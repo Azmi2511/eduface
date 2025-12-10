@@ -153,13 +153,3 @@ php artisan test
 3. Buka PR dengan deskripsi perubahan dan langkah reproduksi
 
 Terima PR yang rapi, small, dan disertai penjelasan dan tests jika perlu.
-
----
-
-## Lisensi
-
-Project ini disediakan di bawah lisensi MIT — lihat `LICENSE` jika ada.
-
----
-
-Jika Anda ingin saya commit README ini ke branch `backend` atau `main`, beri tahu pesan commit yang diinginkan. Terima kasih!
