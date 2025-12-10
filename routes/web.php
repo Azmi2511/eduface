@@ -13,46 +13,45 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\SettingsController;
 
-// Public / guest routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 
-// Protected routes (require session)
 Route::middleware(['session.auth'])->group(function () {
-	Route::get('/', [HomeController::class, 'index'])->name('dashboard');
+    Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 
-	// Announcements: everyone with session can view
-	Route::get('/announcements', [AnnouncementsController::class, 'index'])->name('announcements.index');
-	Route::get('/announcements/{id}', [AnnouncementsController::class, 'show'])->name('announcements.show');
+    Route::resource('announcements', AnnouncementsController::class);
 
-	// Notifications (any logged user)
-	Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
 
-	// Attendance: admin and teacher can view attendance lists
-	Route::get('/attendance', [AttendanceController::class, 'index'])->middleware('role:admin,teacher')->name('attendance.index');
+    Route::resource('attendance', AttendanceController::class);
+    Route::post('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
 
-	// Admin-only pages
-	Route::middleware('role:admin')->group(function () {
-		Route::get('/users', [UsersController::class, 'index'])->name('users.index');
-		Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-	});
+    Route::middleware(['role:admin'])->group(function () {
+        Route::resource('users', UsersController::class);
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::resource('teachers', TeachersController::class);
+        Route::resource('parents', ParentsController::class);
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
+        Route::post('/settings/attendance', [SettingsController::class, 'updateAttendance'])->name('settings.update.attendance');
+        Route::post('/settings/notification', [SettingsController::class, 'updateNotification'])->name('settings.update.notification');
+        Route::post('/settings/security', [SettingsController::class, 'updateSecurity'])->name('settings.update.security');
+        Route::post('/settings/backup', [SettingsController::class, 'backupDatabase'])->name('settings.backup');
+    });
 
-	// Teacher/Admin pages
-	Route::middleware('role:admin,teacher')->group(function () {
-		Route::get('/classes', [ClassesController::class, 'index'])->name('classes.index');
-		Route::get('/teachers', [TeachersController::class, 'index'])->name('teachers.index');
-	});
+    Route::middleware(['role:admin,teacher'])->group(function () {
+        Route::resource('classes', ClassesController::class);
+        Route::resource('students', StudentController::class);
+    });
 
-	// Parent/Student pages
-	Route::middleware('role:admin,parent')->group(function () {
-		Route::get('/parents', [ParentsController::class, 'index'])->name('parents.index');
-	});
+    Route::middleware(['role:admin,parent'])->group(function () {
+        Route::get('/parents', [ParentsController::class, 'index'])->name('parents.index');
+    });
 
-	// Students listing accessible to admin/teacher
-	Route::get('/students', [StudentsController::class, 'index'])->middleware('role:admin,teacher')->name('students.index');
+    Route::get('/students', [StudentsController::class, 'index'])
+        ->middleware(['role:admin,teacher'])
+        ->name('students.index');
 
-	// Logout
-	Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
 });
-
-

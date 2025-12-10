@@ -11,7 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Register route middleware aliases so route files can use short names
+        // (this project uses the closure-based bootstrap, so `app/Http/Kernel.php`
+        // may not be used to register aliases). Register aliases here to
+        // ensure `session.auth` and `role` middleware are available.
+        $middleware->alias([
+            'session.auth' => \App\Http\Middleware\SessionAuth::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

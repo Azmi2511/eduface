@@ -24,7 +24,7 @@ class Student extends Model
         'face_registered_at' => 'datetime',
     ];
 
-    public function class(): BelongsTo
+    public function classRoom(): BelongsTo
     {
         return $this->belongsTo(ClassModel::class, 'class_id');
     }
@@ -37,5 +37,9 @@ class Student extends Model
     public function attendanceLogs(): HasMany
     {
         return $this->hasMany(AttendanceLog::class, 'student_nisn', 'nisn');
+    }
+
+    public function user() {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
