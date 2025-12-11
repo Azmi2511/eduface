@@ -6,7 +6,7 @@ $active_menu = 'users';
 
 @section('title', 'Manajemen Pengguna')
 
-@section('header_title', 'Data Semua Pengguna')
+@section('header_title', 'Manajemen Pengguna')
 
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
