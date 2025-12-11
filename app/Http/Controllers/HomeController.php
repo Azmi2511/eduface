@@ -16,16 +16,18 @@ class HomeController extends Controller
 
         $total_present = DB::table('attendance_logs')
             ->where('date', $today)
+            ->where('status', 'Hadir', 'Terlambat')
             ->distinct('student_nisn')
             ->count('student_nisn');
 
-        $limit_time = '07:30:59';
         $total_late = DB::table('attendance_logs')
             ->where('date', $today)
-            ->where('time_log', '>', $limit_time)
+            ->where('status', 'Terlambat')
             ->count();
 
-        $total_absent = max(0, $total_students - $total_present);
+        $late_limit = DB::table('system_settings')->value('late_limit');
+
+        $total_absent = max(0, $total_students - $total_present - $total_late);
         $attendance_percentage = $total_students > 0 ? round(($total_present / $total_students) * 100) : 0;
 
         $chart_labels = [];
@@ -57,7 +59,7 @@ class HomeController extends Controller
 
         return view('dashboard', compact(
             'total_students', 'total_present', 'total_late', 'total_absent', 'attendance_percentage',
-            'chart_labels', 'chart_data', 'result_activity', 'result_users'
+            'chart_labels', 'chart_data', 'result_activity', 'result_users', 'late_limit'
         ));
     }
 }
