@@ -17,6 +17,15 @@ use App\Http\Controllers\ProfileController;
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 
+Route::get('/register', function () {
+    return view('auth.register');
+})->name('register');
+
+// API Endpoint untuk AJAX Request
+Route::post('/auth/validate', [AuthController::class, 'validateRegistration']); // Kartu 2
+Route::post('/auth/check-otp', [AuthController::class, 'checkOtp']);          // Kartu 3 (Cek dulu sebelum buat password)
+Route::post('/auth/final', [AuthController::class, 'registerFinal']);         // Kartu 4
+
 Route::middleware(['session.auth'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 

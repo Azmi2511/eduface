@@ -253,4 +253,27 @@ class AuthController extends Controller
             return response()->json(['message' => 'Gagal membuat akun: ' . $e->getMessage()], 500);
         }
     }
+
+    public function checkOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required',
+            'temp_token' => 'required'
+        ]);
+
+        // Ambil data session
+        $sessionData = Cache::get('reg_sess_'.$request->temp_token);
+        if (!$sessionData) {
+            return response()->json(['message' => 'Sesi kadaluarsa.'], 401);
+        }
+
+        // Cek kecocokan OTP
+        $cachedOtp = Cache::get('otp_'.$sessionData['phone']);
+        
+        if ($request->otp == $cachedOtp) {
+            return response()->json(['status' => 'success']);
+        } else {
+            return response()->json(['message' => 'Kode OTP Salah.'], 400);
+        }
+    }
 }

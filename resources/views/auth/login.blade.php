@@ -77,7 +77,7 @@
                 </div>
 
                 <div class="text-center text-xs text-gray-500">
-                    Belum punya akun? <a href="#" class="text-[#2F80ED] font-bold hover:underline">Daftar Sekarang</a>
+                    Belum punya akun? <a href="{{ route('register') }}" class="text-[#2F80ED] font-bold hover:underline">Aktivasi Sekarang</a>
                 </div>
             </form>
         </div>
