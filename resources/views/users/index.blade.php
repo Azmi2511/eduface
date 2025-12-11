@@ -336,7 +336,7 @@
     </div>
 
 </div>
-
+@endsection
 @push('scripts')
 <script>
     function toggleModal(modalID) {
