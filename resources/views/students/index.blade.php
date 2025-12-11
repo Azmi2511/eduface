@@ -211,7 +211,7 @@ $active_menu = 'students';
                         <div class="relative">
                             <select name="class_id" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500">
                                 <option value="">-- Pilih Kelas --</option>
-                                @foreach($classes as $cls)
+                                @foreach($classmodel as $cls)
                                     <option value="{{ $cls->id }}">{{ $cls->class_name }}</option>
                                 @endforeach
                             </select>
