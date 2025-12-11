@@ -22,9 +22,9 @@ Route::get('/register', function () {
 })->name('register');
 
 // API Endpoint untuk AJAX Request
-Route::post('/auth/validate', [AuthController::class, 'validateRegistration']); // Kartu 2
-Route::post('/auth/check-otp', [AuthController::class, 'checkOtp']);          // Kartu 3 (Cek dulu sebelum buat password)
-Route::post('/auth/final', [AuthController::class, 'registerFinal']);         // Kartu 4
+Route::post('/auth/validate', [AuthController::class, 'validateRegistration']);
+Route::post('/auth/check-otp', [AuthController::class, 'checkOtp']);
+Route::post('/auth/final', [AuthController::class, 'registerFinal']);
 
 Route::middleware(['session.auth'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('dashboard');

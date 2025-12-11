@@ -204,19 +204,34 @@
         }
 
         async function postApi(url, data) {
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const tokenTag = document.querySelector('meta[name="csrf-token"]');
+            const token = tokenTag ? tokenTag.getAttribute('content') : '';
+
             try {
                 const res = await fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token 
                     },
                     body: JSON.stringify(data)
                 });
-                return { ok: res.ok, status: res.status, json: await res.json() };
+
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return { ok: res.ok, status: res.status, json: await res.json() };
+                } else {
+                    const text = await res.text();
+                    console.error("Server Error HTML:", text); 
+                    return { 
+                        ok: false, 
+                        json: { message: `Server Error (${res.status}). Cek Console Browser.` } 
+                    };
+                }
             } catch (e) {
-                return { ok: false, json: { message: "Gagal menghubungi server." } };
+                console.error("Network Error:", e);
+                return { ok: false, json: { message: "Gagal menghubungi server (Network Error)." } };
             }
         }
 

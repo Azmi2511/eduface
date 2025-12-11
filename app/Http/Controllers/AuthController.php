@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use App\Models\User;
+use App\Models\Teacher;
+use App\Models\Student;
 use App\Services\JwtService;
 
 class AuthController extends Controller
