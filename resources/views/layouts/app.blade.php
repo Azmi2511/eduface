@@ -26,7 +26,7 @@
         @include('partials.sidebar')
         <div class="flex-1 flex flex-col overflow-hidden">
             @include('partials.header')
-            <main class="flex-1 overflow-y-auto p-8 bg-[#F3F6FD]">
+            <main class="flex-1 overflow-y-auto bg-[#F3F6FD]">
                 @yield('content')
             </main>
         </div>
