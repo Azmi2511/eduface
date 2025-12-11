@@ -4,8 +4,8 @@ $active_menu = 'students';
 
 @extends('layouts.app')
 
-@section('title', 'Data Siswa')
-@section('header_title', 'Data Siswa')
+@section('title', 'Manajemen Siswa')
+@section('header_title', 'Manajemen Siswa')
 
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
