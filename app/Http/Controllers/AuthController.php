@@ -5,9 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Services\JwtService;
 
 class AuthController extends Controller
 {
+    private $jwtService;
+
+    public function __construct(JwtService $jwtService)
+    {
+        $this->jwtService = $jwtService;
+    }
+
     public function showLogin()
     {
         return view('auth.login');
@@ -33,5 +41,45 @@ class AuthController extends Controller
     {
         session()->flush();
         return redirect()->route('login.show');
+    }
+
+    public function apiLogin(Request $request)
+    {
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required'
+        ]);
+
+        $user = User::where('username', $request->username)->first();
+        
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Credentials not valid'], 401);
+        }
+
+        // Generate JWT token
+        $payload = [
+            'user_id' => $user->id,
+            'username' => $user->username,
+            'role' => $user->role,
+            'email' => $user->email
+        ];
+
+        $token = $this->jwtService->generate($payload);
+
+        return response()->json([
+            'message' => 'Login successful',
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role
+            ]
+        ], 200);
+    }
+
+    public function apiLogout(Request $request)
+    {
+        return response()->json(['message' => 'Logout successful'], 200);
     }
 }

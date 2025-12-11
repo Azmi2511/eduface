@@ -40,5 +40,6 @@ class Kernel extends HttpKernel
         // add session-based middleware from scaffold
         'session.auth' => \App\Http\Middleware\SessionAuth::class,
         'role' => \App\Http\Middleware\CheckRole::class,
+        'jwt' => \App\Http\Middleware\JwtMiddleware::class,
     ];
 }
