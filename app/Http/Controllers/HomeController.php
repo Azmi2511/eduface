@@ -14,20 +14,22 @@ class HomeController extends Controller
 
         $total_students = DB::table('students')->count();
 
-        $total_present = DB::table('attendance_logs')
+        $latest_ids = DB::table('attendance_logs')
+            ->selectRaw('MAX(id) as id')
             ->where('date', $today)
-            ->where('status', 'Hadir', 'Terlambat')
-            ->distinct('student_nisn')
-            ->count('student_nisn');
+            ->groupBy('student_nisn');
 
-        $total_late = DB::table('attendance_logs')
-            ->where('date', $today)
-            ->where('status', 'Terlambat')
-            ->count();
+        $today_logs = DB::table('attendance_logs')
+            ->whereIn('id', $latest_ids)
+            ->get();
+
+        $total_present = $today_logs->where('status', 'Hadir')->count();
+
+        $total_late = $today_logs->where('status', 'Terlambat')->count();
 
         $late_limit = DB::table('system_settings')->value('late_limit');
 
-        $total_absent = max(0, $total_students - $total_present - $total_late);
+        $total_absent  = $total_students - $total_present - $total_late;
         $attendance_percentage = $total_students > 0 ? round(($total_present / $total_students) * 100) : 0;
 
         $chart_labels = [];
