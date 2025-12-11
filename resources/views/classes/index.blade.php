@@ -67,10 +67,10 @@ $active_menu = 'classes';
                     </thead>
 
                     <tbody class="divide-y divide-gray-100 bg-white">
-                        @forelse($classes as $class)
+                        @forelse($classmodel as $class)
                             <tr class="hover:bg-gray-50 transition duration-150">
                                 <td class="px-6 py-4 text-sm text-center text-gray-500">
-                                    {{ $loop->iteration + ($classes->currentPage() - 1) * $classes->perPage() }}
+                                    {{ $loop->iteration + ($classmodel->currentPage() - 1) * $classmodel->perPage() }}
                                 </td>
 
                                 <td class="px-6 py-4">
@@ -136,24 +136,24 @@ $active_menu = 'classes';
             {{-- Pagination --}}
             <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <div class="text-sm text-gray-500">
-                    Halaman <span class="font-medium">{{ $classes->currentPage() }}</span> dari <span class="font-medium">{{ $classes->lastPage() }}</span>
+                    Halaman <span class="font-medium">{{ $classmodel->currentPage() }}</span> dari <span class="font-medium">{{ $classmodel->lastPage() }}</span>
                 </div>
 
                 <div class="flex space-x-2">
                     {{-- Previous Page Link --}}
-                    @if ($classes->onFirstPage())
+                    @if ($classmodel->onFirstPage())
                         <span class="px-3 py-1.5 text-sm font-medium text-gray-300 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
                             <i class="fas fa-chevron-left mr-1"></i> Prev
                         </span>
                     @else
-                        <a href="{{ $classes->previousPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                        <a href="{{ $classmodel->previousPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
                             <i class="fas fa-chevron-left mr-1"></i> Prev
                         </a>
                     @endif
 
                     {{-- Next Page Link --}}
-                    @if ($classes->hasMorePages())
-                        <a href="{{ $classes->nextPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                    @if ($classmodel->hasMorePages())
+                        <a href="{{ $classmodel->nextPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
                             Next <i class="fas fa-chevron-right ml-1"></i>
                         </a>
                     @else
