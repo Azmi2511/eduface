@@ -238,6 +238,7 @@ $active_menu = 'announcements';
                 <form id="editAnnForm" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" id="edit_id" name="id">
                     
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -430,37 +431,64 @@ $active_menu = 'announcements';
     }
 
     function openEditModal(data) {
-        // Mengisi Form Edit dengan Data Objek
-        document.getElementById('edit_id').value = data.id;
-        document.getElementById('edit_message').value = data.message;
-        document.getElementById('edit_recipient').value = data.recipient;
-        document.getElementById('edit_datetime').value = data.datetime_send;
-        document.getElementById('edit_link').value = data.attachment_link;
+        // Isi form edit dengan data objek (cek elemen dulu)
+        const editIdEl = document.getElementById('edit_id');
+        const editMessageEl = document.getElementById('edit_message');
+        const editRecipientEl = document.getElementById('edit_recipient');
+        const editDatetimeEl = document.getElementById('edit_datetime');
+        const editLinkEl = document.getElementById('edit_link');
+
+        if (editIdEl) editIdEl.value = data.id ?? '';
+        if (editMessageEl) editMessageEl.value = data.message ?? '';
+        if (editRecipientEl) editRecipientEl.value = data.recipient ?? '';
+        if (editLinkEl) editLinkEl.value = data.attachment_link ?? '';
+
+        // Konversi datetime ke format yang diterima input[type=datetime-local]
+        if (editDatetimeEl) {
+            let dt = data.datetime_send ?? '';
+            if (dt) {
+                // Coba buat objek Date, lalu format lokal tanpa detik
+                const parsed = new Date(dt);
+                if (!isNaN(parsed)) {
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const local = parsed.getFullYear() + '-' + pad(parsed.getMonth() + 1) + '-' + pad(parsed.getDate()) + 'T' + pad(parsed.getHours()) + ':' + pad(parsed.getMinutes());
+                    editDatetimeEl.value = local;
+                } else {
+                    // Fallback: ubah spasi ke 'T' dan potong ke 16 karakter (YYYY-MM-DDTHH:MM)
+                    editDatetimeEl.value = dt.replace(' ', 'T').slice(0, 16);
+                }
+            } else {
+                editDatetimeEl.value = '';
+            }
+        }
 
         // Mengatur Action URL Form secara dinamis
         let url = "{{ route('announcements.update', ':id') }}";
         url = url.replace(':id', data.id);
-        document.getElementById('editAnnForm').action = url;
+        const form = document.getElementById('editAnnForm');
+        if (form) form.action = url;
 
         // Logika Tampilan File
         const fileInfoDiv = document.getElementById('current_file_info');
         const deleteCheckbox = document.getElementById('delete_file_checkbox');
         const fileNameText = document.getElementById('text_current_filename');
 
-        // Reset checkbox
-        if(deleteCheckbox) deleteCheckbox.checked = false;
+        if (deleteCheckbox) deleteCheckbox.checked = false;
 
-        if(data.attachment_file) {
-            // Bersihkan nama file dari timestamp prefix (opsional, tergantung cara simpan)
+        if (data.attachment_file) {
             let cleanName = data.attachment_file.split('_').slice(1).join('_');
-            if(!cleanName) cleanName = data.attachment_file;
+            if (!cleanName) cleanName = data.attachment_file;
 
-            fileNameText.innerText = cleanName;
-            fileInfoDiv.classList.remove('hidden');
-            fileInfoDiv.classList.add('flex');
+            if (fileNameText) fileNameText.innerText = cleanName;
+            if (fileInfoDiv) {
+                fileInfoDiv.classList.remove('hidden');
+                fileInfoDiv.classList.add('flex');
+            }
         } else {
-            fileInfoDiv.classList.add('hidden');
-            fileInfoDiv.classList.remove('flex');
+            if (fileInfoDiv) {
+                fileInfoDiv.classList.add('hidden');
+                fileInfoDiv.classList.remove('flex');
+            }
         }
 
         toggleModal('editAnnModal');
