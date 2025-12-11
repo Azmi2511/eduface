@@ -199,7 +199,6 @@ $active_menu = 'users';
             {{-- Pagination --}}
             @if($users->hasPages())
                 <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
-                    {{-- Tambahkan appends(request()->query()) --}}
                     {{ $users->appends(request()->query())->links() }}
                 </div>
             @endif
