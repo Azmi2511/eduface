@@ -152,14 +152,10 @@ $active_menu = 'classes';
                     @endif
 
                     {{-- Next Page Link --}}
-                    @if ($classmodel->hasMorePages())
-                        <a href="{{ $classmodel->nextPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
-                            Next <i class="fas fa-chevron-right ml-1"></i>
-                        </a>
-                    @else
-                        <span class="px-3 py-1.5 text-sm font-medium text-gray-300 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
-                            Next <i class="fas fa-chevron-right ml-1"></i>
-                        </span>
+                    @if($classmodel->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                            {{ $classmodel->appends(request()->query())->links() }}
+                        </div>
                     @endif
                 </div>
             </div>

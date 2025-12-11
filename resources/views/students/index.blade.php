@@ -156,9 +156,11 @@ $active_menu = 'students';
             </div>
 
             {{-- Pagination --}}
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $students->withQueryString()->links() }}
-            </div>
+            @if($students->hasPages())
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                    {{ $students->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
     </main>
 

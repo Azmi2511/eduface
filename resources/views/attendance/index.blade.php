@@ -222,9 +222,11 @@ $active_menu = 'attendance';
                 </div>
 
                 {{-- Pagination --}}
-                <div class="px-6 py-4 border-t border-gray-200">
-                    {{ $attendanceLogs->withQueryString()->links() }}
-                </div>
+                @if($attendanceLogs->hasPages())
+                    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                        {{ $attendanceLogs->appends(request()->query())->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </main>

@@ -36,7 +36,7 @@
         <div class="flex-1 flex flex-col overflow-hidden relative">
             @include('partials.header')
             
-            <main class="flex-1 overflow-y-auto bg-[#F3F6FD] p-6">
+            <main class="flex-1 overflow-y-auto bg-[#F3F6FD]">
                 @yield('content')
             </main>
         </div>

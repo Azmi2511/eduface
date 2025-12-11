@@ -30,7 +30,7 @@ class AuthController extends Controller
 
         $user = User::where('username', $request->username)->first();
         if ($user && Hash::check($request->password, $user->password)) {
-            session(['user_id' => $user->id, 'full_name' => $user->username, 'role' => $user->role]);
+            session(['user_id' => $user->id, 'full_name' => $user->full_name, 'role' => $user->role]);
             return redirect()->route('dashboard');
         }
 

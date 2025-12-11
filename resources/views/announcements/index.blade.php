@@ -131,9 +131,11 @@ $active_menu = 'announcements';
             </div>
 
             {{-- Pagination --}}
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $announcements->links() }}
-            </div>
+            @if($announcements->hasPages())
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                    {{ $announcements->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
     </main>
 

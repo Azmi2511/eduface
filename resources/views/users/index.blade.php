@@ -162,7 +162,7 @@ $active_menu = 'users';
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-500">{{ $user->created_at->format('d M Y') }}</span>
+                                    <span class="text-sm text-gray-500">{{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex item-center justify-center space-x-2">
@@ -197,9 +197,12 @@ $active_menu = 'users';
             </div>
 
             {{-- Pagination --}}
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $users->withQueryString()->links() }}
-            </div>
+            @if($users->hasPages())
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                    {{-- Tambahkan appends(request()->query()) --}}
+                    {{ $users->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
     </main>
 

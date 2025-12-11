@@ -10,6 +10,17 @@ $notifications = DB::table('notifications')
     ->where('user_role', $userId)
     ->orderBy('created_at', 'desc')
     ->get();
+
+$role = '';
+if ($userRole == 'admin'){
+    $role = 'Administrator';
+} elseif ($userRole == "teacher"){
+    $role = 'Guru';
+} elseif ($userRole == "student"){
+    $role = 'Siswa';
+} else{
+    $role = 'Guest';
+}
 @endphp
 
 <div class="hidden md:block relative flex-1 max-w-md ml-8">
@@ -67,7 +78,7 @@ $notifications = DB::table('notifications')
                 {{ Str::limit(session('full_name', 'Guest User'), 15) }}
             </h4>
             <p class="text-[11px] text-gray-500 mt-0.5 font-medium uppercase tracking-wide">
-                {{ session('role', 'User') }}
+                {{ $role }}
             </p>
         </div>
         
