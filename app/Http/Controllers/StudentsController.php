@@ -46,12 +46,12 @@ class StudentsController extends Controller
         // Data untuk Dropdown Modal
         $users_student = User::where('role', 'student')->where('is_active', 1)->orderBy('full_name')->get();
         $parents = ParentModel::with('user')->get();
-        $classes = ClassModel::orderBy('class_name')->get();
+        $classmodel = ClassModel::orderBy('class_name')->get();
 
         return view('students.index', compact(
             'students', 
             'count_total', 'count_active', 'count_inactive',
-            'users_student', 'parents', 'classes'
+            'users_student', 'parents', 'classmodel'
         ));
     }
 
@@ -62,7 +62,7 @@ class StudentsController extends Controller
             'nisn' => 'required|unique:students,nisn',
             'full_name' => 'required|string',
             'gender' => 'required|in:L,P',
-            'class_id' => 'required|exists:classes,id',
+            'class_id' => 'required|exists:classmodel,id',
             'parent_id' => 'required|exists:parents,id',
         ]);
 
