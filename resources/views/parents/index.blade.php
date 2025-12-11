@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'parents';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Data Orang Tua')

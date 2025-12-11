@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'announcements';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Pengumuman')

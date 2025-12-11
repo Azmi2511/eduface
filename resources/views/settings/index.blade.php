@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'settings';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Pengaturan Sistem')

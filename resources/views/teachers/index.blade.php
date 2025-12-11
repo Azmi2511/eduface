@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'teachers';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Data Guru')

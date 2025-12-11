@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'classes';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Data Kelas')

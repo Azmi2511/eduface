@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'students';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Data Siswa')

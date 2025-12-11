@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'dashboard';
+?>
+
 @extends('layouts.app')
 
 @section('title','Dashboard')
