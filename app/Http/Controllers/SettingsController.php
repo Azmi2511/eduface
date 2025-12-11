@@ -61,7 +61,22 @@ class SettingsController extends Controller
             'face_rec_enabled'  => $request->has('face_rec_enabled') ? 1 : 0,
         ]);
 
-        return redirect()->route('settings.index')->with('success', 'Pengaturan Absensi berhasil disimpan!');
+        $today = date('Y-m-d');
+        $newLateLimit = $request->late_limit;
+
+        \DB::table('attendance_logs')
+            ->where('date', $today)
+            ->whereIn('status', ['Hadir', 'Terlambat'])
+            ->whereTime('time_log', '>', $newLateLimit)
+            ->update(['status' => 'Terlambat']);
+
+        \DB::table('attendance_logs')
+            ->where('date', $today)
+            ->whereIn('status', ['Hadir', 'Terlambat'])
+            ->whereTime('time_log', '<=', $newLateLimit)
+            ->update(['status' => 'Hadir']);
+
+        return redirect()->route('settings.index')->with('success', 'Pengaturan Absensi berhasil disimpan dan status siswa hari ini diperbarui!');
     }
 
     /**
