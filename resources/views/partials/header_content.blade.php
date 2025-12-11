@@ -1,3 +1,17 @@
+@php
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+$userId = auth()->id();
+$userRole = session('role');
+
+$notifications = DB::table('notifications')
+    ->where('user_id', $userId)
+    ->where('user_role', $userId)
+    ->orderBy('created_at', 'desc')
+    ->get();
+@endphp
+
 <div class="hidden md:block relative flex-1 max-w-md ml-8">
     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <i class="fas fa-search text-gray-400"></i>
@@ -22,7 +36,21 @@
                 <h3 class="text-sm font-semibold text-gray-700">Notifikasi</h3>
             </div>
             <div class="max-h-64 overflow-y-auto">
-                <p class="px-4 py-6 text-center text-sm text-gray-500">Tidak ada notifikasi baru.</p>
+                @if($notifications->isEmpty())
+                    <div class="flex flex-col items-center justify-center py-8 px-4 text-center">
+                        <i class="far fa-bell-slash text-5xl text-gray-300 mb-3"></i>
+                        <p class="text-sm text-gray-500 font-medium">Tidak ada notifikasi baru.</p>
+                    </div>
+                @else
+                    <ul class="divide-y divide-gray-100">
+                        @foreach($notifications as $notif)
+                            <li class="px-4 py-3 hover:bg-gray-50 transition cursor-pointer">
+                                <p class="text-sm text-gray-800 font-medium">{{ $notif->title ?? 'Pemberitahuan' }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ $notif->message ?? 'Isi pesan tidak tersedia' }}</p>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         </div>
     </div>
