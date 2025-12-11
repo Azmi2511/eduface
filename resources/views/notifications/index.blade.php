@@ -1,6 +1,11 @@
+<?php
+$active_menu = 'notifications';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Notifikasi Saya')
+@section('header_title', 'Notifikasi Saya')
 
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">

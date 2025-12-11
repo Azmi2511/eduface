@@ -1,6 +1,11 @@
+<?php
+$active_menu = 'users';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Manajemen Pengguna')
+
 @section('header_title', 'Data Semua Pengguna')
 
 @section('content')
@@ -336,7 +341,7 @@
     </div>
 
 </div>
-
+@endsection
 @push('scripts')
 <script>
     function toggleModal(modalID) {

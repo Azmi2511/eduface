@@ -1,3 +1,7 @@
+<?php
+$active_menu = 'attendance';
+?>
+
 @extends('layouts.app')
 
 @section('title', 'Absensi')

@@ -20,12 +20,12 @@ class ClassesController extends Controller
         }
 
         // Pagination 10 data per halaman (sesuai kode native)
-        $classes = $query->orderBy('created_at', 'desc')->paginate(10);
+        $classmodel = $query->orderBy('created_at', 'desc')->paginate(10);
         
         // Hitung total kelas
         $total_classes = ClassModel::count();
 
-        return view('classes.index', compact('classes', 'total_classes'));
+        return view('classes.index', compact('classmodel', 'total_classes'));
     }
 
     /**
