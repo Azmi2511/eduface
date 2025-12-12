@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ParentModel;
+use App\Models\ParentProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,7 @@ class ParentsController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ParentModel::with('user');
+        $query = ParentProfile::with('user');
 
         // 2. Filter Search (Nama atau Email)
         if ($request->filled('search')) {
@@ -37,7 +37,7 @@ class ParentsController extends Controller
 
         $parents = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        $count_total = ParentModel::count();
+        $count_total = ParentProfile::count();
         $count_active = User::where('role', 'parent')->where('is_active', 1)->count();
         $count_inactive = User::where('role', 'parent')->where('is_active', 0)->count();
 
@@ -69,13 +69,13 @@ class ParentsController extends Controller
                 'email'     => $request->email,
                 'password'  => Hash::make($request->password),
                 'role'      => 'parent',
-                'is_active' => '1',
+                'is_active' => 1,
+                'phone'     => $request->phone_number ?? null,
             ]);
-
-            ParentModel::create([
-                'user_id'      => $user->id,
-                'full_name'    => $request->full_name,
-                'phone_number' => $request->phone_number,
+            ParentProfile::create([
+                'user_id'   => $user->id,
+                'relationship' => $request->relationship ?? null,
+                'fcm_token' => $request->fcm_token ?? null,
             ]);
         });
 
@@ -88,7 +88,7 @@ class ParentsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $parent = Parents::where('user_id', $id)->firstOrFail();
+        $parent = ParentProfile::where('user_id', $id)->firstOrFail();
 
         $request->validate([
             'full_name'    => 'required|string|max:255',
@@ -103,12 +103,12 @@ class ParentsController extends Controller
                 'full_name' => $request->full_name,
                 'email'     => $request->email,
                 'is_active' => $request->status,
+                'phone'     => $request->phone_number ?? null,
             ]);
 
             $parent->update([
-                'full_name'    => $request->full_name,
-                'fcm_token'    => $request->fcm_token,
-                'phone_number' => $request->phone_number,
+                'relationship' => $request->relationship ?? $parent->relationship,
+                'fcm_token'    => $request->fcm_token ?? $parent->fcm_token,
             ]);
         });
 
@@ -122,7 +122,7 @@ class ParentsController extends Controller
     public function destroy($id)
     {
         DB::transaction(function () use ($id) {
-            Parents::where('user_id', $id)->delete();
+            ParentProfile::where('user_id', $id)->delete();
             User::where('id', $id)->where('role', 'parent')->delete();
         });
 

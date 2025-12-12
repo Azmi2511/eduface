@@ -3,31 +3,47 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    protected $table = 'users';
-    protected $fillable = ['username','password','full_name','role','is_active','remember_token','email'];
-    protected $hidden = ['password', 'remember_token'];
+    use Notifiable, HasApiTokens;
 
-    protected $casts = [
-        'is_active' => 'boolean',
+    protected $fillable = [
+        'username',
+        'email',
+        'password',
+        'full_name',
+        'phone',
+        'profile_picture',
+        'role',
+        'is_active',
     ];
 
-    public function student(): HasOne
+    protected $hidden = [
+        'password',
+        'remember_token'
+    ];
+
+    // RELATIONS
+    public function teacher()
     {
-        return $this->hasOne(Student::class, 'user_id');
+        return $this->hasOne(Teacher::class);
     }
 
-    public function teacher(): HasOne
+    public function student()
     {
-        return $this->hasOne(Teacher::class, 'user_id');
+        return $this->hasOne(Student::class);
     }
 
-    public function parents(): HasMany
+    public function parentProfile()
     {
-        return $this->hasMany(ParentModel::class, 'user_id');
+        return $this->hasOne(ParentProfile::class, 'user_id');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
     }
 }

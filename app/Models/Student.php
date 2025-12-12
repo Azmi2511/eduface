@@ -3,43 +3,40 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Model
 {
-    protected $table = 'students';
-    protected $primaryKey = 'nisn';
-    public $incrementing = false;
-    protected $keyType = 'string';
-
-    public $timestamps = true;
-
     protected $fillable = [
-        'nisn','user_id','class_id','parent_id','full_name','gender','photo_path','is_face_registered','face_registered_at'
+        'user_id',
+        'nisn',
+        'class_id',
+        'parent_id',
+        'dob',
+        'gender',
     ];
 
-    protected $casts = [
-        'is_face_registered' => 'boolean',
-        'face_registered_at' => 'datetime',
-    ];
-
-    public function classRoom(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(ClassModel::class, 'class_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function parent(): BelongsTo
+    public function class()
     {
-        return $this->belongsTo(ParentModel::class, 'parent_id');
+        return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
-    public function attendanceLogs(): HasMany
+    public function parent()
     {
-        return $this->hasMany(AttendanceLog::class, 'student_nisn', 'nisn');
+        return $this->belongsTo(ParentProfile::class, 'parent_id');
     }
 
-    public function user() {
-        return $this->belongsTo(User::class, 'user_id');
+    public function attendanceLogs()
+    {
+        return $this->hasMany(AttendanceLog::class);
+    }
+
+    public function permissions()
+    {
+        return $this->hasMany(Permission::class);
     }
 }

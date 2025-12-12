@@ -91,8 +91,7 @@ class AnnouncementsController extends Controller
 
         $user = Auth::user();
         Notification::where('user_id', $user->id)
-            ->where('role', $user->role)
-            ->where('link', 'like', '%announcements/' . $id . '%')
+            ->where('ann_id', $id)
             ->update(['is_read' => 1]);
 
         $date = Carbon::parse($announcement->datetime_send);

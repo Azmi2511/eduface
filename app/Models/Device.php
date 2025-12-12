@@ -6,6 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Device extends Model
 {
-    protected $table = 'devices';
-    protected $fillable = ['device_name','location','token_api'];
+    protected $fillable = [
+        'device_name',
+        'location',
+        'api_token'
+    ];
+
+    public function attendanceLogs()
+    {
+        return $this->hasMany(AttendanceLog::class);
+    }
 }

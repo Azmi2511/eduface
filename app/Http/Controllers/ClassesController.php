@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ClassModel;
+use App\Models\SchoolClass;
 use Illuminate\Http\Request;
 
 class ClassesController extends Controller
@@ -12,7 +12,7 @@ class ClassesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ClassModel::query();
+        $query = SchoolClass::query();
 
         // Fitur Pencarian
         if ($request->filled('search')) {
@@ -23,7 +23,7 @@ class ClassesController extends Controller
         $classmodel = $query->orderBy('created_at', 'desc')->paginate(10);
         
         // Hitung total kelas
-        $total_classes = ClassModel::count();
+        $total_classes = SchoolClass::count();
 
         return view('classes.index', compact('classmodel', 'total_classes'));
     }
@@ -39,7 +39,7 @@ class ClassesController extends Controller
             'academic_year' => 'required|string|max:20',
         ]);
 
-        ClassModel::create([
+        SchoolClass::create([
             'class_name'    => $request->class_name,
             'grade_level'   => $request->grade_level,
             'academic_year' => $request->academic_year,
@@ -54,7 +54,7 @@ class ClassesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $class = ClassModel::findOrFail($id);
+        $class = SchoolClass::findOrFail($id);
 
         $request->validate([
             'class_name'    => 'required|string|max:255',
@@ -77,7 +77,7 @@ class ClassesController extends Controller
      */
     public function destroy($id)
     {
-        $class = ClassModel::findOrFail($id);
+        $class = SchoolClass::findOrFail($id);
         $class->delete();
 
         return redirect()->route('classes.index')

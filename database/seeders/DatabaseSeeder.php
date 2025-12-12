@@ -3,17 +3,29 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\User;
+use App\Models\Teacher;
+use App\Models\Student;
+use App\Models\ParentProfile;
+use App\Models\SchoolClass;
+use App\Models\Subject;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         $this->call([
-            UsersTableSeeder::class,
-            StudentsTableSeeder::class,
-            TeachersTableSeeder::class,
-            ParentsTableSeeder::class,
-            ClassesTableSeeder::class,
+            UserSeeder::class,
+            StudentSeeder::class,
+            TeacherSeeder::class,
+            ParentSeeder::class,
+            SchoolClassSeeder::class,
+            SubjectSeeder::class,
+            ScheduleSeeder::class,
+            DeviceSeeder::class,
+            AttendanceLogSeeder::class,
+            AnnouncementSeeder::class,
+            NotificationSeeder::class,
         ]);
     }
 }

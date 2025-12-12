@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AttendanceLog;
-use App\Models\User;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +17,7 @@ class AttendanceController extends Controller
     {
         // 1. Query Dasar dengan Relasi ke Siswa (User)
         // Asumsi: Model AttendanceLog memiliki fungsi 'student()' yang berelasi ke User
-        $query = AttendanceLog::with('student');
+        $query = AttendanceLog::with('student.user');
 
         // 2. Logika Filtering (Sama seperti $_GET di native)
         if ($request->filled('date')) {
@@ -60,7 +60,7 @@ class AttendanceController extends Controller
         ];
 
         // 5. Data Siswa untuk Dropdown Modal Tambah Manual
-        $students = User::where('role', 'Student')->orderBy('full_name')->get();
+        $students = Student::with('user')->get()->sortBy(function($s){ return $s->user->full_name ?? ''; });
 
         return view('attendance.index', compact('attendanceLogs', 'counts', 'students'));
     }
@@ -71,14 +71,14 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id'  => 'required|exists:users,id',
+            'student_id'  => 'required|exists:students,id',
             'date'     => 'required|date',
             'time_log' => 'required',
             'status'   => 'required|in:Hadir,Terlambat,Izin,Alpa',
         ]);
 
         AttendanceLog::create([
-            'user_id'  => $request->user_id,
+            'student_id'  => $request->student_id,
             'date'     => $request->date,
             'time_log' => $request->time_log,
             'status'   => $request->status,
@@ -156,7 +156,7 @@ class AttendanceController extends Controller
 
             foreach ($logs as $log) {
                 // Pastikan menangani jika data student terhapus (optional chaining)
-                $name = $log->student->full_name ?? 'User Terhapus';
+                $name = $log->student->user->full_name ?? 'User Terhapus';
                 
                 echo "{$name}\t{$log->date}\t{$log->time_log}\t{$log->status}\n";
             }

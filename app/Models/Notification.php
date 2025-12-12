@@ -6,14 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    protected $table = 'notifications';
+    public $timestamps = false;
 
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = null;
-
-    protected $fillable = ['user_id','user_role','message','link','is_read'];
+    protected $fillable = [
+        'user_id',
+        'ann_id',
+        'message',
+        'is_read'
+    ];
 
     protected $casts = [
         'is_read' => 'boolean',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function announcement()
+    {
+        return $this->belongsTo(Announcement::class, 'ann_id');
+    }
 }

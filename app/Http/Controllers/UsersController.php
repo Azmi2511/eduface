@@ -30,8 +30,8 @@ class UsersController extends Controller
         $counts = [
             'total'    => User::count(),
             'active'   => User::where('is_active', 1)->count(),
-            'teachers' => User::where('role', 'Teacher')->count(),
-            'admins'   => User::where('role', 'Admin')->count(),
+            'teachers' => User::where('role', 'teacher')->count(),
+            'admins'   => User::where('role', 'admin')->count(),
         ];
 
         return view('users.index', compact('users', 'counts'));

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\User;
-use App\Models\ParentModel;
-use App\Models\ClassModel;
+use App\Models\ParentProfile;
+use App\Models\SchoolClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +14,7 @@ class StudentsController extends Controller
     public function index(Request $request)
     {
         // Query dengan Eager Loading
-        $query = Student::with(['user', 'parent.user', 'classRoom']);
+        $query = Student::with(['user', 'parent.user', 'class']);
 
         // Pencarian
         if ($request->filled('search')) {
@@ -45,8 +45,8 @@ class StudentsController extends Controller
 
         // Data untuk Dropdown Modal
         $users_student = User::where('role', 'student')->where('is_active', 1)->orderBy('full_name')->get();
-        $parents = ParentModel::with('user')->get();
-        $classmodel = ClassModel::orderBy('class_name')->get();
+        $parents = ParentProfile::with('user')->get();
+        $classmodel = SchoolClass::orderBy('class_name')->get();
 
         return view('students.index', compact(
             'students', 
@@ -62,7 +62,7 @@ class StudentsController extends Controller
             'nisn' => 'required|unique:students,nisn',
             'full_name' => 'required|string',
             'gender' => 'required|in:L,P',
-            'class_id' => 'required|exists:classmodel,id',
+            'class_id' => 'required|exists:classes,id',
             'parent_id' => 'required|exists:parents,id',
         ]);
 
@@ -84,8 +84,8 @@ class StudentsController extends Controller
 
     public function update(Request $request, $id)
     {
-        $student = Student::where('user_id', $request->user_id)->firstOrFail();
-        
+        $student = Student::findOrFail($id);
+
         $request->validate([
             'nisn' => 'required|unique:students,nisn,' . $student->id,
             'full_name' => 'required|string',
