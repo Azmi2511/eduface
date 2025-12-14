@@ -16,8 +16,7 @@ class NotificationsController extends Controller
     {
         $userId = auth()->id();
 
-        $query = Notification::where('user_id', $userId)
-                             ->where('user_role', $userId); 
+        $query = Notification::where('user_id', $userId); 
 
         if ($request->filled('search')) {
             $query->where('message', 'like', '%' . $request->search . '%');
@@ -26,7 +25,6 @@ class NotificationsController extends Controller
         $notifications = $query->orderBy('created_at', 'desc')->paginate(10);
 
         $total_unread = Notification::where('user_id', $userId)
-                                    ->where('user_role', $userId)
                                     ->where('is_read', 0)
                                     ->count();
 

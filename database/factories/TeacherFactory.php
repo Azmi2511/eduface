@@ -12,7 +12,6 @@ class TeacherFactory extends Factory
         return [
             'user_id' => User::factory(['role' => 'teacher']),
             'nip' => $this->faker->unique()->numerify('1980####'),
-            'dob' => $this->faker->date(),
             'employment_status' => $this->faker->randomElement(['PNS','Honorer','Kontrak']),
             'teacher_code' => strtoupper($this->faker->bothify('TC###')),
         ];

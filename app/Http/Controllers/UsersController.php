@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-class UsersController extends Controller
+class UsersController extends AdminBaseController
 {
     public function index(Request $request)
     {
@@ -34,12 +34,12 @@ class UsersController extends Controller
             'admins'   => User::where('role', 'admin')->count(),
         ];
 
-        return view('users.index', compact('users', 'counts'));
+        return view('admin::users.index', compact('users', 'counts'));
     }
 
     public function create()
     {
-        return view('users.create');
+       return view('admin::users.create');
     }
 
     public function store(Request $request)

@@ -29,7 +29,6 @@ Route::post('/auth/final', [AuthController::class, 'registerFinal']);
 Route::middleware(['session.auth'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 
-    Route::resource('announcements', AnnouncementsController::class);
 
     Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
 
@@ -45,6 +44,7 @@ Route::middleware(['session.auth'])->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::resource('teachers', TeachersController::class);
         Route::resource('parents', ParentsController::class);
+        Route::resource('announcements', AnnouncementsController::class);
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
         Route::post('/settings/attendance', [SettingsController::class, 'updateAttendance'])->name('settings.update.attendance');
@@ -55,7 +55,7 @@ Route::middleware(['session.auth'])->group(function () {
 
     Route::middleware(['role:admin,teacher'])->group(function () {
         Route::resource('classes', ClassesController::class);
-        Route::resource('students', StudentController::class);
+        Route::resource('students', StudentsController::class);
     });
 
     Route::middleware(['role:admin,parent'])->group(function () {

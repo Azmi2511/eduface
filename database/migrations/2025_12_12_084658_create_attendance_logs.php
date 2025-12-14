@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('attendance_logs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('student_id');
+            // Use student NISN (string) as foreign key to students.nisn
+            $table->string('student_nisn', 50);
             $table->unsignedBigInteger('device_id')->nullable();
             $table->unsignedBigInteger('schedule_id')->nullable();
 
@@ -23,7 +24,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
+            $table->foreign('student_nisn')->references('nisn')->on('students')->onDelete('cascade');
             $table->foreign('device_id')->references('id')->on('devices')->onDelete('set null');
             $table->foreign('schedule_id')->references('id')->on('schedules')->onDelete('set null');
         });

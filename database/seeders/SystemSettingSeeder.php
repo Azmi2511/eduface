@@ -25,7 +25,7 @@ class SystemSettingSeeder extends Seeder
             'tolerance_minutes' => 5,
 
             'face_rec_enabled' => true,
-            'min_accuracy' => 0.75,
+            'min_accuracy' => 85,
 
             'notif_late' => true,
             'notif_absent' => true,

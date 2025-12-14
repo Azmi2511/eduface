@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    public $timestamps = false;
+    // table has created_at timestamp; enable timestamps
+    public $timestamps = true;
 
     protected $fillable = [
         'user_id',
@@ -17,6 +18,7 @@ class Notification extends Model
 
     protected $casts = [
         'is_read' => 'boolean',
+        'created_at' => 'datetime',
     ];
 
     public function user()

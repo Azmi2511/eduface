@@ -16,6 +16,8 @@ class User extends Authenticatable
         'password',
         'full_name',
         'phone',
+        'dob',
+        'gender',
         'profile_picture',
         'role',
         'is_active',
@@ -24,6 +26,11 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token'
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'dob' => 'date',
     ];
 
     // RELATIONS

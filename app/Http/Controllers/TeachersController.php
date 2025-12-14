@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class TeachersController extends Controller
+class TeachersController extends AdminBaseController
 {
     /**
      * Menampilkan daftar guru.
@@ -39,7 +39,7 @@ class TeachersController extends Controller
 
         $users_teacher = User::where('role', 'teacher')->where('is_active', 1)->orderBy('full_name')->get();
 
-        return view('teachers.index', compact(
+        return view('admin::teachers.index', compact(
             'teachers',
             'count_total', 'count_active', 'count_inactive',
             'users_teacher'
@@ -69,7 +69,7 @@ class TeachersController extends Controller
             User::where('id', $request->user_id)->update(['full_name' => $request->full_name]);
         });
 
-        return redirect()->route('teachers.index')
+        return redirect()->route('admin::teachers.index')
             ->with('success', 'Data guru berhasil ditambahkan.');
     }
 
@@ -102,7 +102,7 @@ class TeachersController extends Controller
             ]);
         });
 
-        return redirect()->route('teachers.index')
+        return redirect()->route('admin::teachers.index')
             ->with('success', 'Data guru berhasil diperbarui.');
     }
 
@@ -114,7 +114,7 @@ class TeachersController extends Controller
         $teacher = Teacher::where('user_id', $id)->firstOrFail();
         $teacher->delete();
 
-        return redirect()->route('teachers.index')
+        return redirect()->route('admin::teachers.index')
             ->with('success', 'Data guru berhasil dihapus.');
     }
 }

@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_id')->unique()->nullable();
-            $table->string('nisn', 50)->unique();
+            $table->unsignedBigInteger('user_id')->nullable()->unique();
+            $table->string('nisn', 50)->nullable()->unique();
             $table->unsignedBigInteger('class_id')->nullable();
             $table->unsignedBigInteger('parent_id')->nullable();
-            $table->date('dob')->nullable();
-            $table->enum('gender', ['L','P']);
             $table->string('photo_path')->nullable();
             $table->boolean('face_registered')->default(0);
             $table->timestamp('face_registered_at')->nullable();

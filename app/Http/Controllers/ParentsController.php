@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
-class ParentsController extends Controller
+class ParentsController extends AdminBaseController
 {
     /**
      * Menampilkan daftar orang tua.
@@ -41,7 +41,7 @@ class ParentsController extends Controller
         $count_active = User::where('role', 'parent')->where('is_active', 1)->count();
         $count_inactive = User::where('role', 'parent')->where('is_active', 0)->count();
 
-        return view('parents.index', compact(
+        return view('admin::parents.index', compact(
             'parents',
             'count_total', 'count_active', 'count_inactive'
         ));
@@ -79,7 +79,7 @@ class ParentsController extends Controller
             ]);
         });
 
-        return redirect()->route('parents.index')
+        return redirect()->route('admin::parents.index')
             ->with('success', 'Data orang tua berhasil ditambahkan.');
     }
 
@@ -112,7 +112,7 @@ class ParentsController extends Controller
             ]);
         });
 
-        return redirect()->route('parents.index')
+        return redirect()->route('admin::parents.index')
             ->with('success', 'Data orang tua berhasil diperbarui.');
     }
 
@@ -126,7 +126,7 @@ class ParentsController extends Controller
             User::where('id', $id)->where('role', 'parent')->delete();
         });
 
-        return redirect()->route('parents.index')
+        return redirect()->route('admin::parents.index')
             ->with('success', 'Data orang tua berhasil dihapus.');
     }
 }

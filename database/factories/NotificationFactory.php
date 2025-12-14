@@ -14,7 +14,6 @@ class NotificationFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'user_role' => $this->faker->randomElement(['admin','teacher','student','parent']),
             'message' => $this->faker->sentence(),
             'ann_id' => Announcement::factory(),
             'is_read' => $this->faker->boolean(30),

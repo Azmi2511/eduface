@@ -47,7 +47,7 @@ $active_menu = 'attendance';
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">{{ $counts['absent'] }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Tidak Hadir (Alpa)</p>
+                    <p class="text-sm text-gray-500 font-medium">Tidak Hadir (Alpha)</p>
                 </div>
             </div>
         </div>
@@ -89,7 +89,7 @@ $active_menu = 'attendance';
                             <option value="Hadir" @selected(request('status') == 'Hadir')>Hadir</option>
                             <option value="Terlambat" @selected(request('status') == 'Terlambat')>Terlambat</option>
                             <option value="Izin" @selected(request('status') == 'Izin')>Izin</option>
-                            <option value="Alpa" @selected(request('status') == 'Alpa')>Alpa</option>
+                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -126,7 +126,7 @@ $active_menu = 'attendance';
                     <a href="{{ route('attendance.index') }}" class="pb-4 text-sm font-medium {{ !request('status') && !request('date') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Semua Data</a>
                     <a href="{{ route('attendance.index', ['date' => date('Y-m-d')]) }}" class="pb-4 text-sm font-medium {{ request('date') == date('Y-m-d') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Hari Ini</a>
                     <a href="{{ route('attendance.index', ['status' => 'Terlambat']) }}" class="pb-4 text-sm font-medium {{ request('status') == 'Terlambat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Terlambat</a>
-                    <a href="{{ route('attendance.index', ['status' => 'Alpa']) }}" class="pb-4 text-sm font-medium {{ request('status') == 'Alpa' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Tidak Hadir</a>
+                    <a href="{{ route('attendance.index', ['status' => 'Alpha']) }}" class="pb-4 text-sm font-medium {{ request('status') == 'Alpha' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Tidak Hadir</a>
                 </div>
             </div>
 
@@ -163,13 +163,13 @@ $active_menu = 'attendance';
                             @forelse($attendanceLogs as $log)
                                 <tr class="hover:bg-gray-50 transition">
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $log->student->full_name }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $log->student->user->full_name ?? ($log->student->full_name ?? '-') }}</div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm text-gray-500">{{ $log->student->nisn ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-500">{{ $log->student->class_id ?? '-' }}</div>
+                                        <div class="text-sm text-gray-500">{{ $log->student->class->class_name ?? ($log->student->class_id ?? '-') }}</div>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-500">{{ \Carbon\Carbon::parse($log->date)->translatedFormat('d F Y') }}</td>
                                     <td class="px-6 py-4 text-center">
@@ -183,7 +183,7 @@ $active_menu = 'attendance';
                                                 'Hadir' => 'bg-emerald-100 text-emerald-700',
                                                 'Terlambat' => 'bg-amber-100 text-amber-700',
                                                 'Izin' => 'bg-blue-100 text-blue-700',
-                                                'Alpa' => 'bg-rose-100 text-rose-700',
+                                                'Alpha' => 'bg-rose-100 text-rose-700',
                                                 default => 'bg-gray-100 text-gray-700'
                                             };
                                         @endphp
@@ -194,7 +194,7 @@ $active_menu = 'attendance';
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex item-center justify-center space-x-2">
                                             {{-- View Button --}}
-                                            <button onclick="openViewModal(@js($log->student->full_name), '{{ $log->date }}', '{{ $log->time_log }}', '{{ $log->status }}')" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-blue-600 transition">
+                                            <button onclick="openViewModal(@js($log->student->user->full_name ?? ($log->student->full_name ?? '-')), '{{ $log->date }}', '{{ $log->time_log }}', '{{ $log->status }}')" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-blue-600 transition">
                                                 <i class="far fa-eye"></i>
                                             </button>
                                             
@@ -242,13 +242,17 @@ $active_menu = 'attendance';
             </div>
             <form action="{{ route('attendance.store') }}" method="POST">
                 @csrf
-                <div class="space-y-4">
+                    <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Siswa</label>
-                        <select name="user_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                            @foreach($students as $student)
-                                <option value="{{ $student->id }}">{{ $student->full_name }}</option>
-                            @endforeach
+                        <select name="student_nisn" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                            @if($students->isEmpty())
+                                <option value="">Tidak ada siswa</option>
+                            @else
+                                @foreach($students as $student)
+                                    <option value="{{ $student->nisn }}">{{ $student->user->full_name ?? ($student->full_name ?? $student->nisn) }}</option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
                     <div>
@@ -265,7 +269,7 @@ $active_menu = 'attendance';
                             <option value="Hadir">Hadir</option>
                             <option value="Terlambat">Terlambat</option>
                             <option value="Izin">Izin</option>
-                            <option value="Alpa">Alpa</option>
+                            <option value="Alpha">Alpha</option>
                         </select>
                     </div>
                 </div>
@@ -302,7 +306,7 @@ $active_menu = 'attendance';
                             <option value="Hadir">Hadir</option>
                             <option value="Terlambat">Terlambat</option>
                             <option value="Izin">Izin</option>
-                            <option value="Alpa">Alpa</option>
+                            <option value="Alpha">Alpha</option>
                         </select>
                     </div>
                 </div>

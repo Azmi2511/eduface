@@ -8,12 +8,12 @@ use Carbon\Carbon;
 use App\Models\Notification;
 use App\Models\Announcement;
 
-class AnnouncementsController extends Controller
+class AnnouncementsController extends AdminBaseController
 {
     public function index()
     {
         $announcements = Announcement::orderBy('datetime_send', 'desc')->paginate(10);
-        return view('announcements.index', compact('announcements'));
+        return view('admin::announcements.index', compact('announcements'));
     }
 
     public function store(Request $request)

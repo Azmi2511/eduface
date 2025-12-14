@@ -14,15 +14,17 @@ class AttendanceLogFactory extends Factory
     public function definition()
     {
         return [
-            'student_id'  => Student::factory(),
+            // store student by NISN (string) to match AttendanceLog model
+            'student_nisn' => function () {
+                $s = Student::inRandomOrder()->first();
+                return $s ? $s->nisn : Student::factory()->create()->nisn;
+            },
             'schedule_id' => Schedule::factory(),
             'device_id'   => Device::factory(),
 
-            'timestamp' => $this->faker->dateTimeBetween('-1 week', 'now'),
-            'status'     => $this->faker->randomElement(['present', 'late', 'absent', 'excused']),
-
-            'face_image_path' => null,
-            'confidence_score'=> $this->faker->randomFloat(2, 0.0, 1.0),
+            'date' => $this->faker->date(),
+            'time_log' => $this->faker->time(),
+            'status'     => $this->faker->randomElement(['Hadir', 'Terlambat', 'Alpha']),
         ];
     }
 }

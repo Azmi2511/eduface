@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SchoolClass;
 use Illuminate\Http\Request;
 
-class ClassesController extends Controller
+class ClassesController extends AdminBaseController
 {
     /**
      * Menampilkan daftar kelas.
@@ -25,7 +25,7 @@ class ClassesController extends Controller
         // Hitung total kelas
         $total_classes = SchoolClass::count();
 
-        return view('classes.index', compact('classmodel', 'total_classes'));
+        return view('admin::classes.index', compact('classmodel', 'total_classes'));
     }
 
     /**
@@ -45,7 +45,7 @@ class ClassesController extends Controller
             'academic_year' => $request->academic_year,
         ]);
 
-        return redirect()->route('classes.index')
+        return redirect()->route('admin::classes.index')
             ->with('success', 'Data kelas berhasil ditambahkan.');
     }
 
@@ -68,7 +68,7 @@ class ClassesController extends Controller
             'academic_year' => $request->academic_year,
         ]);
 
-        return redirect()->route('classes.index')
+        return redirect()->route('admin::classes.index')
             ->with('success', 'Data kelas berhasil diperbarui.');
     }
 

@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('password');
             $table->string('full_name');
             $table->string('phone', 50)->nullable();
+            $table->date('dob')->nullable();
+            $table->enum('gender', ['L','P'])->nullable();
             $table->string('profile_picture')->nullable();
             $table->enum('role', ['admin','teacher','student','parent']);
             $table->boolean('is_active')->default(1);

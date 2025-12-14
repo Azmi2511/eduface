@@ -9,7 +9,7 @@ use App\Models\SchoolClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class StudentsController extends Controller
+class StudentsController extends AdminBaseController
 {
     public function index(Request $request)
     {
@@ -21,9 +21,9 @@ class StudentsController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('nisn', 'like', "%{$search}%")
-                  ->orWhere('full_name', 'like', "%{$search}%")
                   ->orWhereHas('user', function($u) use ($search) {
-                      $u->where('email', 'like', "%{$search}%");
+                      $u->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
                   });
             });
         }
@@ -46,9 +46,11 @@ class StudentsController extends Controller
         // Data untuk Dropdown Modal
         $users_student = User::where('role', 'student')->where('is_active', 1)->orderBy('full_name')->get();
         $parents = ParentProfile::with('user')->get();
-        $classmodel = SchoolClass::orderBy('class_name')->get();
+        $classmodel = SchoolClass::select('id', 'class_name')
+                        ->orderBy('class_name')
+                        ->get();
 
-        return view('students.index', compact(
+        return view('admin::students.index', compact(
             'students', 
             'count_total', 'count_active', 'count_inactive',
             'users_student', 'parents', 'classmodel'
@@ -61,7 +63,6 @@ class StudentsController extends Controller
             'user_id' => 'required|unique:students,user_id',
             'nisn' => 'required|unique:students,nisn',
             'full_name' => 'required|string',
-            'gender' => 'required|in:L,P',
             'class_id' => 'required|exists:classes,id',
             'parent_id' => 'required|exists:parents,id',
         ]);
@@ -70,8 +71,6 @@ class StudentsController extends Controller
             Student::create([
                 'user_id' => $request->user_id,
                 'nisn' => $request->nisn,
-                'full_name' => $request->full_name,
-                'gender' => $request->gender,
                 'class_id' => $request->class_id,
                 'parent_id' => $request->parent_id,
             ]);
@@ -101,10 +100,9 @@ class StudentsController extends Controller
                 'is_active' => $request->status,
             ]);
 
-            // Update Student
+            // Update Student (only fields present in students table)
             $student->update([
                 'nisn' => $request->nisn,
-                'full_name' => $request->full_name,
             ]);
         });
 
@@ -116,6 +114,6 @@ class StudentsController extends Controller
         $student = Student::where('nisn', $nisn)->firstOrFail();
         $student->delete();
 
-        return redirect()->route('students.index')->with('success', 'Data siswa dihapus');
+        return redirect()->route('admin::students.index')->with('success', 'Data siswa dihapus');
     }
 }

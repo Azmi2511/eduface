@@ -13,9 +13,8 @@ return new class extends Migration
     {
         Schema::create('teachers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_id')->unique();
-            $table->string('nip', 50)->unique();
-            $table->date('dob')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable()->unique();
+            $table->string('nip', 50)->nullable()->unique();
             $table->enum('employment_status', ['PNS','Honorer','Kontrak'])->nullable();
             $table->string('teacher_code', 50)->nullable();
             $table->timestamps();
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('teachers');
     }
 };

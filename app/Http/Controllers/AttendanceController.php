@@ -4,22 +4,72 @@ namespace App\Http\Controllers;
 
 use App\Models\AttendanceLog;
 use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\ParentProfile;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AttendanceExport;
 
 class AttendanceController extends Controller
 {
-    /**
-     * Menampilkan halaman daftar absensi.
-     */
+    private function getAccessibleNisns(): ?array
+    {
+        $user = Auth::user();
+        $userId = auth()->id();
+
+        if (!$user) {
+            return [];
+        }
+
+        if ($user->role === 'admin') {
+            return null;
+        }
+
+        if ($user->role === 'student') {
+            $student = Student::where('user_id', $userId)->first();
+            return $student ? [$student->nisn] : [];
+        }
+
+        if ($user->role === 'parent') {
+            $parent = DB::table('parents')->where('user_id', $userId)->first();
+            if (!$parent) return [];
+            return Student::where('parent_id', $parent->id)->pluck('nisn')->toArray();
+        }
+
+        if ($user->role === 'teacher') {
+            $teacher = Teacher::where('user_id', $userId)->first();
+            if (!$teacher) return [];
+
+            $classIds = Schedule::where('teacher_id', $teacher->id)
+                        ->pluck('class_id')
+                        ->unique()
+                        ->toArray();
+
+            return Student::whereIn('class_id', $classIds)->pluck('nisn')->toArray();
+        }
+
+        return [];
+    }
+
     public function index(Request $request)
     {
-        // 1. Query Dasar dengan Relasi ke Siswa (User)
-        // Asumsi: Model AttendanceLog memiliki fungsi 'student()' yang berelasi ke User
-        $query = AttendanceLog::with('student.user');
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
 
-        // 2. Logika Filtering (Sama seperti $_GET di native)
+        $query = AttendanceLog::with(['student.user', 'student.class']);
+
+        $accessibleNisns = $this->getAccessibleNisns();
+
+        if (is_array($accessibleNisns)) {
+            $query->whereIn('student_nisn', $accessibleNisns);
+        }
+
         if ($request->filled('date')) {
             $query->whereDate('date', $request->date);
         }
@@ -30,140 +80,117 @@ class AttendanceController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('student', function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%"); // Opsional: cari by NISN/Username
+            $query->where(function($q) use ($search) {
+                $q->where('student_nisn', 'like', "%{$search}%")
+                  ->orWhereHas('student.user', function ($u) use ($search) {
+                      $u->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%");
+                  });
             });
         }
 
-        // 3. Pagination (Menggantikan limit & offset manual)
-        // Urutkan berdasarkan tanggal terbaru, lalu jam terbaru
         $attendanceLogs = $query->orderBy('date', 'desc')
                                 ->orderBy('time_log', 'desc')
                                 ->paginate(10);
 
-        // 4. Statistik untuk Card (Hari ini)
         $today = Carbon::today();
-        
-        // Menggunakan query agregat agar lebih efisien daripada 4 query terpisah
-        $stats = AttendanceLog::select('status', DB::raw('count(*) as total'))
-            ->whereDate('date', $today)
-            ->groupBy('status')
+        $statsQuery = AttendanceLog::select('status', DB::raw('count(*) as total'))
+            ->whereDate('date', $today);
+
+        if (is_array($accessibleNisns)) {
+            $statsQuery->whereIn('student_nisn', $accessibleNisns);
+        }
+
+        $stats = $statsQuery->groupBy('status')
             ->pluck('total', 'status')
             ->toArray();
 
         $counts = [
-            'present' => $stats['Hadir'] ?? 0,
-            'late'    => $stats['Terlambat'] ?? 0,
-            'permit'  => $stats['Izin'] ?? 0,
-            'absent'  => $stats['Alpa'] ?? 0,
+            'present' => intval($stats['Hadir'] ?? 0),
+            'late'    => intval($stats['Terlambat'] ?? 0),
+            'permit'  => intval($stats['Izin'] ?? 0),
+            'absent'  => intval($stats['Alpha'] ?? 0),
         ];
 
-        // 5. Data Siswa untuk Dropdown Modal Tambah Manual
-        $students = Student::with('user')->get()->sortBy(function($s){ return $s->user->full_name ?? ''; });
+        $students = collect();
+        if (Auth::user()->role === 'admin' || Auth::user()->role === 'teacher') {
+            $studentQuery = Student::with('user');
+            
+            if (Auth::user()->role === 'teacher' && is_array($accessibleNisns)) {
+                $studentQuery->whereIn('nisn', $accessibleNisns);
+            }
+            
+            $students = $studentQuery->get()->sortBy(function($s){ return $s->user->full_name ?? ''; });
+        }
 
         return view('attendance.index', compact('attendanceLogs', 'counts', 'students'));
     }
 
-    /**
-     * Menyimpan data absensi baru (Manual).
-     */
     public function store(Request $request)
     {
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
+            abort(403);
+        }
+        
         $request->validate([
-            'student_id'  => 'required|exists:students,id',
-            'date'     => 'required|date',
+            'student_nisn' => 'required|exists:students,nisn',
+            'date' => 'required|date',
             'time_log' => 'required',
-            'status'   => 'required|in:Hadir,Terlambat,Izin,Alpa',
+            'status' => 'required'
         ]);
 
-        AttendanceLog::create([
-            'student_id'  => $request->student_id,
-            'date'     => $request->date,
-            'time_log' => $request->time_log,
-            'status'   => $request->status,
-        ]);
+        AttendanceLog::create($request->all());
 
-        return redirect()->route('attendance.index')
-            ->with('success', 'Data absensi berhasil ditambahkan.');
+        return redirect()->route('attendance.index')->with('success', 'Data berhasil disimpan');
     }
-
-    /**
-     * Memperbarui data absensi.
-     */
+    
     public function update(Request $request, $id)
     {
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
+            abort(403);
+        }
+
         $log = AttendanceLog::findOrFail($id);
+        $log->update($request->all());
 
-        $request->validate([
-            'date'     => 'required|date',
-            'time_log' => 'required',
-            'status'   => 'required|in:Hadir,Terlambat,Izin,Alpa',
-        ]);
-
-        $log->update([
-            'date'     => $request->date,
-            'time_log' => $request->time_log,
-            'status'   => $request->status,
-        ]);
-
-        return redirect()->route('attendance.index')
-            ->with('success', 'Data absensi berhasil diperbarui.');
+        return redirect()->route('attendance.index')->with('success', 'Data berhasil diperbarui');
     }
 
-    /**
-     * Menghapus data absensi.
-     */
     public function destroy($id)
     {
-        $log = AttendanceLog::findOrFail($id);
-        $log->delete();
+        if (!Auth::check() || Auth::user()->role !== 'admin') {
+            abort(403);
+        }
 
-        return redirect()->route('attendance.index')
-            ->with('success', 'Data absensi berhasil dihapus.');
+        AttendanceLog::findOrFail($id)->delete();
+
+        return redirect()->route('attendance.index')->with('success', 'Data berhasil dihapus');
     }
-
-    /**
-     * Export data ke Excel (Format .xls sederhana / TSV).
-     */
+    
     public function export(Request $request)
     {
-        // Gunakan filter yang sama dengan index, tapi tanpa pagination
-        $query = AttendanceLog::with('student');
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
 
+        $query = AttendanceLog::with(['student.user', 'student.class']);
+
+        $accessibleNisns = $this->getAccessibleNisns();
+        if (is_array($accessibleNisns)) {
+            $query->whereIn('student_nisn', $accessibleNisns);
+        }
+
+        // 4. Filter Input dari User (Tanggal, Status)
         if ($request->filled('date')) {
             $query->whereDate('date', $request->date);
         }
+        
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('student', function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%");
-            });
-        }
 
-        $logs = $query->orderBy('date', 'desc')->orderBy('time_log', 'desc')->get();
-
-        // Nama file
-        $fileName = "data_absensi_" . date('Y-m-d') . ".xls";
-
-        // Generate response stream download agar hemat memori
-        return response()->streamDownload(function() use ($logs) {
-            // Header Excel/TSV
-            echo "Nama\tTanggal\tJam Masuk\tStatus\n";
-
-            foreach ($logs as $log) {
-                // Pastikan menangani jika data student terhapus (optional chaining)
-                $name = $log->student->user->full_name ?? 'User Terhapus';
-                
-                echo "{$name}\t{$log->date}\t{$log->time_log}\t{$log->status}\n";
-            }
-        }, $fileName, [
-            "Content-Type" => "application/vnd.ms-excel",
-            "Pragma" => "no-cache",
-            "Expires" => "0"
-        ]);
+        $fileName = 'Laporan-Absensi-' . Carbon::now()->format('Ymd-His') . '.xlsx';
+        
+        return Excel::download(new AttendanceExport($query), $fileName);
     }
 }

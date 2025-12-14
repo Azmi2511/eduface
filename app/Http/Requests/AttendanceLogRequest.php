@@ -14,13 +14,15 @@ class AttendanceLogRequest extends FormRequest
     public function rules()
     {
         return [
-            'student_id'  => 'required|exists:students,id',
+            // attendance endpoint uses student_nisn as FK
+            'student_nisn'  => 'required|exists:students,nisn',
             'schedule_id' => 'required|exists:schedules,id',
             'device_id'   => 'required|exists:devices,id',
 
             'timestamp'   => 'required|date',
 
-            'status' => 'required|in:present,late,absent,excused',
+            // match DB enum values
+            'status' => 'required|in:Hadir,Terlambat,Alpha',
 
             'face_image_path' => 'nullable|string|max:255',
             'confidence_score'=> 'nullable|numeric|min:0|max:1',

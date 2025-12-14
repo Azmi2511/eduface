@@ -11,8 +11,14 @@ class Student extends Model
         'nisn',
         'class_id',
         'parent_id',
-        'dob',
-        'gender',
+        'photo_path',
+        'face_registered',
+        'face_registered_at',
+    ];
+
+    protected $casts = [
+        'face_registered' => 'boolean',
+        'face_registered_at' => 'datetime',
     ];
 
     public function user()
@@ -32,7 +38,8 @@ class Student extends Model
 
     public function attendanceLogs()
     {
-        return $this->hasMany(AttendanceLog::class);
+        // attendance_logs references students.nisn
+        return $this->hasMany(AttendanceLog::class, 'student_nisn', 'nisn');
     }
 
     public function permissions()

@@ -16,11 +16,10 @@ class StudentFactory extends Factory
             'nisn' => $this->faker->unique()->numerify('20########'),
             'class_id' => SchoolClass::factory(),
             'parent_id' => ParentProfile::factory(),
-            'dob' => $this->faker->date(),
-            'gender' => $this->faker->randomElement(['L','P']),
             'photo_path' => null,
             'face_registered' => false,
             'face_registered_at' => null,
+            
         ];
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('parents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_id')->unique();
+            $table->unsignedBigInteger('user_id')->nullable()->unique();
             $table->enum('relationship', ['Ayah','Ibu','Wali'])->nullable();
             $table->text('fcm_token')->nullable();
             $table->timestamps();

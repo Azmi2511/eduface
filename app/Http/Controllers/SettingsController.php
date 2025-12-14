@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 
-class SettingsController extends Controller
+class SettingsController extends AdminBaseController
 {
     /**
      * Menampilkan halaman pengaturan.
@@ -18,7 +18,7 @@ class SettingsController extends Controller
     {
         $settings = SystemSetting::firstOrNew(['id' => 1]); 
         
-        return view('settings.index', compact('settings'));
+        return view('admin::settings.index', compact('settings'));
     }
 
     /**

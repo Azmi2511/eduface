@@ -20,7 +20,7 @@ class HomeController extends Controller
 
         $latest_ids = AttendanceLog::selectRaw('MAX(id) as id')
             ->whereDate('date', $today)
-            ->groupBy('student_id')
+            ->groupBy('student_nisn')
             ->pluck('id');
 
         $today_logs = AttendanceLog::whereIn('id', $latest_ids)->get();
@@ -40,8 +40,8 @@ class HomeController extends Controller
             $chart_labels[] = date('d M', strtotime($check_date));
 
             $row = AttendanceLog::whereDate('date', $check_date)
-                ->distinct('student_id')
-                ->count('student_id');
+                ->distinct('student_nisn')
+                ->count('student_nisn');
 
             $chart_data[] = $row;
         }
@@ -52,8 +52,8 @@ class HomeController extends Controller
             ->limit(5)
             ->get()
             ->map(function ($a) {
-                $student = $a->student;
-                $name = $student->full_name ?? ($student->user->full_name ?? 'User Terhapus');
+                    $student = $a->student;
+                    $name = $student->user->full_name ?? 'User Terhapus';
                 return (object)[
                     'full_name' => $name,
                     'time_log' => $a->time_log,
