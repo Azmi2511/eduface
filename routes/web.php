@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\AnnouncementsController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClassesController;
@@ -17,9 +18,9 @@ use App\Http\Controllers\ProfileController;
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
+Route::get('/register', [RegisterController::class, 'show'])->name('register.show');
+Route::post('/register/send-otp', [RegisterController::class, 'sendOtp'])->name('register.sendOtp');
+Route::post('/register/verify-create', [RegisterController::class, 'verifyAndCreate'])->name('register.verify');
 
 // API Endpoint untuk AJAX Request
 Route::post('/auth/validate', [AuthController::class, 'validateRegistration']);

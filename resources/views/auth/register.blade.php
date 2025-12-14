@@ -3,311 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrasi - Eduface</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Daftar Akun - Eduface</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
         body { font-family: 'Roboto', sans-serif; }
+        ::placeholder { color: #9CA3AF; font-size: 0.8rem; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background: transparent; }
+        input[type="file"]::file-selector-button { display: none; }
         
-        .step-content { transition: all 0.3s ease-in-out; }
-        .hidden-step { display: none; opacity: 0; }
-        .active-step { display: block; opacity: 1; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active{
-            -webkit-box-shadow: 0 0 0 30px white inset !important;
-        }
+        .modal-fade-enter { opacity: 0; transform: scale(0.95); }
+        .modal-fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 0.3s, transform 0.3s; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center py-4">
+<body class="bg-gray-50 h-screen flex items-center justify-center overflow-hidden">
 
-    <div class="w-full max-w-[340px] mx-4 bg-white rounded-lg shadow-xl overflow-hidden relative">
+    <div class="w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden flex flex-col md:flex-row m-4 h-auto max-h-[95vh] relative z-10">
         
-        <div class="bg-[#2F80ED] p-5 text-center pb-9">
-            <div class="w-14 h-14 bg-white rounded-full mx-auto flex items-center justify-center shadow-md mb-2">
-                <img src="{{ asset('assets/logo.png') }}" onerror="this.src='https://via.placeholder.com/64?text=EF'" alt="logo" class="w-8 h-8 object-contain">
+        <div class="hidden md:flex flex-col justify-center items-center bg-[#2F80ED] w-1/3 p-8 text-center text-white">
+            <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 relative">
+                <img src="{{ asset('assets/logo.png') }}" alt="logo" class="w-16 h-16 object-contain">
             </div>
-            <h1 class="text-white text-base font-bold">Eduface Registration</h1>
-            <p class="text-blue-100 text-[10px] mt-0.5">Buat akun untuk akses akademik</p>
+            <h1 class="text-2xl font-bold mb-2">Eduface</h1>
+            <p class="text-sm opacity-90">Just Face It</p>
         </div>
 
-        <div class="px-5 pb-5 pt-4 bg-white relative -mt-5 rounded-t-3xl">
+        <div class="w-full md:w-2/3 p-6 md:p-8 flex flex-col justify-center relative">
             
-            <div id="alert-box" class="hidden mb-3 p-2 text-[10px] rounded text-center font-medium"></div>
-
-            <div id="step-1" class="step-content active-step">
-                <div class="text-center mb-4">
-                    <h2 class="text-sm font-bold text-gray-800">Siapa Anda?</h2>
-                    <p class="text-gray-400 text-[10px]">Pilih peran untuk melanjutkan</p>
+            <div class="md:hidden flex items-center gap-3 mb-4 pb-4 border-b">
+                <div class="w-10 h-10 bg-[#2F80ED] rounded-full flex items-center justify-center">
+                    <img src="{{ asset('assets/logo.png') }}" alt="logo" class="w-6 h-6 object-contain brightness-0 invert">
                 </div>
+                <h1 class="text-[#2F80ED] font-bold text-lg">Eduface Register</h1>
+            </div>
 
-                <div class="flex justify-between gap-2 mb-5">
-                    <button onclick="selectRole('GURU')" id="btn-GURU" class="role-btn flex-1 py-1.5 text-[10px] font-bold border rounded transition-colors border-gray-200 text-gray-500 hover:border-[#2F80ED] hover:text-[#2F80ED]">
-                        <i class="fas fa-chalkboard-teacher mb-0.5 block text-sm"></i> GURU
-                    </button>
-                    <button onclick="selectRole('SISWA')" id="btn-SISWA" class="role-btn flex-1 py-1.5 text-[10px] font-bold border rounded transition-colors bg-[#2F80ED] text-white border-[#2F80ED] shadow-md">
-                        <i class="fas fa-user-graduate mb-0.5 block text-sm"></i> SISWA
-                    </button>
-                    <button onclick="selectRole('ORTU')" id="btn-ORTU" class="role-btn flex-1 py-1.5 text-[10px] font-bold border rounded transition-colors border-gray-200 text-gray-500 hover:border-[#2F80ED] hover:text-[#2F80ED]">
-                        <i class="fas fa-user-friends mb-0.5 block text-sm"></i> ORTU
-                    </button>
-                </div>
+            <div class="mb-5">
+                <h2 class="text-xl font-bold text-gray-900">Buat Akun Baru</h2>
+                <p class="text-gray-400 text-xs">Lengkapi data di bawah ini</p>
+            </div>
 
-                <form onsubmit="handleValidate(event)">
-                    <input type="hidden" id="selected-role" value="SISWA">
+            <form id="regForm" enctype="multipart/form-data" autocomplete="off">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                     
-                    <div class="mb-3">
-                        <label id="label-id" class="block text-gray-800 text-[11px] font-bold mb-0.5">Masukkan NISN</label>
-                        <input type="text" id="id_number" required
-                            class="w-full border-b border-gray-300 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-[#2F80ED] transition-colors bg-transparent placeholder-gray-400"
-                            placeholder="Nomor Identitas">
+                    <div class="space-y-3">
+                        <h3 class="text-[#2F80ED] text-xs font-bold uppercase tracking-wider border-b pb-1 mb-2">Informasi Akun</h3>
+                        
+                        <div>
+                            <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Username (Opsional)</label>
+                            <input type="text" name="username" placeholder="Kosongkan untuk otomatis" autocomplete="off"
+                                class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Email (Wajib Aktif)</label>
+                            <input type="email" id="emailInput" name="email" required placeholder="email@sekolah.sch.id" autocomplete="off"
+                                class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Password</label>
+                                <input type="password" id="password" name="password" required placeholder="***" autocomplete="new-password"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Konfirmasi</label>
+                                <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="***" autocomplete="new-password"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                            </div>
+                        </div>
+                        <p id="pass-error" class="text-red-500 text-[10px] hidden text-right font-medium">Password tidak cocok</p>
                     </div>
 
-                    <div class="mb-5">
-                        <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Tanggal Lahir</label>
-                        <input type="date" id="dob" required
-                            class="w-full border-b border-gray-300 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-[#2F80ED] transition-colors bg-transparent">
-                        <p id="helper-dob" class="text-[9px] text-[#2F80ED] mt-0.5 italic">Masukkan Tanggal Lahir Anda</p>
-                    </div>
+                    <div class="space-y-3">
+                        <h3 class="text-[#2F80ED] text-xs font-bold uppercase tracking-wider border-b pb-1 mb-2">Data Pribadi</h3>
+                        
+                        <div>
+                            <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Nama Lengkap</label>
+                            <input type="text" name="name" required placeholder="Sesuai Identitas" autocomplete="off"
+                                class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                        </div>
 
-                    <button type="submit" id="btn-validate"
-                        class="w-full bg-[#2F80ED] hover:bg-blue-600 text-white font-bold py-2 text-xs rounded-md shadow-md transition duration-200">
-                        Lanjut <i class="fas fa-arrow-right ml-1"></i>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="relative">
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Peran</label>
+                                <select name="role" id="roleSelect" onchange="updateIdLabel()" required autocomplete="off"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent cursor-pointer">
+                                    <option value="" disabled selected>Pilih</option>
+                                    <option value="student">Siswa</option>
+                                    <option value="teacher">Guru</option>
+                                    <option value="parent">Wali</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label id="idLabel" class="block text-gray-800 text-[11px] font-bold mb-0.5">Nomor ID</label>
+                                <input type="text" name="id_number" id="idInput" placeholder="NIP/NISN" autocomplete="off"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="relative">
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Gender</label>
+                                <select name="gender" required autocomplete="off"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent cursor-pointer">
+                                    <option value="" disabled selected>Pilih</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Tgl Lahir</label>
+                                <input type="date" name="dob" required autocomplete="off"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                            </div>
+                        </div>
+
+                        <div id="student-fields" class="hidden grid-cols-2 gap-3 mt-3 animate-fade-in">
+                            <div class="relative">
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Kelas</label>
+                                <select name="class_id" id="classSelect"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent cursor-pointer">
+                                    <option value="" disabled selected>Pilih Kelas</option>
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}">{{ $class->class_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <div class="relative">
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Orang Tua / Wali</label>
+                                <select name="parent_id" id="parentSelect"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent cursor-pointer">
+                                    <option value="" selected>Tidak Ada / Pilih Nanti</option>
+                                    @foreach($parents as $parent)
+                                        <option value="{{ $parent->id }}">{{ $parent->full_name }} ({{ $parent->phone ?? $parent->email }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">No HP</label>
+                                <input type="tel" name="phone" placeholder="08..." autocomplete="off"
+                                    class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Foto</label>
+                                <input type="file" name="photo" accept="image/*"
+                                    class="w-full text-xs text-gray-500 py-1 cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-2">
+                    <button type="button" id="btn-submit" onclick="initiateRegistration()"
+                        class="w-full bg-[#2F80ED] hover:bg-blue-600 text-white font-bold py-2.5 text-sm rounded-lg shadow-md transition duration-200">
+                        Daftar
                     </button>
-                </form>
-            </div>
-
-            <div id="step-2" class="step-content hidden-step text-center pt-1">
-                <div class="mb-4">
-                    <div class="w-10 h-10 bg-blue-50 text-[#2F80ED] rounded-full flex items-center justify-center mx-auto mb-2">
-                        <i class="fas fa-shield-alt text-lg"></i>
-                    </div>
-                    <h2 class="text-sm font-bold text-gray-800">Verifikasi OTP</h2>
-                    <p class="text-gray-400 text-[10px] mt-0.5">
-                        Kode dikirim ke <span id="masked-phone" class="font-bold text-gray-600"></span>
-                    </p>
-                </div>
-
-                <div class="mb-5">
-                    <input type="text" id="otp-input" maxlength="4" placeholder="0 - 0 - 0 - 0"
-                        class="w-40 text-center text-xl font-bold tracking-[0.4em] border-b-2 border-gray-300 focus:border-[#2F80ED] focus:outline-none py-1.5 text-gray-700 placeholder-gray-200">
-                </div>
-
-                <button onclick="handleCheckOtp()" 
-                    class="w-full bg-[#2F80ED] hover:bg-blue-600 text-white font-bold py-2 text-xs rounded-md shadow-md transition duration-200 mb-2">
-                    Verifikasi
-                </button>
-
-                <div class="flex justify-between items-center mt-3 px-2">
-                    <button onclick="resetStep()" class="text-gray-400 hover:text-gray-600 text-[10px]">Ubah Data</button>
-                    <span class="text-gray-300 text-[10px]">|</span>
-                    <button class="text-gray-400 hover:text-[#2F80ED] text-[10px]">Kirim Ulang</button>
-                </div>
-            </div>
-
-            <div id="step-3" class="step-content hidden-step pt-1">
-                <div class="text-center mb-4">
-                    <h2 class="text-sm font-bold text-gray-800">Amankan Akun</h2>
-                    <p class="text-gray-400 text-[10px]">Buat password login</p>
-                </div>
-
-                <div class="space-y-3 mb-5">
-                    <div>
-                        <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Password Baru</label>
-                        <input type="password" id="password"
-                            class="w-full border-b border-gray-300 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-[#2F80ED] transition-colors bg-transparent placeholder-gray-400"
-                            placeholder="Min 8 karakter">
-                    </div>
-                    <div>
-                        <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Konfirmasi Password</label>
-                        <input type="password" id="password_confirm"
-                            class="w-full border-b border-gray-300 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-[#2F80ED] transition-colors bg-transparent placeholder-gray-400"
-                            placeholder="Ulangi password">
-                        <p id="pass-error" class="text-[10px] text-red-500 mt-0.5 hidden">Password tidak cocok!</p>
+                    
+                    <div class="text-center text-xs text-gray-500 mt-3">
+                        Sudah punya akun? <a href="{{ route('login.perform') }}" class="text-[#2F80ED] font-bold hover:underline">Masuk disini</a>
                     </div>
                 </div>
+            </form>
+        </div>
+    </div>
 
-                <button onclick="handleFinalSubmit()" 
-                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 text-xs rounded-md shadow-md transition duration-200">
-                    Selesai & Masuk
-                </button>
+    <div id="otpModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-80 text-center shadow-2xl transform transition-all scale-95 opacity-0" id="otpContent">
+            <div class="w-12 h-12 bg-blue-100 text-[#2F80ED] rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-envelope-open-text text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Verifikasi Email</h3>
+            <p class="text-xs text-gray-500 mb-4">Kode OTP telah dikirim ke <span id="displayEmail" class="font-bold"></span></p>
+            
+            <input type="text" id="otpCode" maxlength="6" class="w-full text-center text-2xl tracking-widest border border-gray-300 rounded-md py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono" placeholder="123456">
+            
+            <button onclick="verifyAndSubmit()" id="btn-verify" class="w-full bg-[#2F80ED] hover:bg-blue-600 text-white font-bold py-2 rounded-md text-sm transition">
+                Verifikasi & Daftar
+            </button>
+            <button onclick="closeOtp()" class="mt-3 text-xs text-gray-400 hover:text-gray-600">Batal</button>
+        </div>
+    </div>
+
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 w-96 text-center shadow-2xl">
+            <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-check text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Registrasi Berhasil!</h3>
+            <p class="text-sm text-gray-600 mb-4">Akun Anda telah dibuat. Silakan gunakan username di bawah ini untuk login:</p>
+            
+            <div class="bg-gray-100 border border-gray-200 rounded-md p-3 mb-6">
+                <span class="text-xs text-gray-500 uppercase block mb-1">Username Anda</span>
+                <span id="finalUsername" class="text-2xl font-mono font-bold text-[#2F80ED] tracking-wide select-all"></span>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-gray-100 text-center text-[10px] text-gray-500">
-                Sudah punya akun? <a href="{{ route('login.perform') }}" class="text-[#2F80ED] font-bold hover:underline">Masuk Disini</a>
-            </div>
+            <button onclick="redirectToLogin()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition">
+                Lanjut ke Login <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
         </div>
     </div>
 
     <script>
-        let tempToken = ''; 
-        let currentRole = 'SISWA';
+        function updateIdLabel() {
+            const role = document.getElementById('roleSelect').value;
+            const label = document.getElementById('idLabel');
+            const input = document.getElementById('idInput');
 
-        function selectRole(role) {
-            currentRole = role;
-            document.getElementById('selected-role').value = role;
+            const studentFields = document.getElementById('student-fields');
+            const classInput = document.getElementById('classSelect');
 
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                btn.className = "role-btn flex-1 py-1.5 text-[10px] font-bold border rounded transition-colors border-gray-200 text-gray-500 hover:border-[#2F80ED] hover:text-[#2F80ED]";
-            });
+            studentFields.classList.add('hidden');
+            studentFields.classList.remove('grid');
+            classInput.required = false;
 
-            const activeBtn = document.getElementById(`btn-${role}`);
-            activeBtn.className = "role-btn flex-1 py-1.5 text-[10px] font-bold border rounded transition-colors bg-[#2F80ED] text-white border-[#2F80ED] shadow-md";
+            if (role === 'student') {
+                label.innerText = "NISN";
+                input.placeholder = "Isi NISN";
+                input.required = true;
 
-            const labelId = document.getElementById('label-id');
-            const helperDob = document.getElementById('helper-dob');
-
-            if (role === 'GURU') {
-                labelId.innerText = "Masukkan NIP";
-                helperDob.innerText = "Masukkan Tanggal Lahir Anda";
-            } else if (role === 'SISWA') {
-                labelId.innerText = "Masukkan NISN";
-                helperDob.innerText = "Masukkan Tanggal Lahir Anda";
+                studentFields.classList.remove('hidden');
+                studentFields.classList.add('grid');
+                classInput.required = true;
+            } else if (role === 'teacher') {
+                label.innerText = "NIP"; input.placeholder = "Isi NIP"; input.required = true;
             } else {
-                labelId.innerText = "Masukkan NISN Anak";
-                helperDob.innerText = "Info: Masukkan Tanggal Lahir Anak (Siswa)";
+                label.innerText = "NIK/ID"; input.placeholder = "Opsional"; input.required = false;
             }
         }
 
-        function showAlert(msg, type = 'error') {
-            const box = document.getElementById('alert-box');
-            box.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+        async function initiateRegistration() {
+            const p1 = document.getElementById('password').value;
+            const p2 = document.getElementById('password_confirmation').value;
             
-            if (type === 'error') {
-                box.classList.add('bg-red-100', 'text-red-700');
-            } else {
-                box.classList.add('bg-green-100', 'text-green-700');
-            }
+            if (p1.length < 8) { alert("Password min 8 karakter"); return; }
+            if (p1 !== p2) { document.getElementById('pass-error').classList.remove('hidden'); return; }
             
-            box.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'} mr-1"></i> ${msg}`;
-            box.classList.remove('hidden');
-        }
-
-        function switchStep(stepNumber) {
-            document.querySelectorAll('.step-content').forEach(el => {
-                el.classList.remove('active-step');
-                el.classList.add('hidden-step');
-            });
-            document.getElementById(`step-${stepNumber}`).classList.remove('hidden-step');
-            document.getElementById(`step-${stepNumber}`).classList.add('active-step');
-            document.getElementById('alert-box').classList.add('hidden');
-        }
-
-        function resetStep() {
-            switchStep(1);
-            tempToken = '';
-        }
-
-        async function postApi(url, data) {
-            const tokenTag = document.querySelector('meta[name="csrf-token"]');
-            const token = tokenTag ? tokenTag.getAttribute('content') : '';
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': token 
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const contentType = res.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    return { ok: res.ok, status: res.status, json: await res.json() };
-                } else {
-                    const text = await res.text();
-                    console.error("Server Error HTML:", text); 
-                    return { 
-                        ok: false, 
-                        json: { message: `Server Error (${res.status}). Cek Console Browser.` } 
-                    };
-                }
-            } catch (e) {
-                console.error("Network Error:", e);
-                return { ok: false, json: { message: "Gagal menghubungi server (Network Error)." } };
-            }
-        }
-
-        async function handleValidate(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-validate');
+            const btn = document.getElementById('btn-submit');
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim OTP...';
 
-            const payload = {
-                role: currentRole,
-                id_number: document.getElementById('id_number').value,
-                dob: document.getElementById('dob').value
-            };
+            const form = document.getElementById('regForm');
+            const formData = new FormData(form);
 
-            const response = await postApi('/auth/validate', payload);
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const res = await fetch("{{ route('register.sendOtp') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: formData
+                });
+                const data = await res.json();
 
-            if (response.ok) {
-                tempToken = response.json.temp_token;
-                document.getElementById('masked-phone').innerText = response.json.masked_phone;
-                console.info("DEBUG OTP:", response.json.debug_otp);
-                switchStep(2);
-            } else {
-                showAlert(response.json.message, 'error');
-            }
-            
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-
-        async function handleCheckOtp() {
-            const otpVal = document.getElementById('otp-input').value;
-            if (otpVal.length < 4) return showAlert("Masukkan 4 digit OTP");
-
-            const response = await postApi('/auth/check-otp', {
-                temp_token: tempToken,
-                otp: otpVal
-            });
-
-            if (response.ok) {
-                switchStep(3);
-            } else {
-                showAlert(response.json.message || "OTP Salah");
+                if (res.ok && data.status === 'success') {
+                    document.getElementById('displayEmail').innerText = document.getElementById('emailInput').value;
+                    const modal = document.getElementById('otpModal');
+                    const content = document.getElementById('otpContent');
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    setTimeout(() => {
+                        content.classList.remove('scale-95', 'opacity-0');
+                        content.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                } else {
+                    alert(data.message || "Gagal memvalidasi data.");
+                }
+            } catch (err) {
+                alert("Kesalahan jaringan.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         }
 
-        async function handleFinalSubmit() {
-            const p1 = document.getElementById('password').value;
-            const p2 = document.getElementById('password_confirm').value;
+        async function verifyAndSubmit() {
+            const otp = document.getElementById('otpCode').value;
+            if(otp.length < 6) { alert("Masukkan 6 digit kode"); return; }
 
-            if (p1.length < 8) return showAlert("Min 8 karakter");
-            if (p1 !== p2) {
-                document.getElementById('pass-error').classList.remove('hidden');
-                return;
-            } else {
-                document.getElementById('pass-error').classList.add('hidden');
+            const btn = document.getElementById('btn-verify');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+            const form = document.getElementById('regForm');
+            const formData = new FormData(form);
+            formData.append('otp_code', otp);
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const res = await fetch("{{ route('register.verify') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok && data.status === 'success') {
+                    closeOtp();
+                    document.getElementById('finalUsername').innerText = data.username;
+                    const successModal = document.getElementById('successModal');
+                    successModal.classList.remove('hidden');
+                    successModal.classList.add('flex');
+                    window.redirectUrl = data.redirect;
+                } else {
+                    alert(data.message || "Kode OTP salah.");
+                }
+            } catch (err) {
+                alert("Kesalahan server.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
+        }
 
-            const payload = {
-                temp_token: tempToken,
-                otp: document.getElementById('otp-input').value,
-                password: p1
-            };
+        function closeOtp() {
+            const modal = document.getElementById('otpModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
 
-            const response = await postApi('/auth/final', payload);
-
-            if (response.ok) {
-                showAlert("Berhasil! Mengalihkan...", 'success');
-                setTimeout(() => {
-                    window.location.href = response.json.redirect;
-                }, 1500);
-            } else {
-                showAlert(response.json.message || "Gagal membuat akun.");
-            }
+        function redirectToLogin() {
+            window.location.href = window.redirectUrl || "{{ route('login.perform') }}";
         }
     </script>
 </body>
-</html>
+</html> 

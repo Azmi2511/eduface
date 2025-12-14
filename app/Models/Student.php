@@ -12,8 +12,7 @@ class Student extends Model
         'class_id',
         'parent_id',
         'photo_path',
-        'face_registered',
-        'face_registered_at',
+        'face_registered'
     ];
 
     protected $casts = [
