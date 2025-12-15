@@ -27,6 +27,8 @@ Route::post('/auth/validate', [AuthController::class, 'validateRegistration']);
 Route::post('/auth/check-otp', [AuthController::class, 'checkOtp']);
 Route::post('/auth/final', [AuthController::class, 'registerFinal']);
 
+Route::post('/attendance/store', [AttendanceController::class, 'storeAjax'])->name('attendance.storeAjax');
+
 Route::middleware(['session.auth'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 

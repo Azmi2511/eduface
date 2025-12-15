@@ -94,66 +94,89 @@ $active_menu = 'students';
                             <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 bg-white">
-                        @forelse($students as $student)
-                            <tr class="hover:bg-gray-50 transition duration-150">
-                                <td class="px-6 py-4 text-sm text-center text-gray-500">
-                                    {{ $loop->iteration + ($students->currentPage() - 1) * $students->perPage() }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-blue-600 bg-blue-100 rounded-full">
-                                            {{ strtoupper(substr($student->user->full_name, 0, 2)) }}
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">{{ $student->user->full_name }}</div>
-                                            <div class="text-xs text-gray-500">{{ $student->user->email ?? '-' }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ $student->nisn }}</td>
-                                @foreach ($classmodel as $classes)
-                                    <td class="px-6 py-4 text-sm text-gray-500">{{ $classes->class_name ?? '-' }}</td>
-                                @endforeach
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ $student->parent->user->full_name ?? '-' }}</td>
-                                <td class="px-6 py-4 text-center">
-                                    @if($student->user->is_active)
-                                        <span class="inline-flex px-2.5 py-1 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full">Aktif</span>
-                                    @else
-                                        <span class="inline-flex px-2.5 py-1 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full">Nonaktif</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center space-x-2">
-                                        {{-- View Button --}}
-                                        <button onclick="openViewModal(@js($student))" 
-                                            class="p-2 text-blue-500 transition rounded-full hover:bg-blue-50 hover:text-blue-700" title="Lihat Detail">
-                                            <i class="far fa-eye"></i>
-                                        </button>
-                                        
-                                        {{-- Edit Button --}}
-                                        <button onclick="openEditModal(@js($student))"
-                                            class="p-2 text-yellow-500 transition rounded-full hover:bg-yellow-50 hover:text-yellow-700" title="Edit Data">
-                                            <i class="far fa-edit"></i>
-                                        </button>
+                   <tbody class="divide-y divide-gray-100 bg-white">
+                    @forelse($students as $student)
+                        <tr class="hover:bg-gray-50 transition duration-150 group">
+                            
+                            <td class="px-6 py-4 text-sm text-center text-gray-500">
+                                {{ $loop->iteration + ($students->currentPage() - 1) * $students->perPage() }}
+                            </td>
 
-                                        {{-- Delete Button --}}
-                                        <form action="{{ route('students.destroy', $student->nisn) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus data siswa ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" title="Hapus Data">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </form>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-blue-600 bg-blue-100 rounded-full">
+                                        {{ strtoupper(substr($student->user->full_name ?? '?', 0, 2)) }}
                                     </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-6 py-10 text-center text-gray-500">Tidak ada data siswa ditemukan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ $student->user->full_name ?? 'Tanpa Nama' }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $student->user->email ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ $student->nisn }}
+                            </td>
+
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ $student->class->class_name ?? '-' }}
+                            </td>
+
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ $student->parent?->user?->full_name ?? '-' }}
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                @if($student->user->is_active ?? false)
+                                    <span class="inline-flex px-2.5 py-1 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full">
+                                        Aktif
+                                    </span>
+                                @else
+                                    <span class="inline-flex px-2.5 py-1 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full">
+                                        Nonaktif
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <button onclick="openViewModal({{ json_encode($student) }})" 
+                                        class="p-2 text-blue-500 transition rounded-full hover:bg-blue-50 hover:text-blue-700 focus:outline-none" 
+                                        title="Lihat Detail">
+                                        <i class="far fa-eye"></i>
+                                    </button>
+                                    
+                                    <button onclick="openEditModal({{ json_encode($student) }})"
+                                        class="p-2 text-yellow-500 transition rounded-full hover:bg-yellow-50 hover:text-yellow-700 focus:outline-none" 
+                                        title="Edit Data">
+                                        <i class="far fa-edit"></i>
+                                    </button>
+
+                                    <form action="{{ route('students.destroy', $student->nisn) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus data siswa ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700 focus:outline-none" title="Hapus Data">
+                                            <i class="far fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-6 py-10 text-center text-gray-500 bg-gray-50">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="far fa-folder-open text-4xl mb-2 text-gray-300"></i>
+                                    <p>Tidak ada data siswa ditemukan.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
                 </table>
             </div>
 
@@ -487,7 +510,6 @@ $active_menu = 'students';
         toggleModal('viewStudentModal');
     }
 
-    // Sync hidden full_name when selecting user in Add modal
     const addUserSelectEl = document.getElementById('add_user_select');
     if (addUserSelectEl) {
         addUserSelectEl.addEventListener('change', function() {

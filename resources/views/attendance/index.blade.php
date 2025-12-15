@@ -407,24 +407,20 @@ $active_menu = 'attendance';
 @endsection
 @push('scripts')
 <script>
-    // --- KONFIGURASI API ---
-    // Ganti port jika Laravel Anda berjalan di 8000. Biasanya FastAPI di set ke 8001 atau 5000.
-    const API_URL = "http://127.0.0.1:8001"; 
+    const API_URL = "http://127.0.0.1:8001";
     
-    let cctvInterval = null;
     let isRunning = false;
+    let isProcessing = false;
     let currentStream = null;
 
-    // --- MODAL HANDLERS ---
     function toggleModal(modalID) {
         const modal = document.getElementById(modalID);
         
         if (modal.classList.contains('hidden')) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden'); // Prevent scroll
+            document.body.classList.add('overflow-hidden');
             
-            // Init Camera jika modal camera dibuka
             if (modalID === 'cameraModal') {
                 setTimeout(initCameraModal, 100);
             }
@@ -433,7 +429,6 @@ $active_menu = 'attendance';
             modal.classList.remove('flex');
             document.body.classList.remove('overflow-hidden');
             
-            // Stop Camera jika modal camera ditutup
             if (modalID === 'cameraModal') {
                 stopCCTV();
                 stopStream();
@@ -441,7 +436,6 @@ $active_menu = 'attendance';
         }
     }
 
-    // Close modal on outside click
     window.onclick = function(event) {
         const modals = ['addModal', 'editModal', 'viewModal', 'cameraModal'];
         modals.forEach(id => {
@@ -452,7 +446,6 @@ $active_menu = 'attendance';
     }
 
     function openEditModal(log) {
-        // Menggunakan Object Data dari Laravel
         document.getElementById('edit_date').value = log.date;
         document.getElementById('edit_time_log').value = log.time_log;
         document.getElementById('edit_status').value = log.status;
@@ -460,7 +453,6 @@ $active_menu = 'attendance';
         let url = "{{ route('attendance.update', ':id') }}";
         url = url.replace(':id', log.id);
         document.getElementById('editForm').action = url;
-        
         toggleModal('editModal');
     }
 
@@ -471,8 +463,6 @@ $active_menu = 'attendance';
         document.getElementById('view_status').innerText = status;
         toggleModal('viewModal');
     }
-
-    // --- CAMERA & STREAMING LOGIC ---
 
     async function populateCameraList() {
         try {
@@ -488,13 +478,12 @@ $active_menu = 'attendance';
                 cameraSelect.appendChild(option);
             });
             
-            // Auto start first camera
             if (videoDevices.length > 0 && !currentStream) {
                 startStream(videoDevices[0].deviceId);
             }
         } catch (err) { 
             console.error("Error accessing cameras:", err);
-            showCameraError("Tidak dapat mengakses kamera. Pastikan izin diberikan.");
+            showCameraError("Tidak dapat mengakses kamera.");
         }
     }
 
@@ -506,7 +495,7 @@ $active_menu = 'attendance';
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { 
                     deviceId: deviceId ? { exact: deviceId } : undefined, 
-                    width: { ideal: 640 }, // Optimized for performance
+                    width: { ideal: 640 },
                     height: { ideal: 480 } 
                 },
                 audio: false
@@ -515,13 +504,12 @@ $active_menu = 'attendance';
             const video = document.getElementById('video');
             video.srcObject = stream;
             
-            // Clear error if exists
             const errorDiv = document.querySelector('.camera-error');
             if(errorDiv) errorDiv.remove();
 
         } catch (err) { 
             console.error("Error starting stream:", err);
-            showCameraError("Gagal memulai kamera. Periksa koneksi atau izin browser.");
+            showCameraError("Gagal memulai kamera.");
         }
     }
 
@@ -544,48 +532,31 @@ $active_menu = 'attendance';
             videoContainer.appendChild(errorDiv);
         }
         
-        errorDiv.innerHTML = `
-            <i class="fas fa-camera-slash text-3xl mb-3 text-red-500"></i>
-            <p class="text-sm font-medium">${message}</p>
-        `;
+        errorDiv.innerHTML = `<i class="fas fa-camera-slash text-3xl mb-3 text-red-500"></i><p class="text-sm font-medium">${message}</p>`;
     }
 
     function initCameraModal() {
-        // Request permission first
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(s => { 
                 s.getTracks().forEach(t => t.stop()); 
                 populateCameraList(); 
             })
             .catch(e => {
-                console.error("Init failed:", e);
-                showCameraError("Izin kamera ditolak. Silakan izinkan akses kamera di browser.");
+                showCameraError("Izin kamera ditolak.");
             });
             
-        // Event Listeners
         const refreshBtn = document.getElementById('btn-refresh');
-        if(refreshBtn) {
-            refreshBtn.onclick = populateCameraList;
-        }
+        if(refreshBtn) refreshBtn.onclick = populateCameraList;
         
         const camSelect = document.getElementById('cameraSelect');
-        if(camSelect) {
-            camSelect.onchange = (e) => startStream(e.target.value);
-        }
+        if(camSelect) camSelect.onchange = (e) => startStream(e.target.value);
     }
-
-    // --- FACE RECOGNITION LOGIC ---
 
     async function checkServerStatus() {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 2000);
-            
-            // Ping root endpoint
-            const response = await fetch(`${API_URL}/`, { 
-                method: 'GET', 
-                signal: controller.signal 
-            });
+            const response = await fetch(`${API_URL}/`, { method: 'GET', signal: controller.signal });
             clearTimeout(timeoutId);
             return response.ok;
         } catch (error) {
@@ -603,7 +574,7 @@ $active_menu = 'attendance';
         } else {
             const video = document.getElementById('video');
             if (!video.srcObject) {
-                alert('Kamera belum siap. Silakan refresh atau pilih kamera lain.');
+                alert('Kamera belum siap.');
                 return;
             }
             
@@ -627,36 +598,42 @@ $active_menu = 'attendance';
             statusIndicator.className = "w-3 h-3 bg-green-500 rounded-full animate-pulse";
             statusText.innerText = "Mendeteksi wajah...";
             
-            // Kirim frame setiap 3 detik
-            cctvInterval = setInterval(kirimFrame, 3000); 
+            kirimFrame(); 
         }
     }
 
     function stopCCTV() {
-        if (isRunning) {
-            clearInterval(cctvInterval);
-            isRunning = false;
-            
-            const btnCctv = document.getElementById('btn-cctv');
-            const statusIndicator = document.getElementById('status-indicator');
-            const statusText = document.getElementById('status-text');
-            
+        isRunning = false; 
+        isProcessing = false;
+        
+        const btnCctv = document.getElementById('btn-cctv');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        
+        if(btnCctv) {
             btnCctv.innerHTML = '<i class="fas fa-play mr-2"></i> Start CCTV';
             btnCctv.classList.replace('bg-red-600', 'bg-blue-600');
             btnCctv.classList.replace('hover:bg-red-700', 'hover:bg-blue-700');
-            
-            statusIndicator.className = "w-3 h-3 bg-gray-400 rounded-full";
-            statusText.innerText = "Standby";
         }
+        
+        if(statusIndicator) statusIndicator.className = "w-3 h-3 bg-gray-400 rounded-full";
+        if(statusText) statusText.innerText = "Standby";
     }
     
     async function kirimFrame() {
+        if (!isRunning) return;
+        
         const canvas = document.getElementById('canvas');
         const video = document.getElementById('video');
+        
+        if (video.readyState !== video.HAVE_ENOUGH_DATA || isProcessing) {
+            if(isRunning) requestAnimationFrame(kirimFrame);
+            return;
+        }
+
+        isProcessing = true;
+
         const ctx = canvas.getContext('2d');
-        
-        if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-        
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -667,7 +644,7 @@ $active_menu = 'attendance';
             
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+                const timeoutId = setTimeout(() => controller.abort(), 5000); 
                 
                 const response = await fetch(`${API_URL}/predict`, {
                     method: "POST",
@@ -679,23 +656,27 @@ $active_menu = 'attendance';
                 if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
                 
                 const data = await response.json();
-                processResponse(data);
+                await processResponse(data);
                 
             } catch (error) {
                 console.error('API Error:', error);
-                document.getElementById('status-text').innerText = "Koneksi lambat...";
+            } finally {
+                isProcessing = false;
+                if (isRunning) {
+                    requestAnimationFrame(kirimFrame);
+                }
             }
         }, 'image/jpeg', 0.7);
     }
 
-    function processResponse(data) {
+    async function processResponse(data) {
         const statusText = document.getElementById('status-text');
         
         if (data.status === 'success' && data.new_entries && data.new_entries.length > 0) {
             statusText.innerText = `Terdeteksi: ${data.new_entries.length} wajah baru`;
-            data.new_entries.forEach(siswa => {
-                tambahLog(siswa.nisn, siswa.name, new Date().toLocaleTimeString());
-            });
+            for (const siswa of data.new_entries) {
+                await kirimAbsensiKeServer(siswa.nisn, siswa.name);
+            }
         } 
         else if (data.all_detected && data.all_detected.length > 0) {
              statusText.innerText = "Wajah terdeteksi (Sudah Absen)";
@@ -709,18 +690,16 @@ $active_menu = 'attendance';
         const logContainer = document.getElementById('logContainer');
         const countBadge = document.getElementById('detection-count');
         
-        // Hapus pesan kosong
         if (logContainer.querySelector('.text-center')) {
             logContainer.innerHTML = "";
         }
         
-        // Cek Duplikat di tampilan log (UI only logic)
         const existingLogs = Array.from(logContainer.querySelectorAll('.nisn'));
         const isDuplicate = existingLogs.some(log => log.textContent.trim() === String(nisn));
         
         if (!isDuplicate) {
             const div = document.createElement('div');
-            div.className = 'bg-white p-3 rounded-lg border border-green-200 flex justify-between items-center shadow-sm animate-fade-in-up';
+            div.className = 'bg-white p-3 rounded-lg border border-green-200 flex justify-between items-center shadow-sm animate-fade-in-up mb-2';
             div.innerHTML = `
                 <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-1">
@@ -737,16 +716,45 @@ $active_menu = 'attendance';
             
             logContainer.prepend(div);
             
-            // Update counter
             let currentCount = parseInt(countBadge.innerText) || 0;
             countBadge.innerText = currentCount + 1;
             countBadge.classList.remove('hidden');
+        }
+    }
 
-            showSuccessFeedback(name);
-            playTTS(name);
+    async function kirimAbsensiKeServer(nisn, name) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch('/attendance/store', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    nisn: nisn,
+                })
+            });
             
-            // Reload page automatic after few seconds to update main table (Optional)
-            // setTimeout(() => location.reload(), 2000); 
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                console.log('✅ Sukses DB:', data.message);
+                
+                const serverTime = data.data.time_log || new Date().toLocaleTimeString('id-ID');
+                
+                tambahLog(nisn, name, serverTime);
+                
+                if (typeof showSuccessFeedback === "function") showSuccessFeedback(name);
+                if (typeof playTTS === "function") playTTS(name);
+                
+            } else {
+                console.warn('⚠️ Gagal Simpan:', data.message);
+            }
+        } catch (error) {
+            console.error('❌ Error Network Laravel:', error);
         }
     }
 
@@ -760,18 +768,15 @@ $active_menu = 'attendance';
     }
 
     function showSuccessFeedback(name) {
-        // Create Toast
         const toast = document.createElement('div');
         toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl z-50 flex items-center space-x-3 transition-all duration-500 transform translate-x-full';
         toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${name} Berhasil Absen!</span>`;
         document.body.appendChild(toast);
         
-        // Animate In
         requestAnimationFrame(() => {
             toast.classList.remove('translate-x-full');
         });
         
-        // Remove after 3s
         setTimeout(() => {
             toast.classList.add('translate-x-full');
             setTimeout(() => toast.remove(), 500);
@@ -780,7 +785,6 @@ $active_menu = 'attendance';
 
     function showAPIError(message) {
         const logContainer = document.getElementById('logContainer');
-        // Hanya tampilkan jika belum ada log sukses
         if (!logContainer.querySelector('.bg-green-100')) {
             logContainer.innerHTML = `
                 <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
@@ -791,7 +795,6 @@ $active_menu = 'attendance';
         }
     }
 </script>
-
 <style>
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(10px); }
