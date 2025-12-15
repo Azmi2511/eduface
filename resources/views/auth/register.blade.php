@@ -241,6 +241,16 @@
             }
         }
 
+        function sensorEmail(email) {
+            if (!email || !email.includes('@')) return email;
+            
+            const [name, domain] = email.split('@');
+            
+            const visibleLength = name.length > 2 ? 3 : 1; 
+            const visibleName = name.substring(0, visibleLength);
+            
+            return `${visibleName}****@${domain}`;
+        }
         async function initiateRegistration() {
             const p1 = document.getElementById('password').value;
             const p2 = document.getElementById('password_confirmation').value;
@@ -266,7 +276,8 @@
                 const data = await res.json();
 
                 if (res.ok && data.status === 'success') {
-                    document.getElementById('displayEmail').innerText = document.getElementById('emailInput').value;
+                    const emailAsli = document.getElementById('emailInput').value;
+                    document.getElementById('displayEmail').innerText = sensorEmail(emailAsli);
                     const modal = document.getElementById('otpModal');
                     const content = document.getElementById('otpContent');
                     modal.classList.remove('hidden');
