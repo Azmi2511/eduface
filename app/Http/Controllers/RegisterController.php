@@ -56,8 +56,20 @@ class RegisterController extends Controller
             return response()->json(['status' => 'error', 'message' => 'NIP sudah terdaftar.'], 422);
         }
 
+        $email = $request->email;
+
+        // Resend protection
+        $resendKey = 'otp_resend_' . $email;
+        $resendTtl = config('otp.resend_ttl', 60);
+        if (Cache::has($resendKey)) {
+            return response()->json(['status' => 'error', 'message' => 'Tunggu sebelum mengirim ulang kode OTP.'], 429);
+        }
+
         $otp = rand(100000, 999999);
-        Cache::put('otp_' . $request->email, $otp, 300);
+        Cache::put('otp_' . $email, $otp, config('otp.otp_ttl', 300));
+        Cache::put($resendKey, true, $resendTtl);
+        // reset attempt counter on new send
+        Cache::put('otp_attempts_' . $email, 0, config('otp.lock_ttl', 900));
 
         try {
             Mail::to($request->email)->send(new OtpMail($otp));
@@ -69,9 +81,26 @@ class RegisterController extends Controller
 
     public function verifyAndCreate(Request $request)
     {
-        $cachedOtp = Cache::get('otp_' . $request->email);
+        $email = $request->email;
+
+        // check lock
+        $lockKey = 'otp_lock_' . $email;
+        if (Cache::has($lockKey)) {
+            return response()->json(['status' => 'error', 'message' => 'Terlalu banyak percobaan. Coba lagi nanti.'], 423);
+        }
+
+        $cachedOtp = Cache::get('otp_' . $email);
 
         if (!$cachedOtp || $cachedOtp != $request->otp_code) {
+            $attemptKey = 'otp_attempts_' . $email;
+            $attempts = Cache::get($attemptKey, 0) + 1;
+            Cache::put($attemptKey, $attempts, config('otp.lock_ttl', 900));
+
+            if ($attempts >= config('otp.max_attempts', 3)) {
+                Cache::put($lockKey, true, config('otp.lock_ttl', 900));
+                return response()->json(['status' => 'error', 'message' => 'Akun terkunci sementara karena terlalu banyak percobaan.'], 423);
+            }
+
             return response()->json(['status' => 'error', 'message' => 'Kode OTP salah atau kedaluwarsa.'], 400);
         }
 
@@ -115,6 +144,10 @@ class RegisterController extends Controller
             }
 
             Cache::forget('otp_' . $request->email);
+            // clear attempt counters and locks on successful verification
+            Cache::forget('otp_attempts_' . $request->email);
+            Cache::forget('otp_lock_' . $request->email);
+            Cache::forget('otp_resend_' . $request->email);
             DB::commit();
 
             return response()->json([

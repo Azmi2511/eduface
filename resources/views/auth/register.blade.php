@@ -190,7 +190,15 @@
             <button onclick="verifyAndSubmit()" id="btn-verify" class="w-full bg-[#2F80ED] hover:bg-blue-600 text-white font-bold py-2 rounded-md text-sm transition">
                 Verifikasi & Daftar
             </button>
-            <button onclick="closeOtp()" class="mt-3 text-xs text-gray-400 hover:text-gray-600">Batal</button>
+            <div class="mt-2 text-center text-sm text-gray-500">
+                <div id="resendQuestion" class="text-xs text-gray-500 mb-1">Belum menerima kode?</div>
+                    <button id="resendLabel" onclick="resendOtp()" class="text-gray-400 text-xs font-bold" style="background:none;border:none;padding:0;cursor:not-allowed;">
+                    Kirim Ulang<span id="resendTimer" class="text-[11px] text-gray-400 ml-1"></span>
+                </button>
+            </div>
+            <div class="mt-3 text-center">
+                <button onclick="closeOtp()" class="text-xs text-gray-400 hover:text-gray-600">Batal</button>
+            </div>
         </div>
     </div>
 
@@ -286,6 +294,7 @@
                         content.classList.remove('scale-95', 'opacity-0');
                         content.classList.add('scale-100', 'opacity-100');
                     }, 10);
+                    startResendTimer();
                 } else {
                     alert(data.message || "Gagal memvalidasi data.");
                 }
@@ -326,6 +335,7 @@
                     successModal.classList.remove('hidden');
                     successModal.classList.add('flex');
                     window.redirectUrl = data.redirect;
+                    resetResendTimer();
                 } else {
                     alert(data.message || "Kode OTP salah.");
                 }
@@ -334,6 +344,73 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
+            }
+        }
+
+        // Resend timer logic (shows under verify button in mm:ss)
+        let resendSeconds = {{ config('otp.resend_ttl', 60) }};
+        let resendInterval = null;
+
+        function formatMmSs(seconds) {
+            const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const ss = String(seconds % 60).padStart(2, '0');
+            return `${mm}:${ss}`;
+        }
+
+        function startResendTimer() {
+            const label = document.getElementById('resendLabel');
+            const timer = document.getElementById('resendTimer');
+            let remaining = resendSeconds;
+            // set disabled visual state
+            label.classList.remove('text-[#2F80ED]');
+            label.classList.add('text-gray-400');
+            label.setAttribute('aria-disabled', 'true');
+            label.style.cursor = 'not-allowed';
+            timer.innerText = formatMmSs(remaining);
+
+            resendInterval = setInterval(() => {
+                remaining -= 1;
+                timer.innerText = ' - ' + formatMmSs(remaining);
+                if (remaining <= 0) {
+                    resetResendTimer();
+                }
+            }, 1000);
+        }
+
+        function resetResendTimer() {
+            const label = document.getElementById('resendLabel');
+            const timer = document.getElementById('resendTimer');
+            if (resendInterval) clearInterval(resendInterval);
+            label.classList.remove('text-gray-400');
+            label.classList.add('text-[#2F80ED]');
+            label.removeAttribute('aria-disabled');
+            label.style.cursor = 'pointer';
+            timer.innerText = '';
+        }
+
+        async function resendOtp() {
+            const label = document.getElementById('resendLabel');
+            if (label.classList.contains('pointer-events-none')) return;
+
+            const form = document.getElementById('regForm');
+            const formData = new FormData(form);
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const res = await fetch("{{ route('register.sendOtp') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok && data.status === 'success') {
+                    startResendTimer();
+                    alert('Kode OTP berhasil dikirim ulang.');
+                } else {
+                    alert(data.message || 'Gagal mengirim ulang OTP.');
+                }
+            } catch (err) {
+                alert('Kesalahan jaringan.');
             }
         }
 
