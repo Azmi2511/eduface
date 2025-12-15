@@ -102,7 +102,7 @@
                             </div>
                             <div>
                                 <label id="idLabel" class="block text-gray-800 text-[11px] font-bold mb-0.5">Nomor ID</label>
-                                <input type="text" name="id_number" id="idInput" placeholder="NIP/NISN" autocomplete="off"
+                                <input type="number" name="id_number" id="idInput" placeholder="NIP/NISN" autocomplete="off"
                                     class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
                             </div>
                         </div>
@@ -151,7 +151,7 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-gray-800 text-[11px] font-bold mb-0.5">No HP</label>
-                                <input type="tel" name="phone" placeholder="08..." autocomplete="off"
+                                <input type="number" name="phone" placeholder="08..." autocomplete="off"
                                     class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
                             </div>
                             <div>
