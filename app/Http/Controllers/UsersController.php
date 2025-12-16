@@ -35,6 +35,7 @@ class UsersController extends AdminBaseController
         $counts = [
             'total'    => User::count(),
             'active'   => User::where('is_active', 1)->count(),
+            'inactive'   => User::where('is_active', 0)->count(),
             'teachers' => User::where('role', 'teacher')->count(),
             'admins'   => User::where('role', 'admin')->count(),
         ];

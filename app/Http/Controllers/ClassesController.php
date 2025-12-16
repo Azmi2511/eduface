@@ -45,7 +45,7 @@ class ClassesController extends AdminBaseController
             'academic_year' => $request->academic_year,
         ]);
 
-        return redirect()->route('admin::classes.index')
+        return redirect()->route('classes.index')
             ->with('success', 'Data kelas berhasil ditambahkan.');
     }
 
@@ -68,7 +68,7 @@ class ClassesController extends AdminBaseController
             'academic_year' => $request->academic_year,
         ]);
 
-        return redirect()->route('admin::classes.index')
+        return redirect()->route('classes.index')
             ->with('success', 'Data kelas berhasil diperbarui.');
     }
 

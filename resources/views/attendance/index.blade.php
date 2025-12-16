@@ -11,7 +11,7 @@ $active_menu = 'attendance';
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
     <main class="flex-1 overflow-y-auto p-8">
-        
+    
         {{-- 1. Statistics Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
@@ -20,7 +20,7 @@ $active_menu = 'attendance';
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">{{ $counts['present'] }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Hadir Hari Ini</p>
+                    <p class="text-sm text-gray-500 font-medium">Hadir</p>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
@@ -29,7 +29,7 @@ $active_menu = 'attendance';
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">{{ $counts['late'] }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Terlambat Hari Ini</p>
+                    <p class="text-sm text-gray-500 font-medium">Terlambat</p>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
@@ -38,16 +38,16 @@ $active_menu = 'attendance';
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">{{ $counts['permit'] }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Izin Hari Ini</p>
+                    <p class="text-sm text-gray-500 font-medium">Izin</p>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
-                <div class="w-14 h-14 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mr-4">
-                    <i class="fas fa-times-circle"></i>
+                <div class="w-14 h-14 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-user-slash"></i>
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">{{ $counts['absent'] }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Tidak Hadir (Alpha)</p>
+                    <p class="text-sm text-gray-500 font-medium">Belum Hadir / Alpha</p>
                 </div>
             </div>
         </div>
@@ -64,7 +64,7 @@ $active_menu = 'attendance';
                 
                 <form action="{{ route('attendance.export') }}" method="POST" class="contents">
                     @csrf
-                    <input type="hidden" name="date" value="{{ request('date') }}">
+                    <input type="hidden" name="date" value="{{ request('date', $dateFilter) }}">
                     <input type="hidden" name="status" value="{{ request('status') }}">
                     <input type="hidden" name="search" value="{{ request('search') }}">
                     
@@ -77,7 +77,8 @@ $active_menu = 'attendance';
             <form method="GET" action="{{ route('attendance.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 <div class="md:col-span-3">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tanggal</label>
-                    <input type="date" name="date" value="{{ request('date') }}" 
+                    {{-- Gunakan $dateFilter dari controller sebagai value default --}}
+                    <input type="date" name="date" value="{{ request('date', $dateFilter) }}" 
                         class="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm">
                 </div>
 
@@ -89,7 +90,8 @@ $active_menu = 'attendance';
                             <option value="Hadir" @selected(request('status') == 'Hadir')>Hadir</option>
                             <option value="Terlambat" @selected(request('status') == 'Terlambat')>Terlambat</option>
                             <option value="Izin" @selected(request('status') == 'Izin')>Izin</option>
-                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha</option>
+                            {{-- Menggabungkan Alpha dan Belum Hadir dalam filter logika view --}}
+                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha / Belum Hadir</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -103,7 +105,7 @@ $active_menu = 'attendance';
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                             <i class="fas fa-search"></i>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama karyawan..." 
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama siswa..." 
                             class="w-full pl-10 border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm">
                     </div>
                 </div>
@@ -123,23 +125,17 @@ $active_menu = 'attendance';
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="px-6 pt-5 pb-0 border-b border-gray-100">
                 <div class="flex space-x-8">
-                    <a href="{{ route('attendance.index') }}" class="pb-4 text-sm font-medium {{ !request('status') && !request('date') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Semua Data</a>
+                    <a href="{{ route('attendance.index') }}" class="pb-4 text-sm font-medium {{ !request('status') && !request('date') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Default</a>
                     <a href="{{ route('attendance.index', ['date' => date('Y-m-d')]) }}" class="pb-4 text-sm font-medium {{ request('date') == date('Y-m-d') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Hari Ini</a>
-                    <a href="{{ route('attendance.index', ['status' => 'Terlambat']) }}" class="pb-4 text-sm font-medium {{ request('status') == 'Terlambat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Terlambat</a>
-                    <a href="{{ route('attendance.index', ['status' => 'Alpha']) }}" class="pb-4 text-sm font-medium {{ request('status') == 'Alpha' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Tidak Hadir</a>
                 </div>
             </div>
 
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-800">Data Absensi Lengkap</h3>
+                    <h3 class="text-lg font-bold text-gray-800">
+                        Laporan: {{ \Carbon\Carbon::parse($dateFilter)->translatedFormat('d F Y') }}
+                    </h3>
                     <div class="flex gap-2">
-                        <button onclick="window.print()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition flex items-center">
-                            <i class="fas fa-print mr-2"></i> Print
-                        </button>
-                        <button onclick="toggleModal('addModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center">
-                            <i class="fas fa-plus mr-2"></i> Manual
-                        </button>
                         <button onclick="toggleModal('cameraModal')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center">
                                 <i class="fas fa-camera mr-2"></i> Otomatis
                         </button>
@@ -153,191 +149,124 @@ $active_menu = 'attendance';
                                 <th class="px-6 py-4">Nama</th>
                                 <th class="px-6 py-4">NISN</th>
                                 <th class="px-6 py-4">Kelas</th>
-                                <th class="px-6 py-4">Tanggal</th>
                                 <th class="px-6 py-4 text-center">Jam Masuk</th>
                                 <th class="px-6 py-4 text-center">Status</th>
                                 <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @forelse($attendanceLogs as $log)
-                                <tr class="hover:bg-gray-50 transition">
+                            @forelse($students as $student)
+                                <tr class="hover:bg-gray-50 transition group">
+                                    {{-- Data Siswa (Nama, NISN, Kelas) --}}
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $log->student->user->full_name ?? ($log->student->full_name ?? '-') }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $student->user->full_name ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-500">{{ $log->student->nisn ?? '-' }}</div>
+                                        <div class="text-sm text-gray-500">{{ $student->nisn }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-500">{{ $log->student->class->class_name ?? ($log->student->class_id ?? '-') }}</div>
+                                        <div class="text-sm text-gray-500">{{ $student->class->class_name ?? '-' }}</div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-500">{{ \Carbon\Carbon::parse($log->date)->translatedFormat('d F Y') }}</td>
+
+                                    {{-- Jam Masuk --}}
                                     <td class="px-6 py-4 text-center">
                                         <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-mono">
-                                            {{ $log->time_log ? \Carbon\Carbon::parse($log->time_log)->format('H:i') : '-' }}
+                                            {{ $student->today_time != '-' ? \Carbon\Carbon::parse($student->today_time)->format('H:i') : '-' }}
                                         </span>
                                     </td>
+
+                                    {{-- Badge Status (Text) --}}
                                     <td class="px-6 py-4 text-center">
                                         @php
-                                            $statusClass = match($log->status) {
-                                                'Hadir' => 'bg-emerald-100 text-emerald-700',
-                                                'Terlambat' => 'bg-amber-100 text-amber-700',
-                                                'Izin' => 'bg-blue-100 text-blue-700',
-                                                'Alpha' => 'bg-rose-100 text-rose-700',
-                                                default => 'bg-gray-100 text-gray-700'
+                                            $statusLabel = $student->today_status;
+                                            $statusClass = match($statusLabel) {
+                                                'Hadir' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                                'Terlambat' => 'bg-amber-100 text-amber-700 border-amber-200',
+                                                'Izin' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                                'Sakit' => 'bg-purple-100 text-purple-700 border-purple-200',
+                                                'Alpha' => 'bg-rose-100 text-rose-700 border-rose-200',
+                                                default => 'bg-gray-100 text-gray-400 border-gray-200 dashed border'
                                             };
                                         @endphp
-                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
-                                            {{ $log->status }}
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border {{ $statusClass }}">
+                                            {{ $statusLabel }}
                                         </span>
                                     </td>
+
+                                    {{-- KOLOM AKSI (TOMBOL H, I, S, A) --}}
                                     <td class="px-6 py-4 text-center">
-                                        <div class="flex item-center justify-center space-x-2">
-                                            {{-- View Button --}}
-                                            <button onclick="openViewModal(@js($log->student->user->full_name ?? ($log->student->full_name ?? '-')), '{{ $log->date }}', '{{ $log->time_log }}', '{{ $log->status }}')" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-blue-600 transition">
-                                                <i class="far fa-eye"></i>
-                                            </button>
+                                        @php
+                                            $log = $student->attendanceLogs->first();
+                                            // Jika log sudah ada, gunakan route UPDATE. Jika belum, route STORE.
+                                            $routeUrl = $log ? route('attendance.update', $log->id) : route('attendance.store');
+                                            $currentStatus = $log ? $log->status : null;
+                                        @endphp
+
+                                        <form action="{{ $routeUrl }}" method="POST" class="flex justify-center items-center gap-1">
+                                            @csrf
+                                            {{-- Jika Update, tambahkan method PUT --}}
+                                            @if($log)
+                                                @method('PUT')
+                                            @endif
                                             
-                                            {{-- Edit Button --}}
-                                            <button onclick="openEditModal(@js($log))" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-amber-600 transition">
-                                                <i class="far fa-edit"></i>
-                                            </button>
-                                            
-                                            {{-- Delete Button --}}
-                                            <form action="{{ route('attendance.destroy', $log->id) }}" method="POST" onsubmit="return confirm('Hapus log ini?')" class="inline-block">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-600 transition">
-                                                    <i class="far fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                            {{-- Input Hidden Wajib --}}
+                                            <input type="hidden" name="student_nisn" value="{{ $student->nisn }}">
+                                            <input type="hidden" name="date" value="{{ request('date', $dateFilter) }}">
+                                            <input type="hidden" name="time_log" value="{{ \Carbon\Carbon::now()->toTimeString() }}">
+
+                                            {{-- Tombol H (Hadir) --}}
+                                            <button type="submit" name="status" value="Hadir" 
+                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
+                                                {{ in_array($currentStatus, ['Hadir', 'Terlambat']) 
+                                                    ? 'bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-200' 
+                                                    : 'bg-white text-emerald-600 border-gray-200 hover:bg-emerald-50 hover:border-emerald-300' 
+                                                }}" title="Set Hadir">H</button>
+
+                                            {{-- Tombol I (Izin) --}}
+                                            <button type="submit" name="status" value="Izin" 
+                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
+                                                {{ $currentStatus == 'Izin' 
+                                                    ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-200' 
+                                                    : 'bg-white text-blue-600 border-gray-200 hover:bg-blue-50 hover:border-blue-300' 
+                                                }}" title="Set Izin">I</button>
+
+                                            {{-- Tombol S (Sakit) --}}
+                                            <button type="submit" name="status" value="Sakit" 
+                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
+                                                {{ $currentStatus == 'Sakit' 
+                                                    ? 'bg-purple-600 text-white border-purple-600 ring-2 ring-purple-200' 
+                                                    : 'bg-white text-purple-600 border-gray-200 hover:bg-purple-50 hover:border-purple-300' 
+                                                }}" title="Set Sakit">S</button>
+
+                                            {{-- Tombol A (Alpha) --}}
+                                            <button type="submit" name="status" value="Alpha" 
+                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
+                                                {{ $currentStatus == 'Alpha' 
+                                                    ? 'bg-rose-600 text-white border-rose-600 ring-2 ring-rose-200' 
+                                                    : 'bg-white text-rose-600 border-gray-200 hover:bg-rose-50 hover:border-rose-300' 
+                                                }}" title="Set Alpha">A</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Data tidak ditemukan.</td></tr>
+                                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Data siswa tidak ditemukan.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                {{-- Pagination --}}
-                @if($attendanceLogs->hasPages())
-                    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
-                        {{ $attendanceLogs->appends(request()->query())->links() }}
-                    </div>
-                @endif
+                {{-- Pagination Note: Karena $students adalah Collection (bukan Paginate), link pagination standar dimatikan. 
+                    Jika ingin pagination, harus manual di controller atau pakai Javascript datatable --}}
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl text-xs text-gray-500">
+                    Menampilkan seluruh siswa untuk tanggal {{ \Carbon\Carbon::parse($dateFilter)->format('d-m-Y') }}
+                </div>
             </div>
         </div>
     </main>
 
     {{-- MODALS SECTION --}}
 
-    {{-- 1. Manual Add Modal --}}
-    <div id="addModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Input Absensi Manual</h3>
-                <button onclick="toggleModal('addModal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-            </div>
-            <form action="{{ route('attendance.store') }}" method="POST">
-                @csrf
-                    <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Siswa</label>
-                        <select name="student_nisn" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                            @if($students->isEmpty())
-                                <option value="">Tidak ada siswa</option>
-                            @else
-                                @foreach($students as $student)
-                                    <option value="{{ $student->nisn }}">{{ $student->user->full_name ?? ($student->full_name ?? $student->nisn) }}</option>
-                                @endforeach
-                            @endif
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                        <input type="date" name="date" value="{{ date('Y-m-d') }}" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Jam Masuk</label>
-                        <input type="time" name="time_log" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                            <option value="Hadir">Hadir</option>
-                            <option value="Terlambat">Terlambat</option>
-                            <option value="Izin">Izin</option>
-                            <option value="Alpha">Alpha</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" onclick="toggleModal('addModal')" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- 2. Edit Modal --}}
-    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Edit Absensi</h3>
-                <button onclick="toggleModal('editModal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-            </div>
-            <form id="editForm" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                        <input type="date" name="date" id="edit_date" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Jam Masuk</label>
-                        <input type="time" name="time_log" id="edit_time_log" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" id="edit_status" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                            <option value="Hadir">Hadir</option>
-                            <option value="Terlambat">Terlambat</option>
-                            <option value="Izin">Izin</option>
-                            <option value="Alpha">Alpha</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" onclick="toggleModal('editModal')" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">Update</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- 3. View Modal --}}
-    <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6 text-center">
-            <div class="mb-4 text-blue-600 text-4xl"><i class="fas fa-user-clock"></i></div>
-            <h3 class="text-xl font-bold text-gray-800 mb-1" id="view_name">Name</h3>
-            <p class="text-sm text-gray-500 mb-6" id="view_date">Date</p>
-            <div class="flex justify-center space-x-4 mb-6">
-                <div class="bg-gray-50 p-3 rounded-lg w-24">
-                    <span class="block text-xs text-gray-500 uppercase">Masuk</span>
-                    <span class="block text-lg font-bold text-gray-800" id="view_in">--:--</span>
-                </div>  
-            </div>
-            <div class="mb-6">
-                <span class="px-4 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700" id="view_status">Status</span>
-            </div>
-            <button onclick="toggleModal('viewModal')" class="w-full px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Tutup</button>
-        </div>
-    </div>
-
-    {{-- 4. Camera (CCTV) Modal --}}
+    {{-- Camera (CCTV) Modal --}}
     <div id="cameraModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl mx-4 p-6">
             <div class="flex justify-between items-center mb-4">

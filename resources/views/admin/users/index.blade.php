@@ -19,7 +19,7 @@ $active_menu = 'users';
                     <i class="fas fa-users"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900">{{ $count_total ?? $users->total() }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $counts['total'] ?? '-' }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Total Pengguna</p>
                 </div>
             </div>
@@ -28,7 +28,7 @@ $active_menu = 'users';
                     <i class="fas fa-user-check"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900">{{ $count_active ?? '-' }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $counts['active'] ?? '-' }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Pengguna Aktif</p>
                 </div>
             </div>
@@ -37,7 +37,7 @@ $active_menu = 'users';
                     <i class="fas fa-user-times"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900">{{ $count_inactive ?? '-' }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $counts['inactive'] ?? '-' }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Pengguna Nonaktif</p>
                 </div>
             </div>
@@ -70,7 +70,7 @@ $active_menu = 'users';
                 </div>
 
                 <div class="col-span-1">
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition duration-200 flex items-center justify-center">
+                    <button type="submit" class="w-full bg-[#2F80ED] hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition duration-200 flex items-center justify-center">
                         <i class="fas fa-filter mr-2"></i> Terapkan
                     </button>
                 </div>
@@ -81,7 +81,7 @@ $active_menu = 'users';
         <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-100">
             <div class="flex flex-col gap-4 px-6 py-5 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
                 <h3 class="text-lg font-bold text-gray-800">Daftar Data Pengguna</h3>
-                <button onclick="toggleModal('createUserModal')" class="flex items-center px-4 py-2 text-sm font-medium text-white transition bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 shadow-indigo-200">
+                <button onclick="toggleModal('createUserModal')" class="flex items-center px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 shadow-blue-200">
                     <i class="fas fa-plus mr-2"></i> Tambah Pengguna
                 </button>
             </div>

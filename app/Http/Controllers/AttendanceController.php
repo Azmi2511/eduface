@@ -63,17 +63,20 @@ class AttendanceController extends Controller
             return redirect()->route('login');
         }
 
-        $query = AttendanceLog::with(['student.user', 'student.class']);
+        $user = Auth::user();
+        $today = Carbon::today(); // Ambil tanggal hari ini
+        $dateFilter = $request->date ?? $today->format('Y-m-d'); // Default ke hari ini jika tidak ada filter
 
+        // 1. QUERY LOG (Untuk History/Pagination biasa)
+        $query = AttendanceLog::with(['student.user', 'student.class']);
         $accessibleNisns = $this->getAccessibleNisns();
 
         if (is_array($accessibleNisns)) {
             $query->whereIn('student_nisn', $accessibleNisns);
         }
 
-        if ($request->filled('date')) {
-            $query->whereDate('date', $request->date);
-        }
+        // Filter tanggal (Gunakan input atau default hari ini)
+        $query->whereDate('date', $dateFilter);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -84,47 +87,91 @@ class AttendanceController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('student_nisn', 'like', "%{$search}%")
                   ->orWhereHas('student.user', function ($u) use ($search) {
-                      $u->where('full_name', 'like', "%{$search}%")
-                        ->orWhere('username', 'like', "%{$search}%");
+                      $u->where('full_name', 'like', "%{$search}%");
                   });
             });
         }
 
-        $attendanceLogs = $query->orderBy('date', 'desc')
-                                ->orderBy('time_log', 'desc')
-                                ->paginate(10);
+        $attendanceLogs = $query->orderBy('time_log', 'desc')->paginate(10);
 
-        $today = Carbon::today();
+        // 2. QUERY REKAPITULASI (Hitung Total Status Hari Ini)
         $statsQuery = AttendanceLog::select('status', DB::raw('count(*) as total'))
-            ->whereDate('date', $today);
+            ->whereDate('date', $dateFilter);
 
         if (is_array($accessibleNisns)) {
             $statsQuery->whereIn('student_nisn', $accessibleNisns);
         }
 
-        $stats = $statsQuery->groupBy('status')
-            ->pluck('total', 'status')
-            ->toArray();
+        $stats = $statsQuery->groupBy('status')->pluck('total', 'status')->toArray();
 
+        // 3. QUERY UTAMA: DAFTAR SEMUA SISWA + STATUS HARI INI
+        // Ini kuncinya: Kita ambil Siswa, lalu "Join" manual dengan Log hari ini
+        $students = collect();
+
+        if ($user->role === 'admin' || $user->role === 'teacher') {
+            $studentQuery = Student::with(['user', 'class']);
+
+            // Filter Hak Akses Guru
+            if ($user->role === 'teacher' && is_array($accessibleNisns)) {
+                $studentQuery->whereIn('nisn', $accessibleNisns);
+            }
+
+            // Eager Load Absensi HANYA untuk tanggal yang dipilih
+            $studentQuery->with(['attendanceLogs' => function($q) use ($dateFilter) {
+                $q->whereDate('date', $dateFilter);
+            }]);
+
+            // Filter pencarian nama siswa di daftar lengkap
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $studentQuery->whereHas('user', function($q) use ($search) {
+                    $q->where('full_name', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%");
+                });
+            }
+
+            $students = $studentQuery->get()->map(function($student) {
+                // Ambil log pertama (karena tanggal sudah difilter di query, pasti cuma 1 atau 0)
+                $log = $student->attendanceLogs->first();
+                
+                // Menentukan status final untuk ditampilkan
+                $student->today_status = $log ? $log->status : 'Belum Hadir'; 
+                $student->today_time = $log ? $log->time_log : '-';
+                
+                return $student;
+            });
+            
+            // Urutkan berdasarkan Nama
+            $students = $students->sortBy(function($s) { 
+                return $s->user->full_name ?? ''; 
+            });
+
+            // Jika User memfilter status "Belum Hadir" atau "Alpha" yang tidak ada di tabel Log
+            if ($request->filled('status')) {
+                $students = $students->filter(function($s) use ($request) {
+                    // Jika filter 'Alpha' atau 'Belum Hadir', cocokkan dengan yang tidak punya log
+                    if ($request->status == 'Alpha' || $request->status == 'Belum Hadir') {
+                        return $s->today_status == 'Belum Hadir';
+                    }
+                    return $s->today_status == $request->status;
+                });
+            }
+        }
+
+        // Update Counts agar mencakup yang belum hadir
+        // Total Siswa yang harusnya absen
+        $totalStudents = ($user->role === 'admin' || $user->role === 'teacher') ? $students->count() : 0;
+        
         $counts = [
             'present' => intval($stats['Hadir'] ?? 0),
             'late'    => intval($stats['Terlambat'] ?? 0),
             'permit'  => intval($stats['Izin'] ?? 0),
-            'absent'  => intval($stats['Alpha'] ?? 0),
+            'sick'    => intval($stats['Sakit'] ?? 0),
+            // Absen = Total Siswa - (Hadir + Telat + Izin + Sakit)
+            'absent'  => $totalStudents - (array_sum($stats)) 
         ];
 
-        $students = collect();
-        if (Auth::user()->role === 'admin' || Auth::user()->role === 'teacher') {
-            $studentQuery = Student::with('user');
-            
-            if (Auth::user()->role === 'teacher' && is_array($accessibleNisns)) {
-                $studentQuery->whereIn('nisn', $accessibleNisns);
-            }
-            
-            $students = $studentQuery->get()->sortBy(function($s){ return $s->user->full_name ?? ''; });
-        }
-
-        return view('attendance.index', compact('attendanceLogs', 'counts', 'students'));
+        return view('attendance.index', compact('attendanceLogs', 'counts', 'students', 'dateFilter'));
     }
 
     public function store(Request $request)
@@ -132,6 +179,7 @@ class AttendanceController extends Controller
         if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
             abort(403);
         }
+        $student = Student::where('nisn', $request->student_nisn)->firstOrFail();
         
         $request->validate([
             'student_nisn' => 'required|exists:students,nisn',
@@ -152,9 +200,18 @@ class AttendanceController extends Controller
         }
 
         $log = AttendanceLog::findOrFail($id);
-        $log->update($request->all());
 
-        return redirect()->route('attendance.index')->with('success', 'Data berhasil diperbarui');
+        if ($log->status === $request->status) {
+            $log->delete();
+
+            return redirect()->back()->with('success', 'Status absensi berhasil di-reset.');
+        }
+        $log->update([
+            'status'   => $request->status,
+            'time_log' => $request->time_log, 
+        ]);
+
+        return redirect()->route('attendance.index')->with('success', 'Status berhasil diubah menjadi: ' . $request->status);
     }
 
     public function destroy($id)
