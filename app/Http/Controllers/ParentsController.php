@@ -77,7 +77,7 @@ class ParentsController extends AdminBaseController
             ]);
         });
 
-        return redirect()->route('admin::parents.index')
+        return redirect()->route('parents.index')
             ->with('success', 'Data orang tua berhasil ditambahkan.');
     }
 
@@ -115,7 +115,7 @@ class ParentsController extends AdminBaseController
             ]);
         });
 
-        return redirect()->route('admin::parents.index')
+        return redirect()->route('parents.index')
             ->with('success', 'Data orang tua berhasil diperbarui.');
     }
 
@@ -129,7 +129,7 @@ class ParentsController extends AdminBaseController
             User::where('id', $id)->where('role', 'parent')->delete();
         });
 
-        return redirect()->route('admin::parents.index')
+        return redirect()->route('parents.index')
             ->with('success', 'Data orang tua berhasil dihapus.');
     }
 }

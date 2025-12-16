@@ -14,6 +14,7 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\FaceRecognitionController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
@@ -28,6 +29,17 @@ Route::post('/auth/check-otp', [AuthController::class, 'checkOtp']);
 Route::post('/auth/final', [AuthController::class, 'registerFinal']);
 
 Route::post('/attendance/store', [AttendanceController::class, 'storeAjax'])->name('attendance.storeAjax');
+
+Route::get('/scan', function () {
+    return view('scan_wajah');
+})->name('scan.page');
+
+Route::get('/registrasi-wajah', function () {
+    return view('registrasi_wajah');
+})->name('register.page');
+
+Route::post('/face/register', [FaceRecognitionController::class, 'register'])->name('face.register');
+Route::post('/face/predict', [FaceRecognitionController::class, 'predict'])->name('face.predict');
 
 Route::middleware(['session.auth'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('dashboard');

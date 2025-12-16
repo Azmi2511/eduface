@@ -104,7 +104,7 @@ class TeachersController extends AdminBaseController
             ]);
         });
 
-        return redirect()->route('admin::teachers.index')
+        return redirect()->route('teachers.index')
             ->with('success', 'Data guru berhasil ditambahkan.');
     }
 
@@ -144,7 +144,7 @@ class TeachersController extends AdminBaseController
             ]);
         });
 
-        return redirect()->route('admin::teachers.index')
+        return redirect()->route('teachers.index')
             ->with('success', 'Data guru berhasil diperbarui.');
     }
 
@@ -156,7 +156,7 @@ class TeachersController extends AdminBaseController
         $teacher = Teacher::where('user_id', $id)->firstOrFail();
         $teacher->delete();
 
-        return redirect()->route('admin::teachers.index')
+        return redirect()->route('teachers.index')
             ->with('success', 'Data guru berhasil dihapus.');
     }
 }

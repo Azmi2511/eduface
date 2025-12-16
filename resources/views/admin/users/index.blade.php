@@ -1,5 +1,7 @@
 @extends('layouts.app')
-
+@php
+$active_menu = 'users';
+@endphp
 @section('title', 'Manajemen Pengguna')
 @section('header_title', 'Manajemen Pengguna')
 

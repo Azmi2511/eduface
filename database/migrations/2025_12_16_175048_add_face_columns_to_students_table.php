@@ -9,11 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::table('students', function (Blueprint $table) {
-            $table->foreignId('class_id')->nullable()->constrained('class_rooms')->onDelete('set null');
-            $table->foreignId('parent_id')->nullable()->constrained('users')->onDelete('set null');
+            if (!Schema::hasColumn('students', 'is_face_registered')) {
+                $table->boolean('is_face_registered')->default(0);
+            }
+            if (!Schema::hasColumn('students', 'photo_path')) {
+                $table->string('photo_path')->nullable();
+            }
+            if (!Schema::hasColumn('students', 'face_registered_at')) {
+                $table->timestamp('face_registered_at')->nullable();
+            }
         });
     }
 
