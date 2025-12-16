@@ -111,10 +111,14 @@ $active_menu = 'classes';
                                         </button>
 
                                         {{-- Delete Button --}}
-                                        <form action="{{ route('classes.destroy', $class->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus data kelas ini?')">
+                                        <form id="delete-form-{{ $class->id }}" action="{{ route('classes.destroy', $class->id) }}" method="POST" class="inline-block">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700">
+                                            
+                                            <button type="button" 
+                                                onclick="confirmAction(event, 'delete-form-{{ $class->id }}', 'Hapus Kelas?', 'Data kelas ini akan hilang permanen!')"
+                                                class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700"
+                                                title="Hapus Data">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </form>
@@ -167,45 +171,51 @@ $active_menu = 'classes';
 
     {{-- 1. ADD MODAL --}}
     <div id="addClassModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-md p-6 bg-white rounded-xl shadow-2xl m-4">
-            <div class="flex justify-between items-center pb-4 border-b border-gray-100 mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Tambah Kelas Baru</h3>
-                <button onclick="toggleModal('addClassModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+        <div class="relative w-full max-w-2xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+           <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                        <i class="fas fa-school text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white tracking-wide">Tambah Kelas Baru</h3>
+                </div>
+                <button onclick="toggleModal('addClassModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
+            <div class="p-6 overflow-y-auto max-h-[85vh]">
+                <form action="{{ route('classes.store') }}" method="POST">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kelas</label>
+                            <input type="text" name="class_name" required placeholder="Contoh: X IPA 1"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Level Angkatan</label>
+                            <input type="text" name="grade_level" required placeholder="Contoh: 10"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Akademik</label>
+                            <input type="text" name="academic_year" required placeholder="Contoh: 2023/2024"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+                        </div>
+                    </div>
 
-            <form action="{{ route('classes.store') }}" method="POST">
-                @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kelas</label>
-                        <input type="text" name="class_name" required placeholder="Contoh: X IPA 1"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+                    <div class="flex justify-end pt-6 space-x-3">
+                        <button type="button" onclick="toggleModal('addClassModal')"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                            Simpan
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Level Angkatan</label>
-                        <input type="text" name="grade_level" required placeholder="Contoh: 10"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Akademik</label>
-                        <input type="text" name="academic_year" required placeholder="Contoh: 2023/2024"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                </div>
-
-                <div class="flex justify-end pt-6 space-x-3">
-                    <button type="button" onclick="toggleModal('addClassModal')"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                        Simpan
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 

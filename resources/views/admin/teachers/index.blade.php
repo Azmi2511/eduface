@@ -185,65 +185,71 @@ $active_menu = 'teachers';
 
     {{-- 1. ADD MODAL --}}
     <div id="addTeacherModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-2xl p-6 m-4 transition-all transform bg-white shadow-2xl rounded-xl">
-            <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-800">Tambah Guru Baru</h3>
-                <button onclick="toggleModal('addTeacherModal')" class="text-gray-400 transition hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+        <div class="relative w-full max-w-2xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+           <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                        <i class="fas fa-chalkboard-teacher text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white tracking-wide">Tambah Guru Baru</h3>
+                </div>
+                <button onclick="toggleModal('addTeacherModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-            
-            <form action="{{ route('teachers.store') }}" method="POST">
-                @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Pilih Akun Guru</label>
-                        <div class="relative">
-                            <select name="user_id" id="add_user_id" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
-                                <option value="">-- Pilih Akun Guru --</option>
-                                @forelse($users_teacher as $user)
-                                    <option value="{{ $user->id }}" 
-                                        data-full_name="{{ $user->full_name }}"
-                                        data-email="{{ $user->email }}"
-                                        data-phone="{{ $user->phone }}"
-                                        data-dob="{{ $user->dob }}"
-                                        data-gender="{{ $user->gender }}">
-                                        {{ $user->full_name }} ({{ $user->email ?? $user->username }})
-                                    </option>
-                                @empty
-                                    <option value="" disabled>Tidak ada user role teacher tersedia</option>
-                                @endforelse
+            <div class="p-6 overflow-y-auto max-h-[85vh]">
+                <form action="{{ route('teachers.store') }}" method="POST">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Pilih Akun Guru</label>
+                            <div class="relative">
+                                <select name="user_id" id="add_user_id" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
+                                    <option value="">-- Pilih Akun Guru --</option>
+                                    @forelse($users_teacher as $user)
+                                        <option value="{{ $user->id }}" 
+                                            data-full_name="{{ $user->full_name }}"
+                                            data-email="{{ $user->email }}"
+                                            data-phone="{{ $user->phone }}"
+                                            data-dob="{{ $user->dob }}"
+                                            data-gender="{{ $user->gender }}">
+                                            {{ $user->full_name }} ({{ $user->email ?? $user->username }})
+                                        </option>
+                                    @empty
+                                        <option value="" disabled>Tidak ada user role teacher tersedia</option>
+                                    @endforelse
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">Hanya menampilkan user dengan Role 'Teacher'.</p>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">NIP</label>
+                            <input type="text" name="nip" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Nomor Induk Guru">
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Status Kepegawaian</label>
+                            <select name="employment_status" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
+                                <option value="">-- Pilih --</option>
+                                <option value="PNS">PNS</option>
+                                <option value="Honorer">Honorer</option>
+                                <option value="Kontrak">Kontrak</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
                         </div>
-                        <p class="mt-1 text-xs text-gray-400">Hanya menampilkan user dengan Role 'Teacher'.</p>
+                        <div class="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
+                            <i class="fas fa-info-circle mr-1"></i> 
+                            <strong>Catatan:</strong> Nama lengkap, email, dan data lainnya akan diambil dari akun user yang dipilih. Kode guru akan dibuat otomatis.
+                        </div>
                     </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">NIP</label>
-                        <input type="text" name="nip" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Nomor Induk Guru">
+                    <div class="flex justify-end pt-6 mt-6 space-x-3 border-t border-gray-100">
+                        <button type="button" onclick="toggleModal('addTeacherModal')" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                        <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition">
+                            <i class="fas fa-save mr-1"></i> Simpan Data
+                        </button>
                     </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Status Kepegawaian</label>
-                        <select name="employment_status" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
-                            <option value="">-- Pilih --</option>
-                            <option value="PNS">PNS</option>
-                            <option value="Honorer">Honorer</option>
-                            <option value="Kontrak">Kontrak</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
-                    </div>
-                    <div class="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
-                        <i class="fas fa-info-circle mr-1"></i> 
-                        <strong>Catatan:</strong> Nama lengkap, email, dan data lainnya akan diambil dari akun user yang dipilih. Kode guru akan dibuat otomatis.
-                    </div>
-                </div>
-                <div class="flex justify-end pt-6 mt-6 space-x-3 border-t border-gray-100">
-                    <button type="button" onclick="toggleModal('addTeacherModal')" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition">
-                        <i class="fas fa-save mr-1"></i> Simpan Data
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 

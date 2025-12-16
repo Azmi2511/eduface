@@ -189,7 +189,7 @@ $active_menu = 'parents';
             <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
-                        <i class="fas fa-user-graduate text-white text-lg"></i>
+                        <i class="fas fa-person-breastfeeding text-white text-lg"></i>
                     </div>
                     <h3 class="text-lg font-bold text-white tracking-wide">Tambah Orang Tua Baru</h3>
                 </div>

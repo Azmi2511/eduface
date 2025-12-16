@@ -54,31 +54,31 @@
         
         @if($canAccessUsers)
         <a href="{{ route('users.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'users' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            Semua Pengguna
+             <i class="fas fa-users w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Semua Pengguna
         </a>
         @endif
         
         @if($canAccessStudents)
         <a href="{{ route('students.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'students' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            Data Siswa
+            <i class="fas fa-user-graduate w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Siswa
         </a>
         @endif
         
         @if($canAccessTeachers)
         <a href="{{ route('teachers.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'teachers' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            Data Guru
+            <i class="fas fa-chalkboard-teacher w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Guru
         </a>
         @endif
         
         @if($canAccessParents)
         <a href="{{ route('parents.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'parents' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            Data Orang Tua
+            <i class="fas fa-solid fa-person-breastfeeding w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Orang Tua
         </a>
         @endif
         
         @if($canAccessClasses)
         <a href="{{ route('classes.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'classes' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            Data Kelas
+            <i class="fas fa-school w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Kelas
         </a>
         @endif
     </div>
