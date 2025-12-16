@@ -100,10 +100,12 @@ if ($userRole == 'admin' || $userRole == 'Admin'){
                     <i class="far fa-user w-5 text-gray-400 group-hover:text-blue-500 mr-2 text-center"></i>
                     Profil Saya
                 </a>
+                @if(in_array($userRole, ['admin']))
                 <a href="{{ route('settings.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
                     <i class="fas fa-cog w-5 text-gray-400 group-hover:text-blue-500 mr-2 text-center"></i>
                     Pengaturan
                 </a>
+                @endif
             </div>
             
             <div class="border-t border-gray-100 my-0.5"></div>

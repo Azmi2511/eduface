@@ -77,8 +77,12 @@ class UsersController extends AdminBaseController
 
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
+            'username'  => 'nullable|string|max:100|unique:users,username,' . $user->id,
             'email'     => 'required|email|unique:users,email,' . $user->id,
-            'role'      => 'required|string',
+            'phone'     => 'nullable|string|max:50',
+            'dob'       => 'nullable|date',
+            'gender'    => 'nullable|in:L,P',
+            'role'      => 'required|in:admin,teacher,student,parent',
             'is_active' => 'required|boolean',
             'password'  => 'nullable|string|min:8',
         ]);

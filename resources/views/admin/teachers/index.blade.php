@@ -102,17 +102,33 @@ $active_menu = 'teachers';
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-blue-600 bg-blue-100 rounded-full">
-                                            {{ strtoupper(substr($teacher->full_name, 0, 2)) }}
-                                        </div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ $teacher->full_name }}
+                                        @if($teacher->user->profile_picture ?? null)
+                                            <img src="{{ asset('storage/' . $teacher->user->profile_picture) }}" 
+                                                 alt="{{ $teacher->user->full_name ?? '-' }}" 
+                                                 class="h-10 w-10 rounded-full object-cover mr-3 border-2 border-gray-200 flex-shrink-0">
+                                        @else
+                                            <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-sm">
+                                                {{ strtoupper(substr($teacher->user->full_name ?? 'GU', 0, 2)) }}
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $teacher->user->full_name ?? '-' }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                {{ $teacher->user->email ?? $teacher->user->username ?? '-' }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500">{{ $teacher->nip ?? '-' }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ $teacher->user->email ?? $teacher->user->username }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ $teacher->phone_number ?? '-' }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-500">{{ $teacher->user->email ?? '-' }}</div>
+                                    @if($teacher->user->username && $teacher->user->email != $teacher->user->username)
+                                        <div class="text-xs text-gray-400">{{ $teacher->user->username }}</div>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ $teacher->user->phone ?? '-' }}</td>
                                 <td class="px-6 py-4 text-center">
                                     @if($teacher->user->is_active)
                                         <span class="inline-flex px-2.5 py-1 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full">Aktif</span>
@@ -175,14 +191,21 @@ $active_menu = 'teachers';
             
             <form action="{{ route('teachers.store') }}" method="POST">
                 @csrf
-                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <div class="md:col-span-2">
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Pilih Guru (User ID)</label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Pilih Akun Guru</label>
                         <div class="relative">
-                            <select name="user_id" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
+                            <select name="user_id" id="add_user_id" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
                                 <option value="">-- Pilih Akun Guru --</option>
                                 @forelse($users_teacher as $user)
-                                    <option value="{{ $user->id }}">{{ $user->full_name }} ({{ $user->username }})</option>
+                                    <option value="{{ $user->id }}" 
+                                        data-full_name="{{ $user->full_name }}"
+                                        data-email="{{ $user->email }}"
+                                        data-phone="{{ $user->phone }}"
+                                        data-dob="{{ $user->dob }}"
+                                        data-gender="{{ $user->gender }}">
+                                        {{ $user->full_name }} ({{ $user->email ?? $user->username }})
+                                    </option>
                                 @empty
                                     <option value="" disabled>Tidak ada user role teacher tersedia</option>
                                 @endforelse
@@ -196,12 +219,18 @@ $active_menu = 'teachers';
                         <input type="text" name="nip" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Nomor Induk Guru">
                     </div>
                     <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Nama Lengkap</label>
-                        <input type="text" name="full_name" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Nama Guru">
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Status Kepegawaian</label>
+                        <select name="employment_status" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
+                            <option value="">-- Pilih --</option>
+                            <option value="PNS">PNS</option>
+                            <option value="Honorer">Honorer</option>
+                            <option value="Kontrak">Kontrak</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
                     </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">No. Telepon</label>
-                        <input type="text" name="phone_number" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="No Telepon Guru">
+                    <div class="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
+                        <i class="fas fa-info-circle mr-1"></i> 
+                        <strong>Catatan:</strong> Nama lengkap, email, dan data lainnya akan diambil dari akun user yang dipilih. Kode guru akan dibuat otomatis.
                     </div>
                 </div>
                 <div class="flex justify-end pt-6 mt-6 space-x-3 border-t border-gray-100">
@@ -215,75 +244,143 @@ $active_menu = 'teachers';
     </div>
 
     {{-- 2. EDIT MODAL --}}
-    <div id="editTeacherModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-md p-6 bg-white rounded-xl shadow-2xl m-4">
-            <div class="flex justify-between items-center pb-4 border-b border-gray-100 mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Edit Data Guru</h3>
-                <button onclick="toggleModal('editTeacherModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+    <div id="editTeacherModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
+        <div class="relative w-full max-w-2xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+            <div class="px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                        <i class="fas fa-edit text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white tracking-wide">Edit Data Guru</h3>
+                </div>
+                <button onclick="toggleModal('editTeacherModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-            
-            <form id="editTeacherForm" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="user_id" id="edit_user_id">
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
-                        <input type="text" name="nip" id="edit_nip" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+            <div class="p-6 overflow-y-auto max-h-[85vh]">
+                <form id="editTeacherForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="user_id" id="edit_user_id">
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                            <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
+                                <input type="text" name="phone" id="edit_phone" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                                <input type="date" name="dob" id="edit_dob" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                                <select name="gender" id="edit_gender" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
+                                <input type="text" name="nip" id="edit_nip" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status Kepegawaian</label>
+                                <select name="employment_status" id="edit_employment_status" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="PNS">PNS</option>
+                                    <option value="Honorer">Honorer</option>
+                                    <option value="Kontrak">Kontrak</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kode Guru</label>
+                            <input type="text" name="teacher_code" id="edit_teacher_code" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select name="status" id="edit_status" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                <option value="1">Aktif</option>
+                                <option value="0">Nonaktif</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                        <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+                    <div class="flex justify-end pt-4 mt-4 border-t border-gray-100 space-x-3">
+                        <button type="button" onclick="toggleModal('editTeacherModal')" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Batal</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-500/30">Update</button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
-                        <input type="text" name="phone_number" id="edit_phone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" id="edit_status" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                            <option value="1">Aktif</option>
-                            <option value="0">Nonaktif</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end pt-6 space-x-3">
-                    <button type="button" onclick="toggleModal('editTeacherModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Batal</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Update</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     {{-- 3. VIEW MODAL --}}
-    <div id="viewTeacherModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-sm p-0 bg-white rounded-xl shadow-2xl m-4 overflow-hidden">
-            <div class="bg-[#2F80ED] p-6 text-center">
-                <div class="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center text-3xl text-blue-600 mb-3 shadow-lg">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <h3 class="text-xl font-bold text-white" id="view_name">Nama Guru</h3>
-                <p class="text-blue-100 text-sm" id="view_email">email@guru.com</p>
+    <div id="viewTeacherModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
+        <div class="relative w-full max-w-lg p-0 bg-white rounded-2xl shadow-2xl m-4 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white tracking-wide flex items-center">
+                    <i class="far fa-user-circle mr-3 opacity-80"></i> Detail Guru
+                </h3>
+                <button onclick="toggleModal('viewTeacherModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="p-6">
-                <div class="space-y-4">
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="text-gray-500 text-sm">Status Akun</span>
-                        <span id="view_status"></span>
+            <div class="p-6 overflow-y-auto max-h-[85vh] space-y-4">
+                {{-- Profile Picture Section --}}
+                <div class="flex flex-col items-center mb-4 pb-4 border-b border-gray-100">
+                    <div id="view_profile_picture_container" class="mb-3">
+                        <img id="view_profile_picture" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg hidden">
+                        <div id="view_profile_initials" class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-lg"></div>
                     </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="text-gray-500 text-sm">Bergabung Sejak</span>
-                        <span class="font-medium text-gray-800 text-sm" id="view_date"></span>
+                    <h4 class="text-lg font-bold text-gray-800" id="view_name">Nama Guru</h4>
+                    <p class="text-sm text-gray-500" id="view_email">email@guru.com</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">NIP</label>
+                        <p class="text-gray-800 text-sm font-medium" id="view_nip">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Kode Guru</label>
+                        <p class="text-gray-800 text-sm font-medium" id="view_teacher_code">-</p>
                     </div>
                 </div>
-                <button onclick="toggleModal('viewTeacherModal')" class="mt-6 w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Tutup</button>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">No. Telepon</label>
+                        <p class="text-gray-800 text-sm font-medium" id="view_phone">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Status Kepegawaian</label>
+                        <p class="text-gray-800 text-sm font-medium" id="view_employment_status">-</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Status Akun</label>
+                    <p class="text-gray-800 text-sm" id="view_status">-</p>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Bergabung Sejak</label>
+                    <p class="text-gray-800 text-sm" id="view_date">-</p>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end border-t border-gray-100">
+                <button type="button" onclick="toggleModal('viewTeacherModal')" class="px-6 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 hover:text-gray-800 transition shadow-sm">Tutup</button>
             </div>
         </div>
     </div>
@@ -317,33 +414,101 @@ $active_menu = 'teachers';
     }
 
     function openEditModal(teacher) {
-        document.getElementById('edit_user_id').value = teacher.user_id;
-        document.getElementById('edit_nip').value = teacher.nip;
-        document.getElementById('edit_full_name').value = teacher.full_name;
-        document.getElementById('edit_email').value = teacher.user.email;
-        document.getElementById('edit_phone').value = teacher.phone_number;
-        document.getElementById('edit_status').value = teacher.user.is_active;
+        const userIdEl = document.getElementById('edit_user_id');
+        const nipEl = document.getElementById('edit_nip');
+        const fullNameEl = document.getElementById('edit_full_name');
+        const emailEl = document.getElementById('edit_email');
+        const phoneEl = document.getElementById('edit_phone');
+        const dobEl = document.getElementById('edit_dob');
+        const genderEl = document.getElementById('edit_gender');
+        const employmentStatusEl = document.getElementById('edit_employment_status');
+        const teacherCodeEl = document.getElementById('edit_teacher_code');
+        const statusEl = document.getElementById('edit_status');
+        const formEl = document.getElementById('editTeacherForm');
+
+        if (userIdEl) userIdEl.value = teacher.user_id || '';
+        if (nipEl) nipEl.value = teacher.nip || '';
         
-        let url = "{{ route('teachers.update', ':id') }}";
-        url = url.replace(':id', teacher.user_id);
-        document.getElementById('editTeacherForm').action = url;
+        // Ambil semua data dari user
+        if (fullNameEl) fullNameEl.value = teacher.user?.full_name || '';
+        if (emailEl) emailEl.value = teacher.user?.email || '';
+        if (phoneEl) phoneEl.value = teacher.user?.phone || '';
+        
+        // DOB: ensure YYYY-MM-DD format
+        if (dobEl && teacher.user?.dob) {
+            const dobVal = teacher.user.dob.split('T')[0].split(' ')[0];
+            dobEl.value = dobVal;
+        }
+        
+        if (genderEl) genderEl.value = teacher.user?.gender || '';
+        if (employmentStatusEl) employmentStatusEl.value = teacher.employment_status || '';
+        if (teacherCodeEl) teacherCodeEl.value = teacher.teacher_code || '';
+        
+        // Controller expects 'status' field with value 0 or 1
+        if (statusEl) {
+            const isActive = teacher.user?.is_active == 1 || teacher.user?.is_active === true;
+            statusEl.value = isActive ? '1' : '0';
+        }
+        
+        if (formEl) {
+            let url = "{{ route('teachers.update', ':id') }}";
+            url = url.replace(':id', teacher.user_id || '');
+            formEl.action = url;
+        }
         
         toggleModal('editTeacherModal');
     }
 
     function openViewModal(teacher) {
-        document.getElementById('view_name').innerText = teacher.full_name;
-        document.getElementById('view_email').innerText = teacher.user.email;
+        const nameEl = document.getElementById('view_name');
+        const emailEl = document.getElementById('view_email');
+        const nipEl = document.getElementById('view_nip');
+        const teacherCodeEl = document.getElementById('view_teacher_code');
+        const phoneEl = document.getElementById('view_phone');
+        const employmentStatusEl = document.getElementById('view_employment_status');
+        const statusEl = document.getElementById('view_status');
+        const dateEl = document.getElementById('view_date');
+        const profilePicEl = document.getElementById('view_profile_picture');
+        const profileInitialsEl = document.getElementById('view_profile_initials');
+
+        // Ambil semua data dari user
+        if (nameEl) nameEl.innerText = teacher.user?.full_name || '-';
+        if (emailEl) emailEl.innerText = teacher.user?.email || '-';
+        if (nipEl) nipEl.innerText = teacher.nip || '-';
+        if (teacherCodeEl) teacherCodeEl.innerText = teacher.teacher_code || '-';
+        if (phoneEl) phoneEl.innerText = teacher.user?.phone || '-';
+        
+        // Employment Status
+        if (employmentStatusEl) {
+            const empStatus = teacher.employment_status || '-';
+            employmentStatusEl.innerText = empStatus;
+        }
         
         // Date formatting
-        const dateObj = new Date(teacher.created_at);
-        document.getElementById('view_date').innerText = dateObj.toLocaleDateString('id-ID');
+        if (dateEl) {
+            const dateObj = new Date(teacher.created_at);
+            dateEl.innerText = dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
 
-        const elStatus = document.getElementById('view_status');
-        if (teacher.user.is_active == 1) {
-            elStatus.innerHTML = '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Aktif</span>';
-        } else {
-            elStatus.innerHTML = '<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">Nonaktif</span>';
+        // Status badge
+        if (statusEl) {
+            const isActive = teacher.user?.is_active == 1 || teacher.user?.is_active === true;
+            statusEl.innerHTML = isActive 
+                ? '<span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">Aktif</span>'
+                : '<span class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full">Nonaktif</span>';
+        }
+
+        // Profile Picture
+        if (teacher.user?.profile_picture && profilePicEl) {
+            profilePicEl.src = "{{ asset('storage') }}/" + teacher.user.profile_picture;
+            profilePicEl.classList.remove('hidden');
+            profileInitialsEl.classList.add('hidden');
+        } else if (profileInitialsEl) {
+            profilePicEl.classList.add('hidden');
+            profileInitialsEl.classList.remove('hidden');
+            const fullName = teacher.user?.full_name || 'Guru';
+            const initials = fullName.substring(0, 2).toUpperCase();
+            profileInitialsEl.innerText = initials;
         }
 
         toggleModal('viewTeacherModal');

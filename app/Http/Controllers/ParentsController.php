@@ -20,11 +20,9 @@ class ParentsController extends AdminBaseController
         // 2. Filter Search (Nama atau Email)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($u) use ($search) {
-                      $u->where('email', 'like', "%{$search}%");
-                  });
+            $query->whereHas('user', function($u) use ($search) {
+                $u->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -93,7 +91,10 @@ class ParentsController extends AdminBaseController
         $request->validate([
             'full_name'    => 'required|string|max:255',
             'email'        => 'required|email|unique:users,email,' . $id,
-            'phone_number' => 'nullable|string|max:20',
+            'phone'        => 'nullable|string|max:50',
+            'dob'          => 'nullable|date',
+            'gender'       => 'nullable|in:L,P',
+            'relationship' => 'nullable|in:Ayah,Ibu,Wali',
             'fcm_token'    => 'nullable|string',
             'status'       => 'required|in:0,1',
         ]);
@@ -102,8 +103,10 @@ class ParentsController extends AdminBaseController
             $parent->user->update([
                 'full_name' => $request->full_name,
                 'email'     => $request->email,
+                'phone'     => $request->phone,
+                'dob'       => $request->dob,
+                'gender'    => $request->gender,
                 'is_active' => $request->status,
-                'phone'     => $request->phone_number ?? null,
             ]);
 
             $parent->update([

@@ -75,11 +75,13 @@ $active_menu = 'classes';
 
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-blue-600 bg-blue-100 rounded-full">
+                                        <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-sm">
                                             {{ strtoupper(substr($class->class_name, 0, 2)) }}
                                         </div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ $class->class_name }}
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $class->class_name }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -208,48 +210,54 @@ $active_menu = 'classes';
     </div>
 
     {{-- 2. EDIT MODAL --}}
-    <div id="editClassModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-md p-6 bg-white rounded-xl shadow-2xl m-4">
-            <div class="flex justify-between items-center pb-4 border-b border-gray-100 mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Edit Data Kelas</h3>
-                <button onclick="toggleModal('editClassModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+    <div id="editClassModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
+        <div class="relative w-full max-w-2xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+            <div class="px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                        <i class="fas fa-edit text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white tracking-wide">Edit Data Kelas</h3>
+                </div>
+                <button onclick="toggleModal('editClassModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
+            <div class="p-6 overflow-y-auto max-h-[85vh]">
+                <form id="editClassForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kelas</label>
+                            <input type="text" name="class_name" id="edit_class_name" required
+                                class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Level Angkatan</label>
+                            <input type="text" name="grade_level" id="edit_grade" required
+                                class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Akademik</label>
+                            <input type="text" name="academic_year" id="edit_academic_year" required
+                                class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+                    </div>
 
-            <form id="editClassForm" method="POST">
-                @csrf
-                @method('PUT')
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kelas</label>
-                        <input type="text" name="class_name" id="edit_class_name" required
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+                    <div class="flex justify-end pt-4 mt-4 border-t border-gray-100 space-x-3">
+                        <button type="button" onclick="toggleModal('editClassModal')"
+                            class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-500/30">
+                            Update
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Level Angkatan</label>
-                        <input type="text" name="grade_level" id="edit_grade" required
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Akademik</label>
-                        <input type="text" name="academic_year" id="edit_academic_year" required
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                </div>
-
-                <div class="flex justify-end pt-6 space-x-3">
-                    <button type="button" onclick="toggleModal('editClassModal')"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                        Update
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 

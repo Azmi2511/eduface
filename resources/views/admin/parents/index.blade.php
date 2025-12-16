@@ -102,11 +102,22 @@ $active_menu = 'parents';
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-blue-600 bg-blue-100 rounded-full">
-                                            {{ strtoupper(substr($parent->full_name, 0, 2)) }}
-                                        </div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ $parent->full_name }}
+                                        @if($parent->user->profile_picture ?? null)
+                                            <img src="{{ asset('storage/' . $parent->user->profile_picture) }}" 
+                                                 alt="{{ $parent->user->full_name ?? '-' }}" 
+                                                 class="h-10 w-10 rounded-full object-cover mr-3 border-2 border-gray-200 flex-shrink-0">
+                                        @else
+                                            <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-sm">
+                                                {{ strtoupper(substr($parent->user->full_name ?? 'OR', 0, 2)) }}
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $parent->user->full_name ?? '-' }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                {{ $parent->user->email ?? '-' }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -209,79 +220,127 @@ $active_menu = 'parents';
     </div>
 
     {{-- 2. EDIT MODAL --}}
-    <div id="editParentModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-md p-6 bg-white rounded-xl shadow-2xl m-4">
-            <div class="flex justify-between items-center pb-4 border-b border-gray-100 mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Edit Data Orang Tua</h3>
-                <button onclick="toggleModal('editParentModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+    <div id="editParentModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
+        <div class="relative w-full max-w-2xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+            <div class="px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                        <i class="fas fa-edit text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white tracking-wide">Edit Data Orang Tua</h3>
+                </div>
+                <button onclick="toggleModal('editParentModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-            
-            <form id="editParentForm" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="user_id" id="edit_user_id">
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                        <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+            <div class="p-6 overflow-y-auto max-h-[85vh]">
+                <form id="editParentForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="user_id" id="edit_user_id">
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                            <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
+                                <input type="text" name="phone" id="edit_phone" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                                <input type="date" name="dob" id="edit_dob" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                                <select name="gender" id="edit_gender" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Hubungan</label>
+                            <select name="relationship" id="edit_relationship" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                <option value="">-- Pilih --</option>
+                                <option value="Ayah">Ayah</option>
+                                <option value="Ibu">Ibu</option>
+                                <option value="Wali">Wali</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">FCM Token</label>
+                            <input type="text" name="fcm_token" id="edit_fcm" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select name="status" id="edit_status" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                <option value="1">Aktif</option>
+                                <option value="0">Nonaktif</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">FCM Token</label>
-                        <input type="text" name="fcm_token" id="edit_fcm" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
+                    <div class="flex justify-end pt-4 mt-4 border-t border-gray-100 space-x-3">
+                        <button type="button" onclick="toggleModal('editParentModal')" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Batal</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-500/30">Update</button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
-                        <input type="text" name="phone_number" id="edit_phone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" id="edit_status" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                            <option value="1">Aktif</option>
-                            <option value="0">Nonaktif</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end pt-6 space-x-3">
-                    <button type="button" onclick="toggleModal('editParentModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Batal</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Update</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     {{-- 3. VIEW MODAL --}}
-    <div id="viewParentModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-sm p-0 bg-white rounded-xl shadow-2xl m-4 overflow-hidden">
-            <div class="bg-[#2F80ED] p-6 text-center">
-                <div class="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center text-3xl text-blue-600 mb-3 shadow-lg">
-                    <i class="fas fa-user"></i>
-                </div>
-                <h3 class="text-xl font-bold text-white" id="view_name">Nama Orang Tua</h3>
-                <p class="text-blue-100 text-sm" id="view_email">email@parent.com</p>
+    <div id="viewParentModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
+        <div class="relative w-full max-w-lg p-0 bg-white rounded-2xl shadow-2xl m-4 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white tracking-wide flex items-center">
+                    <i class="far fa-user-circle mr-3 opacity-80"></i> Detail Orang Tua
+                </h3>
+                <button onclick="toggleModal('viewParentModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="p-6">
-                <div class="space-y-4">
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="text-gray-500 text-sm">No. Telepon</span>
-                        <span class="text-sm font-medium text-gray-800" id="view_phone">-</span>
+            <div class="p-6 overflow-y-auto max-h-[85vh] space-y-4">
+                {{-- Profile Picture Section --}}
+                <div class="flex flex-col items-center mb-4 pb-4 border-b border-gray-100">
+                    <div id="view_profile_picture_container" class="mb-3">
+                        <img id="view_profile_picture" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg hidden">
+                        <div id="view_profile_initials" class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-lg"></div>
                     </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="text-gray-500 text-sm">Status Akun</span>
-                        <span id="view_status"></span>
+                    <h4 class="text-lg font-bold text-gray-800" id="view_name">Nama Orang Tua</h4>
+                    <p class="text-sm text-gray-500" id="view_email">email@parent.com</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">No. Telepon</label>
+                        <p class="text-gray-800 text-sm font-medium" id="view_phone">-</p>
                     </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="text-gray-500 text-sm">Bergabung Sejak</span>
-                        <span class="font-medium text-gray-800 text-sm" id="view_date"></span>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Hubungan</label>
+                        <p class="text-gray-800 text-sm font-medium" id="view_relationship">-</p>
                     </div>
                 </div>
-                <button onclick="toggleModal('viewParentModal')" class="mt-6 w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Tutup</button>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Status Akun</label>
+                    <p class="text-gray-800 text-sm" id="view_status">-</p>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Bergabung Sejak</label>
+                    <p class="text-gray-800 text-sm" id="view_date">-</p>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end border-t border-gray-100">
+                <button type="button" onclick="toggleModal('viewParentModal')" class="px-6 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 hover:text-gray-800 transition shadow-sm">Tutup</button>
             </div>
         </div>
     </div>
@@ -315,34 +374,90 @@ $active_menu = 'parents';
     }
 
     function openEditModal(parent) {
-        document.getElementById('edit_user_id').value = parent.user_id;
-        document.getElementById('edit_fcm').value = parent.fcm_token;
-        document.getElementById('edit_full_name').value = parent.full_name;
-        document.getElementById('edit_email').value = parent.user.email;
-        document.getElementById('edit_phone').value = parent.phone_number;
-        document.getElementById('edit_status').value = parent.user.is_active;
+        const userIdEl = document.getElementById('edit_user_id');
+        const fcmEl = document.getElementById('edit_fcm');
+        const fullNameEl = document.getElementById('edit_full_name');
+        const emailEl = document.getElementById('edit_email');
+        const phoneEl = document.getElementById('edit_phone');
+        const dobEl = document.getElementById('edit_dob');
+        const genderEl = document.getElementById('edit_gender');
+        const relationshipEl = document.getElementById('edit_relationship');
+        const statusEl = document.getElementById('edit_status');
+        const formEl = document.getElementById('editParentForm');
+
+        if (userIdEl) userIdEl.value = parent.user_id || '';
+        if (fcmEl) fcmEl.value = parent.fcm_token || '';
         
-        let url = "{{ route('parents.update', ':id') }}";
-        url = url.replace(':id', parent.user_id);
-        document.getElementById('editParentForm').action = url;
+        // Ambil semua data dari user
+        if (fullNameEl) fullNameEl.value = parent.user?.full_name || '';
+        if (emailEl) emailEl.value = parent.user?.email || '';
+        if (phoneEl) phoneEl.value = parent.user?.phone || '';
+        
+        // DOB: ensure YYYY-MM-DD format
+        if (dobEl && parent.user?.dob) {
+            const dobVal = parent.user.dob.split('T')[0].split(' ')[0];
+            dobEl.value = dobVal;
+        }
+        
+        if (genderEl) genderEl.value = parent.user?.gender || '';
+        if (relationshipEl) relationshipEl.value = parent.relationship || '';
+        
+        // Controller expects 'status' field with value 0 or 1
+        if (statusEl) {
+            const isActive = parent.user?.is_active == 1 || parent.user?.is_active === true;
+            statusEl.value = isActive ? '1' : '0';
+        }
+        
+        if (formEl) {
+            let url = "{{ route('parents.update', ':id') }}";
+            url = url.replace(':id', parent.user_id || '');
+            formEl.action = url;
+        }
         
         toggleModal('editParentModal');
     }
 
     function openViewModal(parent) {
-        document.getElementById('view_name').innerText = parent.full_name;
-        document.getElementById('view_email').innerText = parent.user.email;
-        document.getElementById('view_phone').innerText = parent.phone_number ?? '-';
+        const nameEl = document.getElementById('view_name');
+        const emailEl = document.getElementById('view_email');
+        const phoneEl = document.getElementById('view_phone');
+        const relationshipEl = document.getElementById('view_relationship');
+        const statusEl = document.getElementById('view_status');
+        const dateEl = document.getElementById('view_date');
+        const profilePicEl = document.getElementById('view_profile_picture');
+        const profileInitialsEl = document.getElementById('view_profile_initials');
+
+        // Ambil semua data dari user
+        if (nameEl) nameEl.innerText = parent.user?.full_name || '-';
+        if (emailEl) emailEl.innerText = parent.user?.email || '-';
+        if (phoneEl) phoneEl.innerText = parent.user?.phone || '-';
+        if (relationshipEl) relationshipEl.innerText = parent.relationship || '-';
         
         // Date formatting
-        const dateObj = new Date(parent.created_at);
-        document.getElementById('view_date').innerText = dateObj.toLocaleDateString('id-ID');
+        if (dateEl) {
+            const dateObj = new Date(parent.created_at);
+            dateEl.innerText = dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
 
-        const elStatus = document.getElementById('view_status');
-        if (parent.user.is_active == 1) {
-            elStatus.innerHTML = '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Aktif</span>';
-        } else {
-            elStatus.innerHTML = '<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">Nonaktif</span>';
+        // Status badge
+        if (statusEl) {
+            const isActive = parent.user?.is_active == 1 || parent.user?.is_active === true;
+            statusEl.innerHTML = isActive 
+                ? '<span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">Aktif</span>'
+                : '<span class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full">Nonaktif</span>';
+        }
+
+        // Profile Picture
+        if (parent.user?.profile_picture && profilePicEl) {
+            profilePicEl.src = "{{ asset('storage') }}/" + parent.user.profile_picture;
+            profilePicEl.classList.remove('hidden');
+            profileInitialsEl.classList.add('hidden');
+        } else if (profileInitialsEl) {
+            profilePicEl.classList.add('hidden');
+            profileInitialsEl.classList.remove('hidden');
+            const fullName = parent.user?.full_name || 'Orang Tua';
+            const initials = fullName.substring(0, 2).toUpperCase();
+            profileInitialsEl.innerText = initials;
         }
 
         toggleModal('viewParentModal');

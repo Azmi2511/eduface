@@ -104,12 +104,22 @@ $active_menu = 'students';
 
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-blue-600 bg-blue-100 rounded-full">
-                                        {{ strtoupper(substr($student->user->full_name ?? '?', 0, 2)) }}
-                                    </div>
+                                    @php
+                                        $profilePic = $student->user->profile_picture ?? $student->photo_path ?? null;
+                                        $fullName = $student->user->full_name ?? 'Tanpa Nama';
+                                    @endphp
+                                    @if($profilePic)
+                                        <img src="{{ asset('storage/' . $profilePic) }}" 
+                                             alt="{{ $fullName }}" 
+                                             class="h-10 w-10 rounded-full object-cover mr-3 border-2 border-gray-200 flex-shrink-0">
+                                    @else
+                                        <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-sm">
+                                            {{ strtoupper(substr($fullName, 0, 2)) }}
+                                        </div>
+                                    @endif
                                     <div>
                                         <div class="text-sm font-medium text-gray-900">
-                                            {{ $student->user->full_name ?? 'Tanpa Nama' }}
+                                            {{ $fullName }}
                                         </div>
                                         <div class="text-xs text-gray-500">
                                             {{ $student->user->email ?? '-' }}
@@ -290,12 +300,12 @@ $active_menu = 'students';
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">NISN</label>
-                            <input type="text" name="nisn" id="edit_nisn" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500 text-sm">
+                            <input type="text" name="nisn" id="edit_nisn" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status Akun</label>
-                            <select name="is_active" id="edit_is_active" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500 text-sm">
+                            <select name="status" id="edit_status" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
                                 <option value="1">Aktif</option>
                                 <option value="0">Nonaktif</option>
                             </select>
@@ -303,22 +313,27 @@ $active_menu = 'students';
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                            <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500 text-sm">
+                            <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500 text-sm">
+                            <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
+                            <input type="text" name="phone" id="edit_phone" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
-                            <input type="date" name="dob" id="edit_dob" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500 text-sm">
+                            <input type="date" name="dob" id="edit_dob" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
-                            <select name="gender" id="edit_gender" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-500 text-sm">
+                            <select name="gender" id="edit_gender" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
                                 <option value="">-- Pilih --</option>
                                 <option value="L">Laki-laki</option>
                                 <option value="P">Perempuan</option>
@@ -328,7 +343,7 @@ $active_menu = 'students';
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kelas</label>
                             <div class="relative">
-                                <select name="class_id" id="edit_class_id" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-orange-500">
+                                <select name="class_id" id="edit_class_id" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl appearance-none focus:outline-none focus:border-orange-500">
                                     <option value="">-- Pilih Kelas --</option>
                                     @foreach($classmodel as $cls)
                                         <option value="{{ $cls->id }}">{{ $cls->class_name }}</option>
@@ -341,7 +356,7 @@ $active_menu = 'students';
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Orang Tua</label>
                             <div class="relative">
-                                <select name="parent_id" id="edit_parent_id" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-orange-500">
+                                <select name="parent_id" id="edit_parent_id" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl appearance-none focus:outline-none focus:border-orange-500">
                                     <option value="">-- Pilih Orang Tua --</option>
                                     @foreach($parents as $parent)
                                         <option value="{{ $parent->id }}">{{ $parent->user->full_name ?? 'No Name' }}</option>
@@ -364,23 +379,28 @@ $active_menu = 'students';
     {{-- 3. VIEW MODAL --}}
     <div id="viewStudentModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-slate-900/50 backdrop-blur-sm transition-opacity">
         <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden m-4 border border-gray-100">
-            <div class="flex items-center p-4 border-b border-gray-100 bg-gray-50/50">
-                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg shadow-sm mr-3 flex-shrink-0">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <div class="flex-1 min-w-0"> 
-                    <h3 class="text-base font-bold text-gray-800 truncate" id="view_name">Nama Siswa</h3>
-                    <div class="flex items-center text-xs text-gray-500 mt-0.5">
-                        <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono mr-2" id="view_nisn">NISN</span>
-                        <span id="view_status_badge"></span> 
-                    </div>
-                </div>
-                <button onclick="toggleModal('viewStudentModal')" class="text-gray-400 hover:text-red-500 transition ml-2">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white tracking-wide flex items-center">
+                    <i class="far fa-user-circle mr-3 opacity-80"></i> Detail Siswa
+                </h3>
+                <button onclick="toggleModal('viewStudentModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+            <div class="p-6 overflow-y-auto max-h-[85vh] space-y-4">
+                {{-- Profile Picture Section --}}
+                <div class="flex flex-col items-center mb-4 pb-4 border-b border-gray-100">
+                    <div id="view_profile_picture_container" class="mb-3">
+                        <img id="view_profile_picture" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg hidden">
+                        <div id="view_profile_initials" class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-lg"></div>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800" id="view_name">Nama Siswa</h4>
+                    <div class="flex items-center text-xs text-gray-500 mt-1">
+                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono mr-2" id="view_nisn">NISN</span>
+                        <span id="view_status_badge"></span> 
+                    </div>
+                </div>
 
-            <div class="p-4 space-y-4">
                 <div>
                     <h4 class="text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-2">Data Akademik</h4>
                     <div class="grid grid-cols-2 gap-3">
@@ -455,56 +475,109 @@ $active_menu = 'students';
     }
 
     function openEditModal(student) {
+        const studentIdEl = document.getElementById('edit_student_id');
+        const userIdEl = document.getElementById('edit_user_id');
+        const nisnEl = document.getElementById('edit_nisn');
+        const fullNameEl = document.getElementById('edit_full_name');
+        const emailEl = document.getElementById('edit_email');
+        const phoneEl = document.getElementById('edit_phone');
+        const dobEl = document.getElementById('edit_dob');
+        const genderEl = document.getElementById('edit_gender');
+        const classIdEl = document.getElementById('edit_class_id');
+        const parentIdEl = document.getElementById('edit_parent_id');
+        const statusEl = document.getElementById('edit_status');
+        const formEl = document.getElementById('editStudentForm');
+
         // Hidden IDs
-        document.getElementById('edit_student_id').value = student.id ?? '';
-        document.getElementById('edit_user_id').value = student.user ? student.user.id : '';
+        if (studentIdEl) studentIdEl.value = student.id ?? '';
+        if (userIdEl) userIdEl.value = student.user?.id ?? '';
 
         // Student fields
-        document.getElementById('edit_nisn').value = student.nisn ?? '';
-        document.getElementById('edit_class_id').value = student.class ? student.class.id : '';
-        document.getElementById('edit_parent_id').value = student.parent ? student.parent.id : '';
+        if (nisnEl) nisnEl.value = student.nisn ?? '';
+        if (classIdEl) classIdEl.value = student.class_id ?? student.class?.id ?? '';
+        if (parentIdEl) parentIdEl.value = student.parent_id ?? student.parent?.id ?? '';
 
         // User fields
-        document.getElementById('edit_full_name').value = student.user ? (student.user.full_name || '') : '';
-        document.getElementById('edit_email').value = student.user ? (student.user.email || '') : '';
+        if (fullNameEl) fullNameEl.value = student.user?.full_name || '';
+        if (emailEl) emailEl.value = student.user?.email || '';
+        if (phoneEl) phoneEl.value = student.user?.phone || '';
+        
         // DOB: ensure YYYY-MM-DD format
-        const dobEl = document.getElementById('edit_dob');
-        if (dobEl) {
-            const dobVal = student.user && student.user.dob ? student.user.dob.split('T')[0].split(' ')[0] : '';
+        if (dobEl && student.user?.dob) {
+            const dobVal = student.user.dob.split('T')[0].split(' ')[0];
             dobEl.value = dobVal;
         }
-        document.getElementById('edit_gender').value = student.user ? (student.user.gender || '') : '';
-        document.getElementById('edit_is_active').value = student.user ? (student.user.is_active ? '1' : '0') : '0';
+        
+        if (genderEl) genderEl.value = student.user?.gender || '';
+        
+        // Status - controller expects 'status' field with value 0 or 1
+        if (statusEl) {
+            const isActive = student.user?.is_active == 1 || student.user?.is_active === true;
+            statusEl.value = isActive ? '1' : '0';
+        }
 
         // Setup action URL for update (student id)
-        let url = "{{ route('students.update', ':id') }}";
-        url = url.replace(':id', student.id ?? '');
-        const form = document.getElementById('editStudentForm');
-        if (form) form.action = url;
+        if (formEl) {
+            let url = "{{ route('students.update', ':id') }}";
+            url = url.replace(':id', student.id ?? '');
+            formEl.action = url;
+        }
 
         toggleModal('editStudentModal');
     }
 
     function openViewModal(student) {
-        document.getElementById('view_name').innerText = student.user.full_name;
-        document.getElementById('view_email').innerText = student.user.email;
-        document.getElementById('view_username').innerText = student.user.username;
-        document.getElementById('view_nisn').innerText = student.nisn;
-        document.getElementById('view_class').innerText = student.class_room ? student.class_room.class_name : '-';
-        document.getElementById('view_parent').innerText = student.parent && student.parent.user ? student.parent.user.full_name : '-';
+        const nameEl = document.getElementById('view_name');
+        const emailEl = document.getElementById('view_email');
+        const usernameEl = document.getElementById('view_username');
+        const nisnEl = document.getElementById('view_nisn');
+        const classEl = document.getElementById('view_class');
+        const parentEl = document.getElementById('view_parent');
+        const dateEl = document.getElementById('view_date');
+        const genderEl = document.getElementById('view_gender');
+        const statusEl = document.getElementById('view_status_badge');
+        const profilePicEl = document.getElementById('view_profile_picture');
+        const profileInitialsEl = document.getElementById('view_profile_initials');
+
+        if (nameEl) nameEl.innerText = student.user?.full_name || 'Tanpa Nama';
+        if (emailEl) emailEl.innerText = student.user?.email || '-';
+        if (usernameEl) usernameEl.innerText = student.user?.username || '-';
+        if (nisnEl) nisnEl.innerText = student.nisn || '-';
+        if (classEl) classEl.innerText = student.class?.class_name || student.class_room?.class_name || '-';
+        if (parentEl) parentEl.innerText = student.parent?.user?.full_name || '-';
         
         // Date formatting
-        const dateObj = new Date(student.created_at);
-        document.getElementById('view_date').innerText = dateObj.toLocaleDateString('id-ID');
+        if (dateEl) {
+            const dateObj = new Date(student.created_at);
+            dateEl.innerText = dateObj.toLocaleDateString('id-ID');
+        }
         
-        const genderText = (student.gender === 'L') ? 'Laki-Laki' : (student.gender === 'P' ? 'Perempuan' : '-');
-        document.getElementById('view_gender').innerText = genderText;
+        // Gender
+        if (genderEl) {
+            const genderText = (student.user?.gender === 'L') ? 'Laki-Laki' : (student.user?.gender === 'P' ? 'Perempuan' : '-');
+            genderEl.innerText = genderText;
+        }
 
-        const elStatus = document.getElementById('view_status_badge');
-        if (student.user.is_active == 1) {
-            elStatus.innerHTML = '<span class="px-2 py-1 text-xs font-bold text-green-700 bg-green-100 rounded-full">Aktif</span>';
-        } else {
-            elStatus.innerHTML = '<span class="px-2 py-1 text-xs font-bold text-red-700 bg-red-100 rounded-full">Nonaktif</span>';
+        // Status badge
+        if (statusEl) {
+            const isActive = student.user?.is_active == 1 || student.user?.is_active === true;
+            statusEl.innerHTML = isActive 
+                ? '<span class="px-2 py-1 text-xs font-bold text-green-700 bg-green-100 rounded-full">Aktif</span>'
+                : '<span class="px-2 py-1 text-xs font-bold text-red-700 bg-red-100 rounded-full">Nonaktif</span>';
+        }
+
+        // Profile Picture
+        const profilePic = student.user?.profile_picture || student.photo_path || null;
+        if (profilePic && profilePicEl) {
+            profilePicEl.src = "{{ asset('storage') }}/" + profilePic;
+            profilePicEl.classList.remove('hidden');
+            profileInitialsEl.classList.add('hidden');
+        } else if (profileInitialsEl) {
+            profilePicEl.classList.add('hidden');
+            profileInitialsEl.classList.remove('hidden');
+            const fullName = student.user?.full_name || 'Tanpa Nama';
+            const initials = fullName.substring(0, 2).toUpperCase();
+            profileInitialsEl.innerText = initials;
         }
 
         toggleModal('viewStudentModal');

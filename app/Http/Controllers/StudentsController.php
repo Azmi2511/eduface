@@ -87,8 +87,13 @@ class StudentsController extends AdminBaseController
 
         $request->validate([
             'nisn' => 'required|unique:students,nisn,' . $student->id,
-            'full_name' => 'required|string',
+            'full_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $student->user_id,
+            'phone' => 'nullable|string|max:50',
+            'dob' => 'nullable|date',
+            'gender' => 'nullable|in:L,P',
+            'class_id' => 'nullable|exists:classes,id',
+            'parent_id' => 'nullable|exists:parents,id',
             'status' => 'required|in:0,1',
         ]);
 
@@ -97,12 +102,17 @@ class StudentsController extends AdminBaseController
             $student->user->update([
                 'full_name' => $request->full_name,
                 'email' => $request->email,
+                'phone' => $request->phone,
+                'dob' => $request->dob,
+                'gender' => $request->gender,
                 'is_active' => $request->status,
             ]);
 
-            // Update Student (only fields present in students table)
+            // Update Student
             $student->update([
                 'nisn' => $request->nisn,
+                'class_id' => $request->class_id,
+                'parent_id' => $request->parent_id,
             ]);
         });
 

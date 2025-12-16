@@ -120,12 +120,18 @@ $active_menu = 'dashboard';
                                     <td class="px-6 py-4">{{ $idx + 1 }}</td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center">
-                                            <div
-                                                class="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs mr-3">
-                                                {{ strtoupper(substr($row->username, 0, 2)) }}</div>
+                                            @if($row->profile_picture ?? null)
+                                                <img src="{{ asset('storage/' . $row->profile_picture) }}" 
+                                                     alt="{{ $row->full_name ?? $row->username }}" 
+                                                     class="h-10 w-10 rounded-full object-cover mr-3 border-2 border-gray-200">
+                                            @else
+                                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-xs mr-3 shadow-sm">
+                                                    {{ strtoupper(substr($row->full_name ?? $row->username, 0, 2)) }}
+                                                </div>
+                                            @endif
                                             <div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $row->username }}</div>
-                                                <div class="text-xs text-gray-500">{{ $row->username }}</div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $row->full_name ?? $row->username }}</div>
+                                                <div class="text-xs text-gray-500">{{ $row->email ?? $row->username }}</div>
                                             </div>
                                         </div>
                                     </td>

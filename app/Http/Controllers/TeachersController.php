@@ -47,26 +47,61 @@ class TeachersController extends AdminBaseController
     }
 
     /**
+     * Generate teacher code dengan pola TCH-YYYY-NNNN
+     * Contoh: TCH-2025-0001, TCH-2025-0002, dst
+     */
+    private function generateTeacherCode()
+    {
+        $year = date('Y');
+        $prefix = "TCH-{$year}-";
+        
+        // Cari nomor urut terakhir untuk tahun ini
+        $lastTeacher = Teacher::where('teacher_code', 'like', $prefix . '%')
+            ->orderBy('teacher_code', 'desc')
+            ->first();
+        
+        if ($lastTeacher && $lastTeacher->teacher_code) {
+            // Extract nomor urut dari kode terakhir (format: TCH-YYYY-NNNN)
+            $lastNumber = (int) substr($lastTeacher->teacher_code, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            // Jika belum ada, mulai dari 1
+            $nextNumber = 1;
+        }
+        
+        // Format nomor dengan padding 4 digit
+        $teacherCode = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        
+        // Pastikan kode unik (jika ada duplikasi, increment)
+        while (Teacher::where('teacher_code', $teacherCode)->exists()) {
+            $nextNumber++;
+            $teacherCode = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        }
+        
+        return $teacherCode;
+    }
+
+    /**
      * Menyimpan data guru baru.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'user_id'      => 'required|unique:teachers,user_id', // Pastikan user belum terdaftar sebagai guru
-            'nip'          => 'required|string|max:50',
-            'full_name'    => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
+            'user_id'          => 'required|unique:teachers,user_id', // Pastikan user belum terdaftar sebagai guru
+            'nip'              => 'required|string|max:50|unique:teachers,nip',
+            'employment_status' => 'nullable|in:PNS,Honorer,Kontrak',
         ]);
 
         DB::transaction(function () use ($request) {
+            // Generate teacher_code otomatis
+            $teacherCode = $this->generateTeacherCode();
+            
             Teacher::create([
-                'user_id'      => $request->user_id,
-                'nip'          => $request->nip,
-                'full_name'    => $request->full_name,
-                'phone_number' => $request->phone_number,
+                'user_id'          => $request->user_id,
+                'nip'              => $request->nip,
+                'employment_status' => $request->employment_status,
+                'teacher_code'     => $teacherCode,
             ]);
-
-            User::where('id', $request->user_id)->update(['full_name' => $request->full_name]);
         });
 
         return redirect()->route('admin::teachers.index')
@@ -81,24 +116,31 @@ class TeachersController extends AdminBaseController
         $teacher = Teacher::where('user_id', $id)->firstOrFail();
 
         $request->validate([
-            'nip'          => 'required|string|max:50',
-            'full_name'    => 'required|string|max:255',
-            'email'        => 'required|email|unique:users,email,' . $id,
-            'phone_number' => 'required|string|max:20',
-            'status'       => 'required|in:0,1',
+            'nip'              => 'required|string|max:50',
+            'full_name'        => 'required|string|max:255',
+            'email'            => 'required|email|unique:users,email,' . $id,
+            'phone'            => 'nullable|string|max:50',
+            'dob'              => 'nullable|date',
+            'gender'           => 'nullable|in:L,P',
+            'employment_status' => 'nullable|in:PNS,Honorer,Kontrak',
+            'teacher_code'     => 'nullable|string|max:50',
+            'status'           => 'required|in:0,1',
         ]);
 
         DB::transaction(function () use ($request, $teacher) {
             $teacher->user->update([
                 'full_name' => $request->full_name,
                 'email'     => $request->email,
+                'phone'     => $request->phone,
+                'dob'       => $request->dob,
+                'gender'    => $request->gender,
                 'is_active' => $request->status,
             ]);
 
             $teacher->update([
-                'nip'          => $request->nip,
-                'full_name'    => $request->full_name,
-                'phone_number' => $request->phone_number,
+                'nip'              => $request->nip,
+                'employment_status' => $request->employment_status,
+                'teacher_code'     => $request->teacher_code,
             ]);
         });
 

@@ -138,9 +138,15 @@ $active_menu = 'users';
                                 <td class="px-6 py-4">{{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <div class="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs mr-3">
-                                            {{ strtoupper(substr($user->full_name, 0, 2)) }}
-                                        </div>
+                                        @if($user->profile_picture)
+                                            <img src="{{ asset('storage/' . $user->profile_picture) }}" 
+                                                 alt="{{ $user->full_name }}" 
+                                                 class="h-10 w-10 rounded-full object-cover mr-3 border-2 border-gray-200">
+                                        @else
+                                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-xs mr-3 shadow-sm">
+                                                {{ strtoupper(substr($user->full_name, 0, 2)) }}
+                                            </div>
+                                        @endif
                                         <div>
                                             <div class="text-sm font-medium text-gray-900">{{ $user->full_name }}</div>
                                             <div class="text-xs text-gray-500">{{ $user->username ?? '-' }}</div>
@@ -272,51 +278,89 @@ $active_menu = 'users';
     </div>
 
     {{-- 2. Edit User Modal --}}
-    <div id="editUserModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-800 bg-opacity-50 overflow-y-auto">
-        <div class="relative w-full max-w-md p-4 bg-white rounded-xl shadow-lg m-4">
-            <div class="flex justify-between items-center pb-4 border-b border-gray-100 mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Edit Pengguna</h3>
-                <button onclick="toggleModal('editUserModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+    <div id="editUserModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
+        <div class="relative w-full max-w-2xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+            <div class="px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                        <i class="fas fa-edit text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white tracking-wide">Edit Pengguna</h3>
+                </div>
+                <button onclick="toggleModal('editUserModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="editUserForm" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" id="edit_user_id" name="id">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                        <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
+            <div class="p-6 overflow-y-auto max-h-[85vh]">
+                <form id="editUserForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="edit_user_id" name="id">
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                            <select name="role" id="edit_role" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                                <option value="Parent">Orang Tua</option>
-                                <option value="Student">Siswa</option>
-                                <option value="Teacher">Guru</option>
-                                <option value="Admin">Admin</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                            <input type="text" name="full_name" id="edit_full_name" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <select name="is_active" id="edit_status" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-sm">
-                                <option value="1">Aktif</option>
-                                <option value="0">Nonaktif</option>
-                            </select>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                <input type="text" name="username" id="edit_username" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
+                                <input type="text" name="phone" id="edit_phone" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                                <input type="date" name="dob" id="edit_dob" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                                <select name="gender" id="edit_gender" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                <select name="role" id="edit_role" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                    <option value="admin">Admin</option>
+                                    <option value="teacher">Guru</option>
+                                    <option value="student">Siswa</option>
+                                    <option value="parent">Orang Tua</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select name="is_active" id="edit_status" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Nonaktif</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru (Opsional)</label>
+                                <input type="password" name="password" id="edit_password" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm" placeholder="Kosongkan jika tidak ingin mengubah">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="flex justify-end pt-4 mt-4 border-t border-gray-100 space-x-3">
-                    <button type="button" onclick="toggleModal('editUserModal')" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition">Update</button>
-                </div>
-            </form>
+                    </div>
+                    <div class="flex justify-end pt-4 mt-4 border-t border-gray-100 space-x-3">
+                        <button type="button" onclick="toggleModal('editUserModal')" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Batal</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-500/30">Update</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -332,10 +376,16 @@ $active_menu = 'users';
                 </button>
             </div>
             <div class="p-6 overflow-y-auto max-h-[85vh] space-y-4">
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nama Lengkap</label>
-                    <p class="text-gray-800 text-sm font-medium" id="view_full_name">-</p>
+                {{-- Profile Picture Section --}}
+                <div class="flex flex-col items-center mb-4 pb-4 border-b border-gray-100">
+                    <div id="view_profile_picture_container" class="mb-3">
+                        <img id="view_profile_picture" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg hidden">
+                        <div id="view_profile_initials" class="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl font-bold shadow-lg"></div>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800" id="view_full_name">-</h4>
+                    <p class="text-sm text-gray-500" id="view_username">-</p>
                 </div>
+                
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email</label>
                     <p class="text-gray-800 text-sm" id="view_email">-</p>
@@ -343,7 +393,7 @@ $active_menu = 'users';
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Role</label>
-                        <p class="text-gray-800 text-sm" id="view_role">-</p>
+                        <p class="text-gray-800 text-sm font-medium" id="view_role">-</p>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Status</label>
@@ -374,16 +424,49 @@ $active_menu = 'users';
 
     function openEditModal(user) {
         const fullNameEl = document.getElementById('edit_full_name');
+        const usernameEl = document.getElementById('edit_username');
         const emailEl = document.getElementById('edit_email');
+        const phoneEl = document.getElementById('edit_phone');
+        const dobEl = document.getElementById('edit_dob');
+        const genderEl = document.getElementById('edit_gender');
         const roleEl = document.getElementById('edit_role');
         const statusEl = document.getElementById('edit_status');
+        const passwordEl = document.getElementById('edit_password');
         const idEl = document.getElementById('edit_user_id');
         const formEl = document.getElementById('editUserForm');
 
         if (fullNameEl) fullNameEl.value = user.full_name ?? '';
+        if (usernameEl) usernameEl.value = user.username ?? '';
         if (emailEl) emailEl.value = user.email ?? '';
-        if (roleEl) roleEl.value = user.role ?? '';
+        if (phoneEl) phoneEl.value = user.phone ?? '';
+        
+        // DOB: ensure YYYY-MM-DD format
+        if (dobEl && user.dob) {
+            const dobVal = user.dob.split('T')[0].split(' ')[0];
+            dobEl.value = dobVal;
+        }
+        
+        if (genderEl) genderEl.value = user.gender || '';
+        
+        // Ensure role is lowercase for controller validation
+        const userRole = (user.role || '').toString().toLowerCase();
+        if (roleEl) {
+            // Map common variations to lowercase
+            const roleMap = {
+                'admin': 'admin',
+                'administrator': 'admin',
+                'teacher': 'teacher',
+                'guru': 'teacher',
+                'student': 'student',
+                'siswa': 'student',
+                'parent': 'parent',
+                'orang tua': 'parent'
+            };
+            roleEl.value = roleMap[userRole] || userRole || 'student';
+        }
+        
         if (statusEl) statusEl.value = (user.is_active == 1 || user.is_active === true) ? '1' : '0';
+        if (passwordEl) passwordEl.value = ''; // Clear password field
         if (idEl) idEl.value = user.id ?? '';
 
         // Set Action URL Dynamically (only if form exists)
@@ -398,12 +481,17 @@ $active_menu = 'users';
 
     function openViewModal(user) {
         const nameEl = document.getElementById('view_full_name');
+        const usernameEl = document.getElementById('view_username');
         const emailEl = document.getElementById('view_email');
         const roleEl = document.getElementById('view_role');
         const statusEl = document.getElementById('view_status');
         const createdEl = document.getElementById('view_created_at');
+        const profilePicEl = document.getElementById('view_profile_picture');
+        const profilePicContainer = document.getElementById('view_profile_picture_container');
+        const profileInitialsEl = document.getElementById('view_profile_initials');
 
         if (nameEl) nameEl.innerText = user.full_name ?? '-';
+        if (usernameEl) usernameEl.innerText = user.username ?? '-';
         if (emailEl) emailEl.innerText = user.email ?? '-';
 
         // Map English role values from DB to Indonesian labels for display
@@ -416,7 +504,25 @@ $active_menu = 'users';
         const rawRole = (user.role || '').toString().toLowerCase();
         if (roleEl) roleEl.innerText = roleMap[rawRole] ?? user.role ?? '-';
 
-        if (statusEl) statusEl.innerText = (user.is_active == 1 || user.is_active === true) ? 'Aktif' : 'Nonaktif';
+        // Status with badge
+        if (statusEl) {
+            const isActive = (user.is_active == 1 || user.is_active === true);
+            statusEl.innerHTML = isActive 
+                ? '<span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">Aktif</span>'
+                : '<span class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full">Nonaktif</span>';
+        }
+
+        // Profile Picture
+        if (user.profile_picture) {
+            profilePicEl.src = "{{ asset('storage') }}/" + user.profile_picture;
+            profilePicEl.classList.remove('hidden');
+            profileInitialsEl.classList.add('hidden');
+        } else {
+            profilePicEl.classList.add('hidden');
+            profileInitialsEl.classList.remove('hidden');
+            const initials = (user.full_name || user.username || '?').substring(0, 2).toUpperCase();
+            profileInitialsEl.innerText = initials;
+        }
 
         // Format Date (Simple JS)
         if (createdEl) {
