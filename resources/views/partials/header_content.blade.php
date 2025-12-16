@@ -138,9 +138,9 @@
             <div class="border-t border-gray-100 my-0.5"></div>
             
             <div class="py-1">
-                <form method="POST" action="{{ route('logout') }}">
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" >
                     @csrf
-                    <button type="submit" class="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors group text-left">
+                    <button type="button" onclick="confirmAction(event, 'logout-form', 'Yakin ingin keluar?', 'Sesi Anda akan diakhiri.')" class="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors group text-left">
                         <i class="fas fa-sign-out-alt w-5 text-red-400 group-hover:text-red-600 mr-2 text-center"></i>
                         Logout
                     </button>

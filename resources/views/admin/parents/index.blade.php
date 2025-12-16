@@ -150,10 +150,14 @@ $active_menu = 'parents';
                                         </button>
 
                                         {{-- Delete Button --}}
-                                        <form action="{{ route('parents.destroy', $parent->user_id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus data orang tua ini? Tindakan ini juga akan menghapus akun login.')">
+                                        <form id="delete-form-{{ $parent->user_id }}" action="{{ route('parents.destroy', $parent->user_id) }}" method="POST" class="inline-block">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" title="Hapus Data">
+                                            
+                                            <button type="button" 
+                                                onclick="confirmAction(event, 'delete-form-{{ $parent->user_id }}', 'Hapus Data Orang Tua?', 'Data ini beserta akun login akan dihapus permanen!')"
+                                                class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" 
+                                                title="Hapus Data">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </form>
@@ -180,42 +184,65 @@ $active_menu = 'parents';
     </main>
 
     {{-- 1. ADD MODAL --}}
-    <div id="addParentModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto">
-        <div class="relative w-full max-w-2xl p-6 m-4 transition-all transform bg-white shadow-2xl rounded-xl">
-            <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-800">Tambah Orang Tua Baru</h3>
-                <button onclick="toggleModal('addParentModal')" class="text-gray-400 transition hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
+    <div id="addParentModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
+        <div class="relative w-full max-w-2xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                        <i class="fas fa-user-graduate text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white tracking-wide">Tambah Orang Tua Baru</h3>
+                </div>
+                <button onclick="toggleModal('addParentModal')" class="text-white/70 hover:text-white hover:bg-white/20 rounded-full p-1 w-8 h-8 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <form action="{{ route('parents.store') }}" method="POST">
-                @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Nama Lengkap</label>
-                        <input type="text" name="full_name" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
+            <div class="p-6 overflow-y-auto max-h-[85vh]">
+                <p class="text-sm text-gray-600 mb-4">Catatan: Buat akun user terlebih dahulu pada menu <a href="{{ route('users.index') }}" target="_blank" class="text-blue-600 font-semibold underline">Pengguna</a>, lalu pilih akun tersebut di formulir di bawah.</p>
+                <form action="{{ route('parents.store') }}" method="POST">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Pilih Akun Orang Tua</label>
+                            <div class="relative">
+                                <select name="user_id" id="add_parent_user_id" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
+                                    <option value="">-- Pilih Akun User --</option>
+                                        @foreach($users_parent as $user)
+                                                <option value="{{ $user->id }}" data-full_name="{{ $user->full_name }}">{{ $user->full_name }} ({{ $user->email ?? $user->username }})</option>
+                                        @endforeach
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">Hanya menampilkan user dengan Role 'Parent'.</p>
+                        </div>
+
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">No. Telepon</label>
+                            <input type="text" name="phone_number" class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="08xxxxxxxxxx">
+                        </div>
+
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Pekerjaan</label>
+                            <input type="text" name="occupation" class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Contoh: Pegawai Swasta, Wirausaha">
+                        </div>
+
+                        <div class="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
+                            <i class="fas fa-info-circle mr-1"></i> 
+                            <strong>Catatan:</strong> Nama lengkap, email, dan password dikelola melalui menu <em>User Management</em>. Form ini hanya melengkapi data profil Orang Tua.
+                        </div>
                     </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
+
+                    <div class="flex justify-end pt-6 mt-6 space-x-3 border-t border-gray-100">
+                        <button type="button" onclick="toggleModal('addParentModal')" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                        <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition">
+                            <i class="fas fa-save mr-1"></i> Simpan Data
+                        </button>
                     </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">No. Telepon</label>
-                        <input type="text" name="phone_number" class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" name="password" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
-                    </div>
-                </div>
-                <div class="flex justify-end pt-6 mt-6 space-x-3 border-t border-gray-100">
-                    <button type="button" onclick="toggleModal('addParentModal')" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition">
-                        Simpan
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 

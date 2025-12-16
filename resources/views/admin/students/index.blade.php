@@ -166,10 +166,14 @@ $active_menu = 'students';
                                         <i class="far fa-edit"></i>
                                     </button>
 
-                                    <form action="{{ route('students.destroy', $student->nisn) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus data siswa ini?')">
+                                    <form id="delete-form-{{ $student->nisn }}" action="{{ route('students.destroy', $student->nisn) }}" method="POST" class="inline-block">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700 focus:outline-none" title="Hapus Data">
+                                        
+                                        <button type="button" 
+                                            onclick="confirmAction(event, 'delete-form-{{ $student->nisn }}', 'Hapus Siswa?', 'Data NISN {{ $student->nisn }} akan hilang permanen!')"
+                                            class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" 
+                                            title="Hapus Data">
                                             <i class="far fa-trash-alt"></i>
                                         </button>
                                     </form>

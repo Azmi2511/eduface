@@ -38,10 +38,11 @@ class ParentsController extends AdminBaseController
         $count_total = ParentProfile::count();
         $count_active = User::where('role', 'parent')->where('is_active', 1)->count();
         $count_inactive = User::where('role', 'parent')->where('is_active', 0)->count();
+        $users_parent = User::where('role', 'parent')->where('is_active', 1)->orderBy('full_name')->get();
 
         return view('admin::parents.index', compact(
             'parents',
-            'count_total', 'count_active', 'count_inactive'
+            'count_total', 'count_active', 'count_inactive', 'users_parent'
         ));
     }
 

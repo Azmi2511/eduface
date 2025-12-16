@@ -124,6 +124,6 @@ class StudentsController extends AdminBaseController
         $student = Student::where('nisn', $nisn)->firstOrFail();
         $student->delete();
 
-        return redirect()->route('admin::students.index')->with('success', 'Data siswa dihapus');
+        return redirect()->route('students.index')->with('success', 'Data siswa dihapus');
     }
 }

@@ -53,6 +53,10 @@
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
+            customClass: {
+                popup: 'flex items-center w-full max-w-sm p-4 bg-white border border-gray-100 rounded-xl shadow-lg',
+                title: 'text-sm font-medium text-gray-700'
+            },
             didOpen: (toast) => {
                 toast.addEventListener('mouseenter', Swal.stopTimer)
                 toast.addEventListener('mouseleave', Swal.resumeTimer)
@@ -62,6 +66,7 @@
         @if (session('success'))
             Toast.fire({
                 icon: 'success',
+                iconColor: '#10B981',
                 title: '{{ session('success') }}'
             });
         @endif
@@ -69,6 +74,7 @@
         @if (session('error'))
             Toast.fire({
                 icon: 'error',
+                iconColor: '#EF4444',
                 title: '{{ session('error') }}'
             });
         @endif
@@ -79,6 +85,38 @@
                 title: 'Terdapat kesalahan pada input Anda. Silakan cek kembali.'
             });
         @endif
+
+        function confirmAction(event, formId, title, text) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                iconColor: '#ef4444',
+                showCancelButton: true,
+                
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                
+                buttonsStyling: false,
+                
+                customClass: {
+                    popup: 'rounded-xl shadow-lg border border-gray-100',
+                    title: 'text-lg font-bold text-gray-800',
+                    htmlContainer: 'text-sm text-gray-600',
+                    actions: 'space-x-3',
+                    
+                    confirmButton: 'bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
+                    
+                    cancelButton: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-2 px-5 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
     </script>
     @stack('scripts')
 </body>

@@ -151,10 +151,14 @@ $active_menu = 'teachers';
                                         </button>
 
                                         {{-- Delete Button --}}
-                                        <form action="{{ route('teachers.destroy', $teacher->user_id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus data guru ini?')">
+                                        <form id="delete-form-{{ $teacher->user_id }}" action="{{ route('teachers.destroy', $teacher->user_id) }}" method="POST" class="inline-block">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" title="Hapus Data">
+                                            
+                                            <button type="button" 
+                                                onclick="confirmAction(event, 'delete-form-{{ $teacher->user_id }}', 'Hapus Data Guru?', 'Data guru ini akan hilang permanen!')"
+                                                class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" 
+                                                title="Hapus Data">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </form>
