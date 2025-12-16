@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UsersController extends AdminBaseController
 {
@@ -13,19 +14,23 @@ class UsersController extends AdminBaseController
         $query = User::query();
 
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('full_name', 'like', '%' . $request->search . '%')
-                ->orWhere('email', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%");
             });
         }
+
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
-        if ($request->filled('is_active')) {
+        
+        if ($request->has('is_active') && $request->is_active !== null) {
             $query->where('is_active', $request->is_active);
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(5);
+        $users = $query->orderBy('created_at', 'desc')->paginate(10);
 
         $counts = [
             'total'    => User::count(),
@@ -39,36 +44,47 @@ class UsersController extends AdminBaseController
 
     public function create()
     {
-       return view('admin::users.create');
+        return view('admin::users.create');
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email',
-            'password'  => 'required|string|min:8',
-            'role'      => 'required|string',
-            'is_active' => 'required|boolean',
+            'username'        => 'required|string|max:50|unique:users,username',
+            'email'           => 'required|email|max:255|unique:users,email',
+            'password'        => 'required|string|min:8',
+            'full_name'       => 'required|string|max:255',
+            'phone'           => 'nullable|string|max:20',
+            'dob'             => 'nullable|date',
+            'gender'          => 'nullable|in:L,P',
+            'role'            => 'required|in:admin,teacher,student,parent',
+            'is_active'       => 'required|boolean',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
+        if ($request->hasFile('profile_picture')) {
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $validated['profile_picture'] = $path;
+        }
+
         User::create($validated);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        return redirect()->route('users.index')
+                         ->with('success', 'User created successfully.');
     }
 
     public function show($id)
     {
         $user = User::findOrFail($id);
-        return view('users.show', compact('user'));
+        return view('admin::users.show', compact('user'));
     }
 
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        return view('users.edit', compact('user'));
+        return view('admin::users.edit', compact('user'));
     }
 
     public function update(Request $request, $id)
@@ -76,15 +92,16 @@ class UsersController extends AdminBaseController
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'username'  => 'nullable|string|max:100|unique:users,username,' . $user->id,
-            'email'     => 'required|email|unique:users,email,' . $user->id,
-            'phone'     => 'nullable|string|max:50',
-            'dob'       => 'nullable|date',
-            'gender'    => 'nullable|in:L,P',
-            'role'      => 'required|in:admin,teacher,student,parent',
-            'is_active' => 'required|boolean',
-            'password'  => 'nullable|string|min:8',
+            'username'        => 'required|string|max:50|unique:users,username,' . $user->id,
+            'email'           => 'required|email|max:255|unique:users,email,' . $user->id,
+            'password'        => 'nullable|string|min:8',
+            'full_name'       => 'required|string|max:255',
+            'phone'           => 'nullable|string|max:20',
+            'dob'             => 'nullable|date',
+            'gender'          => 'nullable|in:L,P',
+            'role'            => 'required|in:admin,teacher,student,parent',
+            'is_active'       => 'required|boolean',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($request->filled('password')) {
@@ -93,16 +110,32 @@ class UsersController extends AdminBaseController
             unset($validated['password']);
         }
 
+        if ($request->hasFile('profile_picture')) {
+            if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $validated['profile_picture'] = $path;
+        }
+
         $user->update($validated);
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect()->route('users.index')
+                         ->with('success', 'User updated successfully.');
     }
 
     public function destroy($id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        return redirect()->route('users.index')
+                         ->with('success', 'User deleted successfully.');
     }
 }
