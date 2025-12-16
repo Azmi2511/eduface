@@ -19,7 +19,7 @@ class RegisterController extends Controller
 {
     public function show()
     {
-        $classes = DB::table('classes')->select('id', 'class_name')->orderBy('class_name')->get();
+        $classroom = DB::table('classes')->select('id', 'class_name')->orderBy('class_name')->get();
         
         $parents = DB::table('parents')
             ->join('users', 'parents.user_id', '=', 'users.id')
@@ -27,7 +27,7 @@ class RegisterController extends Controller
             ->orderBy('users.full_name')
             ->get();
 
-        return view('auth.register', compact('classes', 'parents'));
+        return view('auth.register', compact('classroom', 'parents'));
     }
 
     public function sendOtp(Request $request)

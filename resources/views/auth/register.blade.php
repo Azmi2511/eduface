@@ -130,8 +130,8 @@
                                 <select name="class_id" id="classSelect"
                                     class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent cursor-pointer">
                                     <option value="" disabled selected>Pilih Kelas</option>
-                                    @foreach($classes as $class)
-                                        <option value="{{ $class->id }}">{{ $class->class_name }}</option>
+                                    @foreach($classroom as $kelas)
+                                        <option value="{{ $kelas->id }}">{{ $kelas->class_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
