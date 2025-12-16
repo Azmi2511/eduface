@@ -15,7 +15,7 @@ class AnnouncementsController extends Controller
 {
     public function index()
     {
-        $announcements = Announcement::with('specificUser') 
+        $announcements = Announcement::with('recipient') 
             ->orderBy('created_at', 'desc')
             ->paginate(10);
         $allUsers = User::leftJoin('students', 'users.id', '=', 'students.user_id')
@@ -92,7 +92,7 @@ class AnnouncementsController extends Controller
                     $notificationsData[] = [
                         'user_id'    => $userId,
                         'ann_id'     => $announcement->id,
-                        'message'    => 'Pengumuman Baru: ' . substr($request->message, 0, 50) . '...',
+                        'message'    => substr($request->message, 0, 50) . '...',
                         'link'       => 'announcements/' . $announcement->id,
                         'is_read'    => 0,
                         'created_at' => $now,

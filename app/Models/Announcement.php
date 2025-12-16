@@ -21,11 +21,6 @@ class Announcement extends Model
         return $this->belongsTo(User::class, 'recipient_id');
     }
 
-    public function specificUser()
-    {
-        return $this->belongsTo(User::class, 'recipient_id');
-    }
-
     public function notifications()
     {
         return $this->hasMany(Notification::class, 'ann_id');

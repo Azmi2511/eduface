@@ -26,16 +26,6 @@ use Illuminate\Support\Facades\DB;
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">
         @include('partials.sidebar_menu_content') 
     </nav>
-
-    <div class="p-4 border-t border-white/20 bg-white/5 backdrop-blur-sm">
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="flex w-full items-center justify-center px-4 py-3 text-sm font-bold text-white bg-white/10 hover:bg-red-500/80 rounded-xl transition-all duration-300 border border-white/20 hover:border-red-400 group shadow-lg">
-                <i class="fas fa-sign-out-alt mr-2 group-hover:-translate-x-1 transition-transform"></i> 
-                Logout
-            </button>
-        </form>
-    </div>
 </aside>
 
 <style>

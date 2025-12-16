@@ -43,9 +43,14 @@
                     {{-- Avatar --}}
                     <div class="relative -mt-16 inline-block">
                         <div class="w-32 h-32 rounded-full border-4 border-white bg-white shadow-md flex items-center justify-center overflow-hidden">
-                            {{-- Jika ada foto profil nanti, ganti logika ini --}}
                             <div class="w-full h-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-4xl">
-                                {{ strtoupper(substr($user->full_name, 0, 2)) }}
+                                @if($user->profile_picture)
+                                    <img src="{{ asset('storage/' . $user->profile_picture) }}" alt="{{ $user->full_name }}">
+                                @else
+                                    <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-indigo-600 bg-indigo-100 border border-indigo-200 rounded-full shadow-sm">
+                                        {{ substr($user->full_name, 0, 2) }}
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         {{-- Tombol Edit Foto (Hiasan dulu) --}}
@@ -118,13 +123,10 @@
                             </div>
                         </div>
 
-                        {{-- Opsional: Jika ada kolom telepon --}}
-                        {{-- 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Telepon</label>
                             <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm">
                         </div> 
-                        --}}
                     </div>
 
                     <div class="flex justify-end">

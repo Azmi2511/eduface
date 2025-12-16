@@ -114,24 +114,54 @@ $active_menu = 'announcements';
                                             'teacher' => 'Semua Guru',
                                             'parent'  => 'Semua Orang Tua',
                                         ];
-                                        
-                                        $recipientType = $announcement->getRawOriginal('recipient');
 
-                                        if ($recipientType === 'specific') {
-                                            $displayText = $announcement->specificUser->full_name ?? 'User Tidak Ditemukan';
-                                            $badgeColor = 'bg-blue-100 text-blue-800';
-                                            $icon = 'fas fa-user';
+                                        // AMBIL DATA
+                                        $rawType = $announcement->getRawOriginal('recipient'); 
+                                        $recipId = $announcement->recipient_id; // Cek kolom ID
+
+                                        $isSpecific = ($rawType === 'specific' || !empty($recipId));
+
+                                        // Variable Default
+                                        $displayName = '-';
+                                        $displayEmail = null;
+                                        $badgeColor = 'bg-gray-100 text-gray-800';
+                                        $icon = 'fas fa-users';
+
+                                        if ($isSpecific) {
+                                            $targetUser = $announcement->recipient; 
+
+                                            if ($targetUser) {
+                                                $displayName = $targetUser->full_name;
+                                                $displayEmail = $targetUser->email;
+                                                $badgeColor = 'bg-blue-100 text-blue-800 border border-blue-200';
+                                                $icon = 'fas fa-user';
+                                            } else {
+                                                $displayName = 'User Tidak Ditemukan';
+                                                $displayEmail = '(ID: ' . $recipId . ')';
+                                                $badgeColor = 'bg-red-50 text-red-600 border border-red-200';
+                                                $icon = 'fas fa-user-slash';
+                                            }
                                         } else {
-                                            $displayText = $labels[$recipientType] ?? ucfirst($recipientType);
-                                            $badgeColor = 'bg-gray-100 text-gray-800';
-                                            $icon = 'fas fa-users';
+                                            $safeType = $rawType ?? 'all';
+                                            $displayName = $labels[$safeType] ?? ucfirst($safeType);
+                                            if (trim($displayName) == '') $displayName = 'Semua Pengguna';
                                         }
                                     @endphp
 
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeColor }}">
-                                        <i class="{{ $icon }} mr-1.5 text-[10px]"></i>
-                                        {{ $displayText }}
-                                    </span>
+                                    <div class="flex flex-col items-start justify-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeColor }}">
+                                            <i class="{{ $icon }} mr-1.5 text-[10px]"></i>
+                                            <span class="truncate max-w-[120px]" title="{{ $displayName }}">
+                                                {{ $displayName }}
+                                            </span>
+                                        </span>
+
+                                        @if($isSpecific && $displayEmail)
+                                            <span class="text-[10px] text-gray-500 mt-1 ml-1 truncate max-w-[140px]" title="{{ $displayEmail }}">
+                                                {{ $displayEmail }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex item-center justify-center space-x-2">
