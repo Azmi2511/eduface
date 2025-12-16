@@ -13,8 +13,15 @@ class Announcement extends Model
         'sent_at',
         'recipient_id',
     ];
-
+    protected $casts = [
+        'sent_at' => 'datetime',
+    ];
     public function recipient()
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    public function specificUser()
     {
         return $this->belongsTo(User::class, 'recipient_id');
     }

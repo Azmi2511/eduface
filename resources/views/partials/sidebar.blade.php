@@ -8,34 +8,55 @@ use Illuminate\Support\Facades\DB;
     $school_name = DB::table('system_settings')->value('school_name');
 @endphp
 
-<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-[#3B82F6] text-white flex flex-col transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 shadow-xl md:shadow-none">
+<aside id="sidebar" 
+       class="fixed inset-y-0 left-0 z-50 w-72 bg-blue-600 text-white flex flex-col transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl">
     
-    <div class="h-20 flex items-center px-6 py-4 border-b border-blue-400/30">
-        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm mr-3">
-            <img src="{{ asset('assets/logo.png') }}" alt="logo" class="w-9 h-9 object-contain">
-        </div>
-        <div>
-            <h1 class="text-md font-bold leading-tight">EduFace</h1>
-            <p class="text-xs text-blue-100 truncate w-32">{{ $school_name }}</p>
+    <div class="h-24 flex items-center px-6 border-b border-white/20">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-white backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
+                <img src="{{ asset('assets/logo.png') }}" alt="logo" class="w-7 h-7">
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold tracking-tight text-white leading-none drop-shadow-md">EduFace</h1>
+                <p class="text-[11px] text-white/80 font-medium mt-1 tracking-wide">{{ $school_name }}</p>
+            </div>
         </div>
     </div>
 
-    <nav class="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">
         @include('partials.sidebar_menu_content') 
-        </nav>
+    </nav>
 
-    <div class="p-4 border-t border-blue-400/30">
-        <a href="{{ route('logout') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-red-200 hover:bg-red-500/20 hover:text-white transition-colors">
-            <i class="fas fa-sign-out-alt mr-2"></i> Logout
-        </a>
+    <div class="p-4 border-t border-white/20 bg-white/5 backdrop-blur-sm">
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="flex w-full items-center justify-center px-4 py-3 text-sm font-bold text-white bg-white/10 hover:bg-red-500/80 rounded-xl transition-all duration-300 border border-white/20 hover:border-red-400 group shadow-lg">
+                <i class="fas fa-sign-out-alt mr-2 group-hover:-translate-x-1 transition-transform"></i> 
+                Logout
+            </button>
+        </form>
     </div>
 </aside>
+
+<style>
+    /* Utility untuk hide scrollbar tapi tetap bisa scroll */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
 
 <script>
 function toggleMasterMenu() {
     const submenu = document.getElementById('submenu-master');
     const arrow = document.getElementById('arrow-master');
-    submenu.classList.toggle('hidden');
-    arrow.classList.toggle('rotate-180');
+    
+    if (submenu.classList.contains('hidden')) {
+        submenu.classList.remove('hidden');
+        setTimeout(() => submenu.classList.remove('opacity-0', '-translate-y-2'), 10);
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        submenu.classList.add('opacity-0', '-translate-y-2');
+        arrow.style.transform = 'rotate(0deg)';
+        setTimeout(() => submenu.classList.add('hidden'), 300);
+    }
 }
 </script>

@@ -34,9 +34,12 @@ Route::middleware(['session.auth'])->group(function () {
 
 
     Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}/read', [NotificationsController::class, 'read'])->name('notifications.read');
 
     Route::resource('attendance', AttendanceController::class);
     Route::post('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+
+    Route::get('announcements/{id}', [AnnouncementsController::class, 'show'])->name('announcements.show');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -19,7 +19,8 @@ $active_menu = 'notifications';
                     <i class="fas fa-message"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_unread) }}</h3>
+                    {{-- Pastikan variabel dikirim dari controller, gunakan null coalescing (?? 0) agar aman --}}
+                    <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_unread ?? 0) }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Pesan Belum Dibaca</p>
                 </div>
             </div>
@@ -30,7 +31,7 @@ $active_menu = 'notifications';
                     <i class="fas fa-bell"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_data) }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_data ?? 0) }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Total Notifikasi</p>
                 </div>
             </div>
@@ -100,9 +101,13 @@ $active_menu = 'notifications';
 
                                 <td class="px-6 py-4 text-sm text-gray-500">
                                     <div class="flex flex-col">
-                                        {{-- Asumsi kolom created_at sudah dicast ke datetime di Model --}}
-                                        <span class="font-medium text-gray-700">{{ $notif->created_at->format('d M Y') }}</span>
-                                        <span class="text-xs">{{ $notif->created_at->format('H:i') }} WIB</span>
+                                        {{-- PERBAIKAN: Menggunakan Carbon::parse() untuk menghindari error 'format on string' --}}
+                                        <span class="font-medium text-gray-700">
+                                            {{ \Carbon\Carbon::parse($notif->created_at)->format('d M Y') }}
+                                        </span>
+                                        <span class="text-xs">
+                                            {{ \Carbon\Carbon::parse($notif->created_at)->format('H:i') }} WIB
+                                        </span>
                                     </div>
                                 </td>
                                 
@@ -119,9 +124,9 @@ $active_menu = 'notifications';
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    {{-- Menggunakan helper url() jika link di DB adalah string path --}}
-                                    <a href="{{ url($notif->link) }}" 
-                                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition shadow-sm">
+                                    {{-- PERBAIKAN: Cek apakah link ada isinya sebelum dipanggil url() --}}
+                                    <a href="{{ route('notifications.read', $notif->id) }}"
+                                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition shadow-sm {{ empty($notif->link) ? 'cursor-not-allowed opacity-50' : '' }}">
                                         <i class="far fa-eye mr-2"></i> Lihat Detail
                                     </a>
                                 </td>
@@ -157,14 +162,16 @@ $active_menu = 'notifications';
                                 <i class="fas fa-chevron-left mr-1"></i> Prev
                             </span>
                         @else
-                            <a href="{{ $notifications->previousPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                            {{-- Tambahkan parameter pencarian ke link pagination --}}
+                            <a href="{{ $notifications->appends(request()->query())->previousPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
                                 <i class="fas fa-chevron-left mr-1"></i> Prev
                             </a>
                         @endif
 
                         {{-- Next Button --}}
                         @if ($notifications->hasMorePages())
-                            <a href="{{ $notifications->nextPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                            {{-- Tambahkan parameter pencarian ke link pagination --}}
+                            <a href="{{ $notifications->appends(request()->query())->nextPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
                                 Next <i class="fas fa-chevron-right ml-1"></i>
                             </a>
                         @else
