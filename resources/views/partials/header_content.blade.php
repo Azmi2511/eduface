@@ -73,7 +73,7 @@ if ($userRole == 'admin' || $userRole == 'Admin'){
     <div class="relative">
         <button onclick="toggleProfileMenu()" id="profileBtn" class="flex items-center cursor-pointer group focus:outline-none">
             <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-transparent group-hover:ring-blue-200 transition-all">
-                {{ strtoupper(substr(session('full_name', 'Guest'), 0, 2)) }}
+                {{ asset('/storage').session('profile_picture') }}
             </div>
             
             <div class="hidden md:block ml-3 text-left">
