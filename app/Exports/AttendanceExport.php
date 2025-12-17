@@ -55,7 +55,7 @@ class AttendanceExport implements FromQuery, WithHeadings, WithMapping, ShouldAu
 
         return [
             $row_number,
-            Carbon::parse($log->date)->format('H:i') . ' WIB',
+            Carbon::parse($log->time_log)->format('H:i') . ' WIB',
             $log->student_nisn,
             optional(optional($log->student)->user)->full_name ?? '-',
             optional(optional($log->student)->class)->class_name ?? '-',

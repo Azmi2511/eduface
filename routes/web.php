@@ -80,9 +80,9 @@ Route::middleware(['session.auth'])->group(function () {
         Route::post('/settings/backup', [SettingsController::class, 'backupDatabase'])->name('settings.backup');
     });
 
-    Route::middleware(['role:teacher'])->group(function () {
+    Route::middleware(['role:admin,teacher'])->group(function () {
         Route::resource('classes', ClassesController::class);
-        Route::get('/students', [StudentsController::class, 'index'])->name('students.index');
+        Route::resource('students', StudentsController::class);
     });
 
     Route::middleware(['role:admin,parent'])->group(function () {

@@ -14,6 +14,7 @@ $active_menu = 'students';
 
         {{-- Statistics Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {{-- ... (Bagian Statistik tidak berubah, aman dilihat guru) ... --}}
             <div class="bg-white p-6 rounded-xl shadow-sm flex items-center border-l-4 border-blue-500">
                 <div class="w-14 h-14 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-2xl mr-4">
                     <i class="fas fa-user-graduate"></i>
@@ -46,6 +47,7 @@ $active_menu = 'students';
         {{-- Filter & Search --}}
         <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
             <form method="GET" action="{{ route('students.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                {{-- ... (Form pencarian tidak berubah) ... --}}
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Cari Data</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama / Email / NISN..."
@@ -76,9 +78,13 @@ $active_menu = 'students';
         <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-100">
             <div class="flex flex-col gap-4 px-6 py-5 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
                 <h3 class="text-lg font-bold text-gray-800">Daftar Data Siswa</h3>
-                <button onclick="toggleModal('addStudentModal')" class="flex items-center px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 shadow-blue-200">
-                    <i class="fas fa-plus mr-2"></i> Tambah Siswa
-                </button>
+                
+                @if(Auth::user()->role == 'admin')
+                    <button onclick="toggleModal('addStudentModal')" class="flex items-center px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 shadow-blue-200">
+                        <i class="fas fa-plus mr-2"></i> Tambah Siswa
+                    </button>
+                @endif
+
             </div>
 
             <div class="overflow-x-auto">
@@ -94,7 +100,7 @@ $active_menu = 'students';
                             <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
-                   <tbody class="divide-y divide-gray-100 bg-white">
+                    <tbody class="divide-y divide-gray-100 bg-white">
                     @forelse($students as $student)
                         <tr class="hover:bg-gray-50 transition duration-150 group">
                             
@@ -110,8 +116,8 @@ $active_menu = 'students';
                                     @endphp
                                     @if($profilePic)
                                         <img src="{{ asset('storage/' . $profilePic) }}" 
-                                             alt="{{ $fullName }}" 
-                                             class="h-10 w-10 rounded-full object-cover mr-3 border-2 border-gray-200 flex-shrink-0">
+                                            alt="{{ $fullName }}" 
+                                            class="h-10 w-10 rounded-full object-cover mr-3 border-2 border-gray-200 flex-shrink-0">
                                     @else
                                         <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-sm">
                                             {{ strtoupper(substr($fullName, 0, 2)) }}
@@ -160,23 +166,26 @@ $active_menu = 'students';
                                         <i class="far fa-eye"></i>
                                     </button>
                                     
-                                    <button onclick="openEditModal({{ json_encode($student) }})"
-                                        class="p-2 text-yellow-500 transition rounded-full hover:bg-yellow-50 hover:text-yellow-700 focus:outline-none" 
-                                        title="Edit Data">
-                                        <i class="far fa-edit"></i>
-                                    </button>
-
-                                    <form id="delete-form-{{ $student->nisn }}" action="{{ route('students.destroy', $student->nisn) }}" method="POST" class="inline-block">
-                                        @csrf
-                                        @method('DELETE')
-                                        
-                                        <button type="button" 
-                                            onclick="confirmAction(event, 'delete-form-{{ $student->nisn }}', 'Hapus Siswa?', 'Data NISN {{ $student->nisn }} akan hilang permanen!')"
-                                            class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" 
-                                            title="Hapus Data">
-                                            <i class="far fa-trash-alt"></i>
+                                    @if(Auth::user()->role == 'admin')
+                                        <button onclick="openEditModal({{ json_encode($student) }})"
+                                            class="p-2 text-yellow-500 transition rounded-full hover:bg-yellow-50 hover:text-yellow-700 focus:outline-none" 
+                                            title="Edit Data">
+                                            <i class="far fa-edit"></i>
                                         </button>
-                                    </form>
+
+                                        <form id="delete-form-{{ $student->nisn }}" action="{{ route('students.destroy', $student->nisn) }}" method="POST" class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            
+                                            <button type="button" 
+                                                onclick="confirmAction(event, 'delete-form-{{ $student->nisn }}', 'Hapus Siswa?', 'Data NISN {{ $student->nisn }} akan hilang permanen!')"
+                                                class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700" 
+                                                title="Hapus Data">
+                                                <i class="far fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
                                 </div>
                             </td>
                         </tr>

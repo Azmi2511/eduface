@@ -48,10 +48,12 @@ $active_menu = 'classes';
         <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-100">
             <div class="flex flex-col gap-4 px-6 py-5 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
                 <h3 class="text-lg font-bold text-gray-800">Daftar Data Kelas</h3>
-                <button onclick="toggleModal('addClassModal')"
-                    class="flex items-center px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 shadow-blue-200">
-                    <i class="fas fa-plus mr-2"></i> Tambah Kelas
-                </button>
+                @if(Auth::user()->role == 'admin')
+                    <button onclick="toggleModal('addClassModal')"
+                        class="flex items-center px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 shadow-blue-200">
+                        <i class="fas fa-plus mr-2"></i> Tambah Kelas
+                    </button>
+                @endif
             </div>
 
             <div class="overflow-x-auto">
@@ -104,24 +106,26 @@ $active_menu = 'classes';
                                             <i class="far fa-eye"></i>
                                         </button>
 
-                                        {{-- Edit Button --}}
-                                        <button onclick="openEditModal(@js($class))"
-                                            class="p-2 text-yellow-500 transition rounded-full hover:bg-yellow-50 hover:text-yellow-700">
-                                            <i class="far fa-edit"></i>
-                                        </button>
-
-                                        {{-- Delete Button --}}
-                                        <form id="delete-form-{{ $class->id }}" action="{{ route('classes.destroy', $class->id) }}" method="POST" class="inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            
-                                            <button type="button" 
-                                                onclick="confirmAction(event, 'delete-form-{{ $class->id }}', 'Hapus Kelas?', 'Data kelas ini akan hilang permanen!')"
-                                                class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700"
-                                                title="Hapus Data">
-                                                <i class="far fa-trash-alt"></i>
+                                        @if(Auth::user()->role == 'admin')
+                                            {{-- Edit Button --}}
+                                            <button onclick="openEditModal(@js($class))"
+                                                class="p-2 text-yellow-500 transition rounded-full hover:bg-yellow-50 hover:text-yellow-700">
+                                                <i class="far fa-edit"></i>
                                             </button>
-                                        </form>
+
+                                            {{-- Delete Button --}}
+                                            <form id="delete-form-{{ $class->id }}" action="{{ route('classes.destroy', $class->id) }}" method="POST" class="inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                
+                                                <button type="button" 
+                                                    onclick="confirmAction(event, 'delete-form-{{ $class->id }}', 'Hapus Kelas?', 'Data kelas ini akan hilang permanen!')"
+                                                    class="p-2 text-red-500 transition rounded-full hover:bg-red-50 hover:text-red-700"
+                                                    title="Hapus Data">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
