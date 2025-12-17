@@ -8,6 +8,9 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
         body { font-family: 'Roboto', sans-serif; }
@@ -105,6 +108,43 @@
     </div>
 
     <script>
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        function showToast(icon, title, colorClass) {
+            Toast.fire({
+                icon: icon,
+                title: title,
+                customClass: {
+                    popup: `font-roboto flex items-center p-4 bg-white/95 backdrop-blur shadow-lg border-l-4 ${colorClass} rounded-r-lg border-gray-100`,
+                    title: 'text-sm font-medium text-gray-700 ml-2',
+                    timerProgressBar: 'bg-gray-300'
+                }
+            });
+        }
+
+        @if (session('success'))
+            showToast('success', "{{ session('success') }}", 'border-emerald-500');
+        @endif
+
+        @if (session('error'))
+            showToast('error', "{{ session('error') }}", 'border-red-500');
+        @endif
+
+        @if ($errors->any())
+            showToast('error', "Mohon periksa kembali input form Anda.", 'border-red-500');
+        @endif
+
         // helper
         function setStep(n) {
             document.querySelectorAll('.step').forEach((el,i)=>el.classList.add('hidden'));
@@ -156,7 +196,7 @@
         // Step bindings
         document.getElementById('fpSendBtn').addEventListener('click', async ()=>{
             const email = document.getElementById('fpEmail').value;
-            if (!email) return alert('Masukkan email valid');
+            if (!email) return showToast('error', 'Masukkan email valid', 'border-red-500');
             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             document.getElementById('fpSendBtn').disabled = true;
             try {
@@ -170,15 +210,15 @@
                     setStep(2);
                     startFpResendTimer();
                 } else {
-                    alert(data.message || 'Gagal mengirim kode');
+                    showToast('error', data.message || 'Gagal mengirim kode', 'border-red-500');
                 }
-            } catch (err) { alert('Kesalahan jaringan'); }
+            } catch (err) { showToast('error', 'Kesalahan jaringan', 'border-red-500'); }
             finally { document.getElementById('fpSendBtn').disabled = false; }
         });
 
         document.getElementById('fpVerifyBtn').addEventListener('click', async ()=>{
             const code = [1,2,3,4,5,6].map(i=>document.getElementById('fpDigit'+i).value).join('');
-            if (code.length < 6) return alert('Masukkan 6 digit kode');
+            if (code.length < 6) return showToast('error', 'Masukkan 6 digit kode', 'border-red-500');
             const email = document.getElementById('fpEmail').value;
             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             document.getElementById('fpVerifyBtn').disabled = true;
@@ -191,9 +231,9 @@
                 if (res.ok && data.status === 'success') {
                     setStep(3);
                 } else {
-                    alert(data.message || 'Kode salah');
+                    showToast('error', data.message || 'Kode salah', 'border-red-500');
                 }
-            } catch (err) { alert('Kesalahan server'); }
+            } catch (err) { showToast('error', 'Kesalahan server', 'border-red-500'); }
             finally { document.getElementById('fpVerifyBtn').disabled = false; }
         });
 
@@ -201,8 +241,8 @@
             const pass = document.getElementById('fpPassword').value;
             const pass2 = document.getElementById('fpPasswordConfirm').value;
             const email = document.getElementById('fpEmail').value;
-            if (pass.length < 8) return alert('Password min 8 karakter');
-            if (pass !== pass2) return alert('Password tidak cocok');
+            if (pass.length < 8) return showToast('error', 'Password min 8 karakter', 'border-red-500');
+            if (pass !== pass2) return showToast('error', 'Password tidak cocok', 'border-red-500');
             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             document.getElementById('fpResetBtn').disabled = true;
             try {
@@ -214,9 +254,9 @@
                 if (res.ok && data.status === 'success') {
                     setStep(4);
                 } else {
-                    alert(data.message || 'Gagal mereset password');
+                    showToast('error', data.message || 'Gagal mereset password', 'border-red-500');
                 }
-            } catch (err) { alert('Kesalahan server'); }
+            } catch (err) { showToast('error', 'Kesalahan server', 'border-red-500'); }
             finally { document.getElementById('fpResetBtn').disabled = false; }
         });
 
@@ -233,9 +273,9 @@
                     body: JSON.stringify({ email })
                 });
                 const data = await res.json();
-                if (res.ok && data.status === 'success') { startFpResendTimer(); alert('Kode OTP berhasil dikirim ulang.'); }
-                else alert(data.message || 'Gagal mengirim ulang');
-            } catch (err) { alert('Kesalahan jaringan'); }
+                if (res.ok && data.status === 'success') { startFpResendTimer(); showToast('success', 'Kode OTP berhasil dikirim ulang.', 'border-green-500'); }
+                else showToast('error', data.message || 'Gagal mengirim ulang', 'border-red-500');
+            } catch (err) { showToast('error', 'Kesalahan jaringan', 'border-red-500'); }
         });
 
         // optional: auto-focus digits

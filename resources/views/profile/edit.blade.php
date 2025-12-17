@@ -5,31 +5,6 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
-    {{-- Alert Messages --}}
-    @if (session('success'))
-        <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-sm flex items-center justify-between">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-500 mr-3 text-lg"></i>
-                <p class="text-sm text-green-700">{{ session('success') }}</p>
-            </div>
-            <button onclick="this.parentElement.remove()" class="text-green-500 hover:text-green-700"><i class="fas fa-times"></i></button>
-        </div>
-    @endif
-
-    @if ($errors->any())
-        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-sm">
-            <div class="flex items-center mb-2">
-                <i class="fas fa-exclamation-circle text-red-500 mr-3 text-lg"></i>
-                <p class="text-sm font-bold text-red-700">Terdapat kesalahan:</p>
-            </div>
-            <ul class="list-disc list-inside text-sm text-red-600 ml-8">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
