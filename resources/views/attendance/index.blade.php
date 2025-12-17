@@ -267,110 +267,114 @@ $active_menu = 'attendance';
     {{-- MODALS SECTION --}}
 
     {{-- Camera (CCTV) Modal --}}
-    <div id="cameraModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300">
-        
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+   <div id="cameraModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-slate-900/80 backdrop-blur-md transition-all duration-300">
+        <div class="relative w-full max-w-5xl mx-4 bg-white/95 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] ring-1 ring-white/20">
             
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-white to-gray-50">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <span class="bg-blue-100 text-blue-600 p-2 rounded-lg">
-                            <i class="fas fa-camera"></i>
+                    <h3 class="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+                            <i class="fas fa-expand"></i>
                         </span>
-                        Absensi Otomatis
+                        Eduface: Just Face It
                     </h3>
-                    <p class="text-xs text-gray-500 mt-0.5 ml-11">Sistem Pengenalan Wajah Real-time</p>
+                    <p class="text-xs font-medium text-slate-400 mt-1 ml-11 uppercase tracking-wider">Sistem Absensi Wajah</p>
                 </div>
-                <button onclick="toggleModal('cameraModal')" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-gray-100">
-                    <i class="fas fa-times text-xl"></i>
+                <button onclick="toggleModal('cameraModal')" class="group p-2 rounded-full hover:bg-red-50 transition-all duration-200">
+                    <i class="fas fa-times text-xl text-gray-300 group-hover:text-red-500 transition-colors"></i>
                 </button>
             </div>
 
-            <div class="p-6 overflow-y-auto custom-scrollbar">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="p-8 overflow-y-auto custom-scrollbar bg-[#F8FAFC]">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
                     
-                    {{-- KOLOM KIRI: Kamera & Kontrol (Lebar 7/12) --}}
-                    <div class="lg:col-span-7 space-y-5">
-                        
-                        <div class="flex gap-3">
+                    <div class="lg:col-span-7 flex flex-col gap-6">
+                        <div class="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
                             <div class="relative flex-1">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-blue-500">
                                     <i class="fas fa-video"></i>
                                 </div>
-                                <select id="cameraSelect" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5 transition-all hover:bg-gray-100 cursor-pointer appearance-none">
-                                    <option value="">Sedang memuat kamera...</option>
+                                <select id="cameraSelect" class="w-full bg-transparent text-slate-700 text-sm font-medium focus:ring-0 border-none block pl-10 py-2.5 cursor-pointer">
+                                    <option value="">Inisiasi Sumber Kamera...</option>
                                 </select>
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-                                    <i class="fas fa-chevron-down text-xs"></i>
-                                </div>
                             </div>
-                            <button id="btn-refresh" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors" title="Refresh Kamera">
+                            <button id="btn-refresh" class="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
 
-                        <div class="relative bg-black rounded-2xl overflow-hidden shadow-inner group ring-1 ring-gray-200 aspect-video flex items-center justify-center">
-                            <video id="video" autoplay playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video> <canvas id="canvas" class="hidden"></canvas>
+                        <div class="relative w-full aspect-video bg-slate-900 rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/10 ring-4 ring-white">
+                            <video id="video" autoplay playsinline class="w-full h-full object-cover transform scale-x-[-1] opacity-90"></video>
+                            <canvas id="canvas" class="hidden"></canvas>
                             
-                            <div class="absolute top-4 left-4 backdrop-blur-md bg-black/30 px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
-                                <div class="relative flex h-3 w-3">
-                                    <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 hidden"></span>
-                                    <span id="status-indicator" class="relative inline-flex rounded-full h-3 w-3 bg-gray-400"></span>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
+
+                            <div class="absolute top-0 w-full h-1 bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.8)] animate-scan opacity-80 pointer-events-none"></div>
+
+                            <div class="absolute top-6 left-6 flex items-center gap-3">
+                                <div class="backdrop-blur-md bg-black/40 px-4 py-2 rounded-full border border-white/10 flex items-center gap-2.5 shadow-lg">
+                                    <span class="relative flex h-3 w-3">
+                                        <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 hidden"></span>
+                                        <span id="status-indicator" class="relative inline-flex rounded-full h-3 w-3 bg-slate-400"></span>
+                                    </span>
+                                    <span id="status-text" class="text-xs font-bold text-white tracking-wide uppercase">Offline</span>
                                 </div>
-                                <span id="status-text" class="text-xs font-medium text-white tracking-wide">Standby</span>
                             </div>
 
-                            <div class="absolute inset-0 border-2 border-white/10 rounded-2xl pointer-events-none"></div>
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-dashed border-white/20 rounded-xl pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="absolute inset-0 border-[3px] border-white/10 rounded-3xl pointer-events-none"></div>
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-blue-400/30 rounded-2xl">
+                                <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400"></div>
+                                <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400"></div>
+                                <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400"></div>
+                                <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400"></div>
+                            </div>
                         </div>
 
-                        <button id="btn-cctv" onclick="toggleCCTV()" class="w-full group relative flex justify-center py-3.5 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">
-                            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                                <i class="fas fa-play group-hover:text-blue-100 transition-colors"></i>
-                            </span>
-                            Mulai Absensi CCTV
+                        <button id="btn-cctv" onclick="toggleCCTV()" class="w-full group relative overflow-hidden rounded-2xl bg-blue-600 px-8 py-4 transition-all duration-300 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.99]">
+                            <div class="relative flex items-center justify-center gap-2 text-white font-bold tracking-wide">
+                                <i class="fas fa-play text-sm group-hover:scale-110 transition-transform"></i>
+                                <span>MULAI</span>
+                            </div>
                         </button>
                     </div>
 
-                    {{-- KOLOM KANAN: Log & Info (Lebar 5/12) --}}
-                    <div class="lg:col-span-5 flex flex-col h-full gap-4">
-                        
-                        <div class="bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col h-[320px] lg:h-auto lg:flex-1 overflow-hidden">
-                            <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
-                                <h4 class="text-sm font-bold text-gray-700">Log Aktivitas</h4>
-                                <span id="detection-count" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">0 Deteksi</span>
+                    <div class="lg:col-span-5 flex flex-col h-full gap-6">
+                        <div class="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                            <div class="px-6 py-4 border-b border-gray-50 bg-white flex justify-between items-center">
+                                <h4 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Live Logs</h4>
+                                <span id="detection-count" class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1 rounded-full">0 Terdeteksi</span>
                             </div>
                             
-                            <div id="logContainer" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-white relative">
-                                <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 pointer-events-none">
-                                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
-                                        <i class="fas fa-user-clock text-2xl"></i>
+                            <div id="logContainer" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-slate-50/50 relative">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none">
+                                    <div class="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
+                                        <i class="fas fa-fingerprint text-3xl text-slate-200"></i>
                                     </div>
-                                    <p class="text-sm">Menunggu deteksi wajah...</p>
+                                    <p class="text-sm font-medium">Menunggu Data...</p>
                                 </div>
-                                
-                                </div>
-                        </div>
-
-                        <div class="bg-blue-50/80 border border-blue-100 rounded-xl p-4 flex gap-3">
-                            <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
-                            <div class="text-xs text-blue-700 leading-relaxed">
-                                <span class="font-bold block mb-1">Panduan Singkat:</span>
-                                <ul class="list-disc pl-4 space-y-1 opacity-80">
-                                    <li>Pastikan pencahayaan ruangan cukup.</li>
-                                    <li>Wajah siswa harus menghadap kamera.</li>
-                                    <li>Data tersimpan otomatis saat terdeteksi.</li>
-                                </ul>
                             </div>
                         </div>
 
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20">
+                            <div class="flex items-start gap-4">
+                                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                    <i class="fas fa-lightbulb text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-sm mb-1">Tips Pro</h5>
+                                    <p class="text-xs text-blue-50 leading-relaxed opacity-90">
+                                        Pastikan wajah siswa mendapat pencahayaan yang merata. Sistem akan mencatat kehadiran secara otomatis setelah pengenalan berhasil.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-</div>
+</div> 
 @endsection
 @push('scripts')
 <script>
@@ -769,6 +773,15 @@ $active_menu = 'attendance';
     }
     .animate-fade-in-up {
         animation: fadeInUp 0.3s ease-out forwards;
+    }
+    @keyframes scan {
+        0% { top: 0%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 100%; opacity: 0; }
+    }
+    .animate-scan {
+        animation: scan 2.5s linear infinite;
     }
 </style>
 @endpush
