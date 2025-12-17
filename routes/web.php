@@ -23,6 +23,12 @@ Route::get('/register', [RegisterController::class, 'show'])->name('register.sho
 Route::post('/register/send-otp', [RegisterController::class, 'sendOtp'])->name('register.sendOtp');
 Route::post('/register/verify-create', [RegisterController::class, 'verifyAndCreate'])->name('register.verify');
 
+// Forgot password flow
+Route::get('/password/forgot', [\App\Http\Controllers\ForgotPasswordController::class, 'show'])->name('password.request');
+Route::post('/password/send-code', [\App\Http\Controllers\ForgotPasswordController::class, 'sendCode'])->name('password.sendCode');
+Route::post('/password/verify-code', [\App\Http\Controllers\ForgotPasswordController::class, 'verifyCode'])->name('password.verifyCode');
+Route::post('/password/reset', [\App\Http\Controllers\ForgotPasswordController::class, 'reset'])->name('password.reset');
+
 // API Endpoint untuk AJAX Request
 Route::post('/auth/validate', [AuthController::class, 'validateRegistration']);
 Route::post('/auth/check-otp', [AuthController::class, 'checkOtp']);

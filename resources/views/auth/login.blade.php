@@ -62,7 +62,7 @@
                 </div>
 
                 <div class="text-right mb-5">
-                    <a href="#" class="text-[#2F80ED] text-xs font-bold hover:underline">Lupa Password?</a>
+                    <a href="{{ route('password.request') }}" class="text-[#2F80ED] text-xs font-bold hover:underline">Lupa Password?</a>
                 </div>
 
                 <button type="submit" 
