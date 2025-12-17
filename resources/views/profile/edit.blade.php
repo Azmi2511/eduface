@@ -47,7 +47,7 @@
                                 @if($user->profile_picture)
                                     <img src="{{ asset('storage/' . $user->profile_picture) }}" alt="{{ $user->full_name }}">
                                 @else
-                                    <div class="flex items-center justify-center flex-shrink-0 w-10 h-10 mr-3 text-sm font-bold text-indigo-600 bg-indigo-100 border border-indigo-200 rounded-full shadow-sm">
+                                    <div class="w-full h-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-4xl uppercase">
                                         {{ substr($user->full_name, 0, 2) }}
                                     </div>
                                 @endif
@@ -75,7 +75,7 @@
                     <div class="text-left space-y-3">
                         <div class="flex items-center text-sm text-gray-600">
                             <i class="far fa-calendar-alt w-6 text-center text-gray-400 mr-3"></i>
-                            <span>Bergabung sejak <b>{{ $user->created_at->format('d M Y') }}</b></span>
+                            <span>Bergabung sejak: <b>{{ $user->created_at?->format('d F Y') ?? '-' }}</b></span>
                         </div>
                         <div class="flex items-center text-sm text-gray-600">
                             <i class="far fa-clock w-6 text-center text-gray-400 mr-3"></i>
