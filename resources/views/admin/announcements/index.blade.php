@@ -169,14 +169,13 @@ $active_menu = 'announcements';
                                             <i class="far fa-eye"></i>
                                         </button>
 
-                                        <button onclick="openEditModal(@js($announcement), '{{ route('announcements.update', $announcement->id) }}', @js($realName ?? null))" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-yellow-600 transition" title="Edit Pesan">
-                                            <i class="far fa-edit"></i>
-                                        </button>
-
-                                        <form action="{{ route('announcements.destroy', $announcement->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pesan ini?')" class="inline-block">
+                                        <form id="delete-form-{{ $announcement->id }}" action="{{ route('announcements.destroy', $announcement->id) }}" method="POST" class="inline-block">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-600 transition" title="Hapus">
+                                            <button type="button" 
+                                            class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-600 transition" 
+                                            onclick="confirmAction(event, 'delete-form-{{ $announcement->id }}', 'Hapus Pengumuman?', 'Pengumuman ini akan hilang permanen!')"
+                                            title="Hapus Pengumuman">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </form>

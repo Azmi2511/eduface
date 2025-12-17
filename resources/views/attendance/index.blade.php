@@ -267,72 +267,110 @@ $active_menu = 'attendance';
     {{-- MODALS SECTION --}}
 
     {{-- Camera (CCTV) Modal --}}
-    <div id="cameraModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900 bg-opacity-50">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl mx-4 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Absensi Otomatis dengan Kamera</h3>
-                <button onclick="toggleModal('cameraModal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-            </div>
+    <div id="cameraModal" class="fixed inset-0 z-50 flex items-center justify-center hidden w-full h-full bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300">
+        
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden flex flex-col max-h-[90vh]">
             
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {{-- Kiri: Feed Kamera --}}
-                <div class="space-y-4">
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <label class="block text-sm font-medium text-gray-700">Pilih Kamera</label>
-                            <button id="btn-refresh" class="text-blue-600 hover:text-blue-800 text-sm">
-                                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-600 p-2 rounded-lg">
+                            <i class="fas fa-camera"></i>
+                        </span>
+                        Absensi Otomatis
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-0.5 ml-11">Sistem Pengenalan Wajah Real-time</p>
+                </div>
+                <button onclick="toggleModal('cameraModal')" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    
+                    {{-- KOLOM KIRI: Kamera & Kontrol (Lebar 7/12) --}}
+                    <div class="lg:col-span-7 space-y-5">
+                        
+                        <div class="flex gap-3">
+                            <div class="relative flex-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <select id="cameraSelect" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5 transition-all hover:bg-gray-100 cursor-pointer appearance-none">
+                                    <option value="">Sedang memuat kamera...</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                            <button id="btn-refresh" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors" title="Refresh Kamera">
+                                <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
-                        <select id="cameraSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                            <option value="">Loading kamera...</option>
-                        </select>
-                    </div>
-                    
-                    <div class="relative bg-black rounded-lg overflow-hidden">
-                        <video id="video" autoplay playsinline class="w-full h-64 object-cover"></video>
-                        <canvas id="canvas" class="hidden"></canvas>
-                        <div class="absolute top-3 right-3 flex items-center space-x-2">
-                            <div id="status-indicator" class="w-3 h-3 bg-gray-400 rounded-full"></div>
-                            <span id="status-text" class="text-white text-sm">Standby</span>
+
+                        <div class="relative bg-black rounded-2xl overflow-hidden shadow-inner group ring-1 ring-gray-200 aspect-video flex items-center justify-center">
+                            <video id="video" autoplay playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video> <canvas id="canvas" class="hidden"></canvas>
+                            
+                            <div class="absolute top-4 left-4 backdrop-blur-md bg-black/30 px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
+                                <div class="relative flex h-3 w-3">
+                                    <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 hidden"></span>
+                                    <span id="status-indicator" class="relative inline-flex rounded-full h-3 w-3 bg-gray-400"></span>
+                                </div>
+                                <span id="status-text" class="text-xs font-medium text-white tracking-wide">Standby</span>
+                            </div>
+
+                            <div class="absolute inset-0 border-2 border-white/10 rounded-2xl pointer-events-none"></div>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-dashed border-white/20 rounded-xl pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         </div>
+
+                        <button id="btn-cctv" onclick="toggleCCTV()" class="w-full group relative flex justify-center py-3.5 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">
+                            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                                <i class="fas fa-play group-hover:text-blue-100 transition-colors"></i>
+                            </span>
+                            Mulai Absensi CCTV
+                        </button>
                     </div>
-                    
-                    <button id="btn-cctv" onclick="toggleCCTV()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition flex items-center justify-center">
-                        <i class="fas fa-play mr-2"></i> Start CCTV
-                    </button>
-                </div>
-                
-                {{-- Kanan: Log Deteksi & Info (Lanjutan dari grid sebelumnya) --}}
-                <div class="space-y-4">
-                    <div class="bg-gray-50 rounded-lg p-4 h-full flex flex-col">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="text-sm font-medium text-gray-700">Log Deteksi Wajah</h4>
-                            <span id="detection-count" class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full hidden">0</span>
-                        </div>
+
+                    {{-- KOLOM KANAN: Log & Info (Lebar 5/12) --}}
+                    <div class="lg:col-span-5 flex flex-col h-full gap-4">
                         
-                        <div id="logContainer" class="flex-1 overflow-y-auto space-y-2 max-h-64 pr-2 scrollbar-thin scrollbar-thumb-gray-300">
-                            <div class="text-center text-gray-500 py-8">
-                                <i class="fas fa-user-clock text-2xl mb-2 opacity-50"></i>
-                                <p class="text-xs">Menunggu deteksi wajah...</p>
+                        <div class="bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col h-[320px] lg:h-auto lg:flex-1 overflow-hidden">
+                            <div class="px-4 py-3 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                                <h4 class="text-sm font-bold text-gray-700">Log Aktivitas</h4>
+                                <span id="detection-count" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">0 Deteksi</span>
+                            </div>
+                            
+                            <div id="logContainer" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-white relative">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 pointer-events-none">
+                                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                                        <i class="fas fa-user-clock text-2xl"></i>
+                                    </div>
+                                    <p class="text-sm">Menunggu deteksi wajah...</p>
+                                </div>
+                                
+                                </div>
+                        </div>
+
+                        <div class="bg-blue-50/80 border border-blue-100 rounded-xl p-4 flex gap-3">
+                            <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                            <div class="text-xs text-blue-700 leading-relaxed">
+                                <span class="font-bold block mb-1">Panduan Singkat:</span>
+                                <ul class="list-disc pl-4 space-y-1 opacity-80">
+                                    <li>Pastikan pencahayaan ruangan cukup.</li>
+                                    <li>Wajah siswa harus menghadap kamera.</li>
+                                    <li>Data tersimpan otomatis saat terdeteksi.</li>
+                                </ul>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 class="text-sm font-medium text-blue-700 mb-2">Informasi</h4>
-                        <ul class="text-xs text-blue-600 space-y-1">
-                            <li>• Pastikan wajah terlihat jelas di kamera</li>
-                            <li>• Pencahayaan yang cukup untuk hasil terbaik</li>
-                            <li>• Sistem akan otomatis mencatat absensi</li>
-                        </ul>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-</div> {{-- Penutup Main Container --}}
+</div>
 @endsection
 @push('scripts')
 <script>
