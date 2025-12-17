@@ -4,8 +4,8 @@ $active_menu = 'settings';
 
 @extends('layouts.app')
 
-@section('title', 'Pengaturan Sistem')
-@section('header_title', 'Pengaturan Sistem')
+@section('title', 'Konfigurasi Sistem')
+@section('header_title', 'Konfigurasi Sistem')
 
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">

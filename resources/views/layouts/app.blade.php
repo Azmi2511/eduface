@@ -1,11 +1,13 @@
 <!doctype html>
-<html lang="id">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $user_theme ?? 'light' }}">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Eduface: Just Face It')</title>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,12 +17,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="{{ asset('assets/logo.png') }}">
-
+    @php
+        $userTheme = Auth::user()->getPref('theme', 'light');
+        $userAccent = Auth::user()->getPref('accent_color', 'blue');
+        
+        $colors = [
+            'blue' => '#2563EB', 'indigo' => '#4F46E5', 'emerald' => '#059669', 
+            'rose' => '#E11D48', 'orange' => '#EA580C'
+        ];
+        $accentHex = $colors[$userAccent] ?? '#2563EB';
+    @endphp
     <style>
         /* @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'); */
+        :root {
+            @php
+                $accentColor = $user_accent ?? 'blue';
+                $hexColors = [
+                    'blue' => '#2563EB',   // blue-600
+                    'indigo' => '#4F46E5', // indigo-600
+                    'emerald' => '#059669', // emerald-600
+                    'rose' => '#E11D48',   // rose-600
+                    'orange' => '#EA580C', // orange-600
+                ];
+                $mainColor = $hexColors[$accentColor] ?? '#2563EB';
+            @endphp
+            
+            --color-primary: {{ $mainColor }};
+        }
+
+        .bg-primary { background-color: var(--color-primary) !important; }
+        .text-primary { color: var(--color-primary) !important; }
+        .border-primary { border-color: var(--color-primary) !important; }
+        .ring-primary { --tw-ring-color: var(--color-primary) !important; }
+        .accent-primary { accent-color: var(--color-primary) !important; }
 
         body {
-           font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
         }
 
         /* Transisi Sidebar Halus */
@@ -64,10 +97,11 @@
             background: #9ca3af;
         }
     </style>
+    
     @stack('head')
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+<body class="font-sans antialiased {{ ($user_theme ?? 'light') == 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900' }}">
 
     <div class="flex h-screen overflow-hidden bg-gray-100">
 
@@ -88,6 +122,18 @@
 
     <script src="{{ asset('script/script.js') }}"></script>
     <script>
+        function toggleModal(modalID) {
+            const modal = document.getElementById(modalID);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
         // --- KONFIGURASI STYLE GLOBAL (Diselaraskan dengan Eduface) ---
         const swalBaseConfig = {
             buttonsStyling: false,

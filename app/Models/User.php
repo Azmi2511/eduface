@@ -54,4 +54,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+
+    public function preferences()
+    {
+        return $this->hasMany(UserPreference::class);
+    }
+
+    public function getPref($key, $default = null)
+    {
+        if ($this->relationLoaded('preferences')) {
+            $pref = $this->preferences->where('key', $key)->first();
+        } else {
+            $pref = $this->preferences()->where('key', $key)->first();
+        }
+
+        return $pref ? $pref->value : $default;
+    }
 }

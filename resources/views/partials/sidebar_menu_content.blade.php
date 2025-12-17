@@ -1,20 +1,22 @@
 @php
     $active = $active ?? ''; 
-    $master_data_pages = ['users','students','teachers','parents','classes'];
+    $master_data_pages = ['users','students','teachers','parents','classes', 'schedules'];
     $is_master_open = in_array($active, $master_data_pages);
     $userRole = session('role');
     
-    // Permission checks logic...
     $canAccessUsers = in_array($userRole, ['admin']);
     $canAccessStudents = in_array($userRole, ['admin', 'teacher']);
     $canAccessTeachers = in_array($userRole, ['admin']);
     $canAccessParents = in_array($userRole, ['admin', 'parent']);
     $canAccessClasses = in_array($userRole, ['admin', 'teacher']);
+    $canAccessSchedules = true;
+    
     $canAccessAttendance = true; 
     $canAccessAnnouncements = in_array($userRole, ['admin']);
     $canAccessNotifications = true; 
     $canAccessSettings = in_array($userRole, ['admin']);
-    $hasMasterAccess = $canAccessUsers || $canAccessStudents || $canAccessTeachers || $canAccessParents || $canAccessClasses;
+
+    $hasMasterAccess = $canAccessUsers || $canAccessStudents || $canAccessTeachers || $canAccessParents || $canAccessClasses || $canAccessSchedules;
 @endphp
 
 <div class="mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest">
@@ -73,6 +75,12 @@
         @if($canAccessParents)
         <a href="{{ route('parents.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'parents' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
             <i class="fas fa-solid fa-person-breastfeeding w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Orang Tua
+        </a>
+        @endif
+        
+        @if($canAccessSchedules)
+        <a href="{{ route('schedules.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'schedules' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+            <i class="fas fa-book-reader w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Jadwal
         </a>
         @endif
         
@@ -136,6 +144,6 @@
     <div class="w-6 mr-3 flex justify-center">
         <i class="fas fa-cog text-lg {{ $active == 'settings' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
-    Pengaturan Sistem
+    Konfigurasi Sistem
 </a>
 @endif

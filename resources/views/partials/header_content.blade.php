@@ -168,11 +168,11 @@
                     <i class="far fa-user-circle w-5 text-lg text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
                     Profil Saya
                 </a>
-                <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <a href="{{ route('settings.preferences.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
                     <i class="fas fa-cog w-5 text-lg text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
-                    Pengaturan Akun
+                    Pengaturan
                 </a>
-                <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <a href="{{ route('support.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
                     <i class="fas fa-question-circle w-5 text-lg text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
                     Bantuan & Dukungan
                 </a>

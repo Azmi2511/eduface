@@ -7,6 +7,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\AnnouncementsController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClassesController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentsController;
 use App\Http\Controllers\TeachersController;
 use App\Http\Controllers\ParentsController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FaceRecognitionController;
+use App\Http\Controllers\PreferencesController;
+use App\Http\Controllers\SupportController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
@@ -50,6 +53,7 @@ Route::post('/face/predict', [FaceRecognitionController::class, 'predict'])->nam
 Route::middleware(['session.auth'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 
+    Route::resource('schedules', ScheduleController::class);
 
     Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/{id}/read', [NotificationsController::class, 'read'])->name('notifications.read');
@@ -63,6 +67,11 @@ Route::middleware(['session.auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    Route::get('/settings/preferences', [PreferencesController::class, 'index'])->name('settings.preferences.index');
+    Route::post('/settings/preferences', [PreferencesController::class, 'update'])->name('settings.preferences.update');
+
+    Route::get('/help-support', [SupportController::class, 'index'])->name('support.index');
 
     Route::middleware(['role:admin'])->group(function () {
         Route::resource('users', UsersController::class);
