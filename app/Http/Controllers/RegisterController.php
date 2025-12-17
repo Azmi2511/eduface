@@ -72,7 +72,7 @@ class RegisterController extends Controller
         Cache::put('otp_attempts_' . $email, 0, config('otp.lock_ttl', 900));
 
         try {
-            Mail::to($request->email)->send(new OtpMail($otp));
+            Mail::to($request->email)->send(new OtpMail($otp, 'registration'));
             return response()->json(['status' => 'success', 'message' => 'Kode OTP telah dikirim ke email Anda.']);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal mengirim email: ' . $e->getMessage()], 500);
