@@ -231,7 +231,7 @@ class AttendanceController extends Controller
             return redirect()->route('login');
         }
 
-        $query = AttendanceLog::with(['student.user', 'student.class']);
+        $query = AttendanceLog::query()->with(['student.user', 'student.class']);
 
         $accessibleNisns = $this->getAccessibleNisns();
         if (is_array($accessibleNisns)) {
@@ -245,6 +245,18 @@ class AttendanceController extends Controller
         
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('class_id')) {
+            $query->whereHas('student', function($q) use ($request) {
+                $q->where('class_id', $request->class_id);
+            });
+        }
+
+        $data = $query->get();
+
+        if ($data->isEmpty()) {
+            return back()->with('error', 'Tidak ada data absensi untuk kriteria tersebut.');
         }
 
         $fileName = 'Laporan-Absensi-' . Carbon::now()->format('Ymd-His') . '.xlsx';

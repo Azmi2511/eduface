@@ -10,10 +10,12 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use Maatwebsite\Excel\Concerns\Exportable;
 use Carbon\Carbon;
 
 class AttendanceExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
+    use Exportable;
     protected $query;
 
     public function __construct($query)
@@ -35,7 +37,6 @@ class AttendanceExport implements FromQuery, WithHeadings, WithMapping, WithStyl
             'NAMA SISWA',
             'KELAS',
             'STATUS',
-            'KETERANGAN',
         ];
     }
 
@@ -46,9 +47,8 @@ class AttendanceExport implements FromQuery, WithHeadings, WithMapping, WithStyl
             $log->time_log,
             $log->student_nisn,
             $log->student->user->full_name ?? '-',
-            $log->student->class->name ?? '-',
+            $log->student->class->class_name ?? '-',
             $log->status,
-            $log->notes ?? '-',
         ];
     }
 
@@ -62,6 +62,7 @@ class AttendanceExport implements FromQuery, WithHeadings, WithMapping, WithStyl
             'A' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]],
             'B' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]],
             'C' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]],
+            'F' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]],
         ];
     }
 }
