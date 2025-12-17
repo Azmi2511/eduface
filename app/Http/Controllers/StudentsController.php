@@ -15,6 +15,13 @@ class StudentsController extends AdminBaseController
     {
         // Query dengan Eager Loading
         $query = Student::with(['user', 'parent.user', 'class']);
+        $user = auth()->user();
+
+        if ($user->role === 'teacher') {
+            $query->whereHas('class.schedules.teacher', function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        }
 
         // Pencarian
         if ($request->filled('search')) {
@@ -38,17 +45,34 @@ class StudentsController extends AdminBaseController
 
         $students = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        // Statistik
-        $count_total = Student::count();
-        $count_active = User::where('role', 'student')->where('is_active', 1)->count();
-        $count_inactive = User::where('role', 'student')->where('is_active', 0)->count();
+        $statsQuery = User::where('role', 'student');
 
-        // Data untuk Dropdown Modal
+        if ($user->role === 'teacher') {
+            $statsQuery->whereHas('student.class.schedules.teacher', function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        }
+        
+        $count_total = (clone $statsQuery)->count(); 
+        $count_active = (clone $statsQuery)->where('is_active', 1)->count();
+        $count_inactive = (clone $statsQuery)->where('is_active', 0)->count();
+
+        if ($user->role === 'teacher') {
+            $classmodel = SchoolClass::whereHas('schedules.teacher', function($q) use ($user) {
+                                $q->where('user_id', $user->id);
+                            })
+                            ->select('id', 'class_name')
+                            ->orderBy('class_name')
+                            ->distinct()
+                            ->get();
+        } else {
+            $classmodel = SchoolClass::select('id', 'class_name')
+                            ->orderBy('class_name')
+                            ->get();
+        }
+
         $users_student = User::where('role', 'student')->where('is_active', 1)->orderBy('full_name')->get();
         $parents = ParentProfile::with('user')->get();
-        $classmodel = SchoolClass::select('id', 'class_name')
-                        ->orderBy('class_name')
-                        ->get();
 
         return view('admin::students.index', compact(
             'students', 

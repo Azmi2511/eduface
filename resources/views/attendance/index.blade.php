@@ -11,7 +11,7 @@ $active_menu = 'attendance';
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
     <main class="flex-1 overflow-y-auto p-8">
-    
+        
         {{-- 1. Statistics Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
@@ -68,6 +68,12 @@ $active_menu = 'attendance';
                     <input type="hidden" name="status" value="{{ request('status') }}">
                     <input type="hidden" name="search" value="{{ request('search') }}">
                     
+                    {{-- Pastikan schedule_id ikut terkirim saat export --}}
+                    @if(request('schedule_id'))
+                        <input type="hidden" name="schedule_id" value="{{ request('schedule_id') }}">
+                        <input type="hidden" name="class_id" value="{{ $selectedSchedule->class_id ?? '' }}">
+                    @endif
+                    
                     <button type="submit" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center md:w-auto w-full">
                         <i class="fas fa-file-excel mr-2"></i> Export Excel
                     </button>
@@ -75,23 +81,45 @@ $active_menu = 'attendance';
             </div>
 
             <form method="GET" action="{{ route('attendance.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                <div class="md:col-span-3">
+                
+                {{-- FILTER TANGGAL --}}
+                <div class="{{ Auth::user()->role == 'teacher' ? 'md:col-span-2' : 'md:col-span-3' }}">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tanggal</label>
-                    {{-- Gunakan $dateFilter dari controller sebagai value default --}}
-                    <input type="date" name="date" value="{{ request('date', $dateFilter) }}" 
+                    <input type="date" name="date" value="{{ request('date', $dateFilter) }}" onchange="this.form.submit()"
                         class="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm">
                 </div>
 
+                {{-- FILTER JADWAL (KHUSUS GURU) --}}
+                @if(Auth::user()->role == 'teacher')
                 <div class="md:col-span-3">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pilih Jadwal</label>
+                    <div class="relative">
+                        <select name="schedule_id" onchange="this.form.submit()" 
+                            class="w-full appearance-none border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm cursor-pointer truncate">
+                            <option value="">-- Semua Siswa Saya --</option>
+                            @foreach($availableSchedules as $schedule)
+                                <option value="{{ $schedule->id }}" @selected(request('schedule_id') == $schedule->id)>
+                                    {{ substr($schedule->start_time, 0, 5) }} - {{ $schedule->subject->subject_name ?? 'Mapel' }} ({{ $schedule->class->class_name ?? 'Kls' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                {{-- FILTER STATUS --}}
+                <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Status</label>
                     <div class="relative">
                         <select name="status" class="w-full appearance-none border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm cursor-pointer">
-                            <option value="">Semua Status</option>
+                            <option value="">Semua</option>
                             <option value="Hadir" @selected(request('status') == 'Hadir')>Hadir</option>
                             <option value="Terlambat" @selected(request('status') == 'Terlambat')>Terlambat</option>
                             <option value="Izin" @selected(request('status') == 'Izin')>Izin</option>
-                            {{-- Menggabungkan Alpha dan Belum Hadir dalam filter logika view --}}
-                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha / Belum Hadir</option>
+                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha / Belum</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -99,7 +127,8 @@ $active_menu = 'attendance';
                     </div>
                 </div>
 
-                <div class="md:col-span-4">
+                {{-- SEARCH --}}
+                <div class="{{ Auth::user()->role == 'teacher' ? 'md:col-span-3' : 'md:col-span-4' }}">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pencarian</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -110,6 +139,7 @@ $active_menu = 'attendance';
                     </div>
                 </div>
 
+                {{-- BUTTONS --}}
                 <div class="md:col-span-2 flex gap-2">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-sm hover:shadow-md flex-1 text-center">
                         Filter
@@ -132,9 +162,24 @@ $active_menu = 'attendance';
 
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-800">
-                        Laporan: {{ \Carbon\Carbon::parse($dateFilter)->translatedFormat('d F Y') }}
-                    </h3>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">
+                            Laporan: {{ \Carbon\Carbon::parse($dateFilter)->translatedFormat('d F Y') }}
+                        </h3>
+                        {{-- INFO JADWAL TERPILIH --}}
+                        @if(isset($selectedSchedule) && $selectedSchedule)
+                            <p class="text-sm text-blue-600 mt-1 flex items-center">
+                                <i class="fas fa-chalkboard-teacher mr-2"></i> 
+                                <span>
+                                    <strong>{{ $selectedSchedule->subject->subject_name }}</strong> - Kelas {{ $selectedSchedule->class->class_name }}
+                                    <span class="text-gray-500 text-xs ml-1">({{ substr($selectedSchedule->start_time, 0, 5) }} - {{ substr($selectedSchedule->end_time, 0, 5) }})</span>
+                                </span>
+                            </p>
+                        @elseif(Auth::user()->role == 'teacher')
+                            <p class="text-xs text-gray-500 mt-1">Menampilkan seluruh siswa bimbingan Anda.</p>
+                        @endif
+                    </div>
+
                     <div class="flex gap-2">
                         <button onclick="toggleModal('cameraModal')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center">
                                 <i class="fas fa-camera mr-2"></i> Otomatis
@@ -157,7 +202,7 @@ $active_menu = 'attendance';
                         <tbody class="divide-y divide-gray-100">
                             @forelse($students as $student)
                                 <tr class="hover:bg-gray-50 transition group">
-                                    {{-- Data Siswa (Nama, NISN, Kelas) --}}
+                                    {{-- Data Siswa --}}
                                     <td class="px-6 py-4">
                                         <div class="text-sm font-medium text-gray-900">{{ $student->user->full_name ?? '-' }}</div>
                                     </td>
@@ -196,23 +241,28 @@ $active_menu = 'attendance';
                                     {{-- KOLOM AKSI (TOMBOL H, I, S, A) --}}
                                     <td class="px-6 py-4 text-center">
                                         @php
+                                            // Ambil Log berdasarkan Filter Query Controller
                                             $log = $student->attendanceLogs->first();
-                                            // Jika log sudah ada, gunakan route UPDATE. Jika belum, route STORE.
                                             $routeUrl = $log ? route('attendance.update', $log->id) : route('attendance.store');
                                             $currentStatus = $log ? $log->status : null;
                                         @endphp
 
                                         <form action="{{ $routeUrl }}" method="POST" class="flex justify-center items-center gap-1">
                                             @csrf
-                                            {{-- Jika Update, tambahkan method PUT --}}
                                             @if($log)
                                                 @method('PUT')
                                             @endif
                                             
-                                            {{-- Input Hidden Wajib --}}
                                             <input type="hidden" name="student_nisn" value="{{ $student->nisn }}">
                                             <input type="hidden" name="date" value="{{ request('date', $dateFilter) }}">
-                                            <input type="hidden" name="time_log" value="{{ \Carbon\Carbon::now()->toTimeString() }}">
+                                            
+                                            {{-- LOGIKA PENTING: Jika update, pertahankan jam lama. Jika baru, pakai jam sekarang --}}
+                                            <input type="hidden" name="time_log" value="{{ $log ? $log->time_log : \Carbon\Carbon::now()->toTimeString() }}">
+                                            
+                                            {{-- LOGIKA PENTING: Kirim Schedule ID agar status tidak lari ke jadwal lain --}}
+                                            @if(isset($selectedSchedule))
+                                                <input type="hidden" name="schedule_id" value="{{ $selectedSchedule->id }}">
+                                            @endif
 
                                             {{-- Tombol H (Hadir) --}}
                                             <button type="submit" name="status" value="Hadir" 
@@ -249,14 +299,12 @@ $active_menu = 'attendance';
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Data siswa tidak ditemukan.</td></tr>
+                                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Data siswa tidak ditemukan untuk kriteria ini.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                {{-- Pagination Note: Karena $students adalah Collection (bukan Paginate), link pagination standar dimatikan. 
-                    Jika ingin pagination, harus manual di controller atau pakai Javascript datatable --}}
                 <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl text-xs text-gray-500">
                     Menampilkan seluruh siswa untuk tanggal {{ \Carbon\Carbon::parse($dateFilter)->format('d-m-Y') }}
                 </div>

@@ -67,8 +67,10 @@ Route::middleware(['session.auth'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::resource('users', UsersController::class);
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::resource('students', StudentsController::class);
         Route::resource('teachers', TeachersController::class);
         Route::resource('parents', ParentsController::class);
+        Route::resource('classes', ClassesController::class);
         Route::resource('announcements', AnnouncementsController::class);
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
@@ -78,18 +80,14 @@ Route::middleware(['session.auth'])->group(function () {
         Route::post('/settings/backup', [SettingsController::class, 'backupDatabase'])->name('settings.backup');
     });
 
-    Route::middleware(['role:admin,teacher'])->group(function () {
+    Route::middleware(['role:teacher'])->group(function () {
         Route::resource('classes', ClassesController::class);
-        Route::resource('students', StudentsController::class);
+        Route::get('/students', [StudentsController::class, 'index'])->name('students.index');
     });
 
     Route::middleware(['role:admin,parent'])->group(function () {
         Route::get('/parents', [ParentsController::class, 'index'])->name('parents.index');
     });
-
-    Route::get('/students', [StudentsController::class, 'index'])
-        ->middleware(['role:admin,teacher'])
-        ->name('students.index');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
