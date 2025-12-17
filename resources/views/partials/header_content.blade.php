@@ -52,7 +52,7 @@
                     <p class="text-xs text-white mt-0.5">{{ $notifications->count() }} pesan belum dibaca</p>
                 </div>
                 @if($notifications->count() > 0)
-                    <a href="{{ route('notifications.mark-all-read') ?? '#' }}" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition">
+                    <a href="{{ route('notifications.markAllRead') ?? '#' }}" class="text-xs font-medium text-white hover:text-gray-200 transition">
                         Tandai semua dibaca
                     </a>
                 @endif

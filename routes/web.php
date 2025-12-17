@@ -53,6 +53,7 @@ Route::middleware(['session.auth'])->group(function () {
 
     Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/{id}/read', [NotificationsController::class, 'read'])->name('notifications.read');
+    Route::get('/notifications/markAllRead', [NotificationsController::class, 'markAllRead'])->name('notifications.markAllRead');
 
     Route::resource('attendance', AttendanceController::class);
     Route::post('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');

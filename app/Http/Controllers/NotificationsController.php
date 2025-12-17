@@ -45,4 +45,18 @@ class NotificationsController extends Controller
 
         return redirect($targetUrl);
     }
+    public function markAllRead()
+    {
+        $updatedCount = Notification::where('user_id', auth()->id())
+                                    ->where('is_read', false)
+                                    ->update(['is_read' => true]);
+        
+        if ($updatedCount > 0) {
+            $message = 'Semua ' . $updatedCount . ' notifikasi baru telah ditandai sebagai sudah dibaca.';
+        } else {
+            $message = 'Tidak ada notifikasi baru untuk ditandai.';
+        }
+
+        return response()->json(['status' => 'success', 'message' => $message], 200);
+    }
 }
