@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 @endphp
 
 <aside id="sidebar" 
-       class="fixed inset-y-0 left-0 z-50 w-72 bg-blue-700 text-white flex flex-col transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl">
+       class="fixed inset-y-0 left-0 z-50 w-72 bg-[#2F80ED] text-white flex flex-col transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl">
     
     <div class="h-24 flex items-center px-6 border-b border-white/20">
         <div class="flex items-center gap-4">
