@@ -311,7 +311,7 @@ class AttendanceController extends Controller
             $settings = SystemSetting::first(); 
             $globalTolerance = $settings->tolerance_minutes ?? 15;
             
-            $student = Student::with('user')->where('nisn', $nisn)->first();
+            $student = Student::where('nisn', $nisn)->first();
             
             if (!$student) {
                 return response()->json(['success' => false, 'message' => 'Siswa tidak ditemukan'], 404);
@@ -332,52 +332,70 @@ class AttendanceController extends Controller
                 })
                 ->first();
 
-            if (!$activeSchedule) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Tidak ada jadwal pelajaran aktif saat ini untuk kelas siswa tersebut.'
-                ], 404);
-            }
-
-            $scheduleId = $activeSchedule->id;
-            $status = 'Hadir';
             
-            $startTime = Carbon::parse($activeSchedule->start_time);
-            $lateLimit = $startTime->copy()->addMinutes($globalTolerance);
+            $scheduleId = null;
+            $status = 'Hadir';
+            $logMessage = '';
 
-            if ($now->greaterThan($lateLimit)) {
-                $status = 'Terlambat';
+            if ($activeSchedule) {
+                $scheduleId = $activeSchedule->id;
+                
+                $startTime = Carbon::parse($activeSchedule->start_time);
+                $lateLimit = $startTime->copy()->addMinutes($globalTolerance);
+
+                if ($now->greaterThan($lateLimit)) {
+                    $status = 'Terlambat';
+                }
+
+                $subjectName = $activeSchedule->subject->subject_name ?? 'Pelajaran';
+                $logMessage = "Absen Mapel: $subjectName ($status)";
+
+            } else {
+                // return response()->json(['success' => false, 'message' => 'Tidak ada jadwal aktif saat ini.'], 404);
+                
+                // Jika ingin tetap mencatat sebagai "Masuk Sekolah" (General):
+                $limitMasuk = $settings->late_limit ?? '07:30:00';
+                if ($time > $limitMasuk) {
+                    $status = 'Terlambat';
+                }
+                $logMessage = "Absen Masuk Sekolah ($status)";
             }
+            $matchAttributes = [
+                'student_nisn' => $nisn,
+                'date'         => $date,
+                'schedule_id'  => $scheduleId, 
+            ];
 
-            $subjectName = $activeSchedule->subject->subject_name ?? 'Pelajaran';
-            $logMessage = "Absen Berhasil: $subjectName ($status)";
+            // Data yang diupdate
+            $updateValues = [
+                'time_log'    => $time,
+                'status'      => $status,
+                'device_id'   => $request->device_id ?? null,
+                // created_at & updated_at otomatis dihandle Eloquent jika timestamps aktif
+            ];
 
-            $log = AttendanceLog::updateOrCreate(
-                [
-                    'student_nisn' => $nisn,
-                    'date' => $date,
-                    'schedule_id' => $scheduleId, 
-                ],
-                [
-                    'time_log' => $time,
-                    'status' => $status,
-                    'device_id' => $request->device_id ?? null,
-                ]
-            );
+            $log = AttendanceLog::updateOrCreate($matchAttributes, $updateValues);
 
             return response()->json([
                 'success' => true,
                 'message' => $logMessage,
-                'data' => $log,
-                'student_name' => $student->user->full_name ?? 'Siswa',
-                'jam_masuk_jadwal' => $activeSchedule->start_time
+                'data'    => $log,
+                'student_name' => $student->user->full_name ?? 'Siswa', // Asumsi relasi ke user
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Attendance Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false, 
                 'message' => 'Server Error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function getCurrentScheduleId($carbonTime)
+    {
+        return Schedule::where('start_time', '<=', $carbonTime)
+            ->where('end_time', '>=', $carbonTime)
+            ->value('id');
     }
 }
