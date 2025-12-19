@@ -11,6 +11,9 @@ use Illuminate\Support\Str;
 
 class DeviceController extends Controller
 {
+    /**
+     * Menampilkan daftar perangkat IoT.
+     */
     public function index(Request $request)
     {
         $query = Device::withCount('attendanceLogs');
@@ -23,6 +26,9 @@ class DeviceController extends Controller
         return DeviceResource::collection($query->latest()->get());
     }
 
+    /**
+     * Menambahkan perangkat IoT baru.
+     */
     public function store(StoreRequest $request)
     {
         $data = $request->validated();
@@ -38,11 +44,17 @@ class DeviceController extends Controller
             ->additional(['message' => 'Perangkat berhasil diregistrasi']);
     }
 
+    /**
+     * Menampilkan detail perangkat IoT.
+     */
     public function show(Device $device)
     {
         return new DeviceResource($device->loadCount('attendanceLogs'));
     }
 
+    /**
+     * Memperbarui informasi perangkat IoT.
+     */
     public function update(Request $request, Device $device)
     {
         $request->validate([
@@ -57,6 +69,9 @@ class DeviceController extends Controller
             ->additional(['message' => 'Informasi perangkat diperbarui']);
     }
 
+    /**
+     * Menghapus perangkat IoT.
+     */
     public function destroy(Device $device)
     {
         // Cegah hapus jika sudah ada log absensi (Integritas Data)

@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 
 class SubjectController extends Controller
 {
+    /**
+     * Menampilkan daftar mata pelajaran.
+     */
     public function index(Request $request)
     {
         $query = Subject::query();
@@ -23,6 +26,9 @@ class SubjectController extends Controller
         return SubjectResource::collection($subjects);
     }
 
+    /**
+     * Menambahkan mata pelajaran baru.
+     */
     public function store(StoreRequest $request)
     {
         $subject = Subject::create($request->validated());
@@ -30,11 +36,17 @@ class SubjectController extends Controller
             ->additional(['message' => 'Mata pelajaran berhasil ditambahkan']);
     }
 
+    /**
+     * Menampilkan detail mata pelajaran.
+     */
     public function show(Subject $subject)
     {
         return new SubjectResource($subject);
     }
 
+    /**
+     * Memperbarui data mata pelajaran.
+     */
     public function update(UpdateRequest $request, Subject $subject)
     {
         $subject->update($request->validated());
@@ -42,6 +54,9 @@ class SubjectController extends Controller
             ->additional(['message' => 'Mata pelajaran berhasil diperbarui']);
     }
 
+    /**
+     * Menghapus data mata pelajaran.
+     */
     public function destroy(Subject $subject)
     {
         // Cek jika sudah digunakan di jadwal

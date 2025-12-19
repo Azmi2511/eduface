@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
+    /**
+     * Menampilkan daftar guru.
+     */
     public function index(Request $request)
     {
         $query = Teacher::with('user');
@@ -35,6 +38,9 @@ class TeacherController extends Controller
         return TeacherResource::collection($teachers);
     }
 
+    /**
+     * Menambahkan guru baru.
+     */
     public function store(StoreRequest $request)
     {
         try {
@@ -56,11 +62,17 @@ class TeacherController extends Controller
         }
     }
 
+    /**
+     * Menampilkan detail guru.
+     */
     public function show(Teacher $teacher)
     {
         return new TeacherResource($teacher->load('user'));
     }
 
+    /**
+     * Memperbarui data guru.
+     */
     public function update(UpdateRequest $request, Teacher $teacher)
     {
         try {
@@ -83,6 +95,9 @@ class TeacherController extends Controller
         }
     }
 
+    /**
+     * Menghapus data guru.
+     */
     public function destroy(Teacher $teacher)
     {
         $teacher->delete();

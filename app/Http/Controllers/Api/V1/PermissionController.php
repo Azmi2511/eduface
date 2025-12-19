@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Storage;
 
 class PermissionController extends Controller
 {
+    /**
+     * Menampilkan daftar izin.
+     */
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -28,6 +31,9 @@ class PermissionController extends Controller
         return PermissionResource::collection($query->latest()->paginate(10));
     }
 
+    /**
+     * Menambahkan izin baru.
+     */
     public function store(StorePermissionRequest $request)
     {
         $user = auth()->user();
@@ -51,6 +57,9 @@ class PermissionController extends Controller
             ->additional(['message' => 'Pengajuan izin berhasil dikirim.']);
     }
 
+    /**
+     * Memperbarui status izin.
+     */
     public function updateStatus(Request $request, Permission $permission)
     {
         $request->validate([

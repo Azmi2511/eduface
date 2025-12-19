@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
+    /**
+     * Menampilkan daftar jadwal.
+     */
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -42,6 +45,9 @@ class ScheduleController extends Controller
         return ScheduleResource::collection($schedules);
     }
 
+    /**
+     * Menambahkan jadwal baru.
+     */
     public function store(StoreRequest $request)
     {
         // Cek Bentrok (Contoh sederhana untuk Guru)
@@ -61,12 +67,18 @@ class ScheduleController extends Controller
             ->additional(['message' => 'Jadwal berhasil dibuat']);
     }
 
+    /**
+     * Menampilkan detail jadwal.
+     */
     public function show(Schedule $schedule)
     {
         return new ScheduleResource($schedule->load(['class', 'subject', 'teacher.user']));
     }
 
-   public function update(UpdateRequest $request, Schedule $schedule)
+    /**
+     * Memperbarui jadwal.
+     */
+    public function update(UpdateRequest $request, Schedule $schedule)
     {
         $criticalFields = ['start_time', 'end_time', 'day_of_week', 'teacher_id', 'class_id'];
     
@@ -88,6 +100,9 @@ class ScheduleController extends Controller
             ->additional(['message' => 'Jadwal berhasil diperbarui']);
     }
 
+    /**
+     * Menghapus jadwal.
+     */
     public function destroy(Schedule $schedule)
     {
         $schedule->delete();

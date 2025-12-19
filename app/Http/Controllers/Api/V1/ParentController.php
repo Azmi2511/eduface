@@ -15,6 +15,9 @@ use Illuminate\Support\Str;
 
 class ParentController extends Controller
 {
+    /**
+     * Menampilkan daftar orang tua.
+     */
     public function index(Request $request)
     {
         $query = ParentProfile::with(['user']);
@@ -36,6 +39,9 @@ class ParentController extends Controller
         return ParentResource::collection($parents);
     }
 
+    /**
+     * Menambahkan akun orang tua baru.
+     */
     public function store(StoreRequest $request)
     {
         try {
@@ -73,12 +79,18 @@ class ParentController extends Controller
         }
     }
 
+    /**
+     * Menampilkan detail akun orang tua.
+     */
     public function show($id)
     {
         $parent = ParentProfile::with(['user', 'students'])->findOrFail($id);
         return new ParentResource($parent);
     }
 
+    /**
+     * Memperbarui informasi akun orang tua.
+     */
     public function update(UpdateRequest $request, $id)
     {
         $parent = ParentProfile::findOrFail($id);
@@ -103,6 +115,9 @@ class ParentController extends Controller
         }
     }
 
+    /**
+     * Menghapus akun orang tua.
+     */
     public function destroy($id)
     {
         $parent = ParentProfile::findOrFail($id);
@@ -113,6 +128,9 @@ class ParentController extends Controller
         return response()->json(['message' => 'Akun orang tua berhasil dihapus']);
     }
 
+    /**
+     * Memperbarui FCM Token.
+     */
     public function updateFcmToken(Request $request, $id)
     {
         $request->validate(['fcm_token' => 'required|string']);

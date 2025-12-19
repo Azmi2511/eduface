@@ -10,6 +10,9 @@ use App\Http\Resources\Api\V1\UserResource;
 
 class AuthController extends Controller
 {
+    /**
+     * Handle user login and token creation.
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -30,6 +33,9 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Handle user logout and token deletion.
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 
 class SchoolClassController extends Controller
 {
+    /**
+     * Menampilkan daftar kelas.
+     */
     public function index(Request $request)
     {
         $query = SchoolClass::withCount('students');
@@ -37,6 +40,9 @@ class SchoolClassController extends Controller
         return SchoolClassResource::collection($classes);
     }
 
+    /**
+     * Menambahkan kelas baru.
+     */
     public function store(StoreRequest $request)
     {
         try {
@@ -49,11 +55,17 @@ class SchoolClassController extends Controller
         }
     }
 
+    /**
+     * Menampilkan detail kelas.
+     */
     public function show(SchoolClass $schoolClass)
     {
         return new SchoolClassResource($schoolClass->loadCount('students')->load('schedules'));
     }
 
+    /**
+     * Memperbarui data kelas.
+     */
     public function update(UpdateRequest $request, SchoolClass $schoolClass)
     {
         try {
@@ -66,6 +78,9 @@ class SchoolClassController extends Controller
         }
     }
 
+    /**
+     * Menghapus kelas.
+     */
     public function destroy(SchoolClass $schoolClass)
     {
         if ($schoolClass->students()->exists()) {

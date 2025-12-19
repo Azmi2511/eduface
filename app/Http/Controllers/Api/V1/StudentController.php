@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
+    /**
+     * Menampilkan daftar siswa.
+     */
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -44,6 +47,9 @@ class StudentController extends Controller
         return StudentResource::collection($students);
     }
 
+    /**
+     * Menambahkan siswa baru.
+     */
     public function store(StoreRequest $request)
     {
         try {
@@ -69,11 +75,17 @@ class StudentController extends Controller
         }
     }
 
+    /**
+     * Menampilkan detail siswa
+     */
     public function show(Student $student)
     {
         return new StudentResource($student->load(['user', 'class', 'parent.user']));
     }
 
+    /**
+     * Memperbarui data siswa.
+     */
     public function update(UpdateRequest $request, Student $student)
     {
         try {
@@ -101,6 +113,9 @@ class StudentController extends Controller
         }
     }
 
+    /**
+     * Menghapus data siswa
+     */
     public function destroy(Student $student)
     {
         // Jangan hapus user, hanya hapus profile student (atau sesuai kebijakan bisnis)

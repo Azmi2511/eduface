@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+    /**
+     * Menampilkan daftar pengguna.
+     */
     public function index(Request $request)
     {
         $query = User::query();
@@ -40,6 +43,9 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Menambahkan pengguna baru.
+     */
     public function store(StoreRequest $request)
     {
         $data = $request->validated();
@@ -53,11 +59,17 @@ class UserController extends Controller
         return (new UserResource($user))->additional(['message' => 'User created successfully']);
     }
 
+    /**
+     * Menampilkan detail pengguna.
+     */
     public function show(User $user)
     {
         return new UserResource($user->load(['teacher', 'student', 'parentProfile']));
     }
 
+    /**
+     * Memperbarui data pengguna.
+     */
     public function update(UpdateRequest $request, User $user)
     {
         $data = $request->validated();
@@ -75,6 +87,9 @@ class UserController extends Controller
         return (new UserResource($user))->additional(['message' => 'User updated successfully']);
     }
 
+    /**
+     * Menghapus data pengguna.
+     */
     public function destroy(User $user)
     {
         if ($user->profile_picture) Storage::disk('public')->delete($user->profile_picture);
