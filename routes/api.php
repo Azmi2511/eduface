@@ -30,15 +30,13 @@ Route::prefix('v1')->group(function () {
     // --- 🔑 PUBLIC ROUTES ---
     Route::post('/login', [AuthController::class, 'login']);
     
-    // Endpoint IoT (Jika device tidak menggunakan Bearer Token, letakkan di sini)
-    // Route::post('attendance/device-scan', [AttendanceController::class, 'deviceStore']);
-
     // --- 🛡️ PROTECTED ROUTES (Sanctum) ---
     Route::middleware('auth:sanctum')->group(function () {
         
         // 👤 User & Profile
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me', [UserController::class, 'me']); // Pindahkan logic closure ke UserController::me
+        Route::get('/me', [UserController::class, 'me']);
+        Route::patch('/me/update', [UserController::class, 'updateProfile']); // Tambahan untuk edit profil mandiri
         Route::apiResource('users', UserController::class);
 
         // 👨‍🏫 Teacher Management
@@ -63,11 +61,14 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('schedules', ScheduleController::class);
 
         // 📸 Attendance & Devices (IoT)
-        Route::apiResource('devices', DeviceController::class);
+        // PENTING: Letakkan route statis DI ATAS apiResource
+        Route::get('attendance/export', [AttendanceController::class, 'export']); 
         Route::post('attendance/device-scan', [AttendanceController::class, 'deviceStore']);
+        Route::apiResource('attendance', AttendanceController::class);
+        
+        Route::apiResource('devices', DeviceController::class);
 
-        // 📢 Announcements (Scramble otomatis deteksi FormRequest di sini)
-        // Gunakan apiResource agar Scramble bisa mapping store/update/destroy
+        // 📢 Announcements
         Route::apiResource('announcements', AnnouncementController::class);
 
         // 🔔 Notifications

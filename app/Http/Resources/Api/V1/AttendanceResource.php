@@ -1,28 +1,33 @@
 <?php
+
 namespace App\Http\Resources\Api\V1;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class AttendanceResource extends JsonResource
 {
-    public function toArray($request)
+    public function toArray(Request $request): array
     {
         return [
             'id'           => $this->id,
             'student'      => [
                 'nisn'      => $this->student_nisn,
-                'full_name' => $this->student->user->full_name ?? 'N/A',
-                'class'     => $this->student->class->class_name ?? 'N/A',
+                'name'      => $this->student->user->full_name ?? null,
+                'class'     => $this->student->class->class_name ?? null,
             ],
-            'schedule'     => $this->schedule ? [
-                'id'           => $this->schedule->id,
-                'subject_name' => $this->schedule->subject->subject_name,
-            ] : null,
-            'device'       => $this->device->device_name ?? 'Manual/Admin',
-            'date'         => $this->date->format('Y-m-d'),
-            'time_log'     => substr($this->time_log, 0, 5),
-            'status'       => $this->status,
-            'created_at'   => $this->created_at->format('H:i:s'),
+            'schedule'     => [
+                'id'        => $this->schedule_id,
+                'subject'   => $this->schedule->subject->subject_name ?? 'Masuk Sekolah (Umum)',
+                'start'     => $this->schedule->start_time ?? null,
+            ],
+            'attendance'   => [
+                'date'      => $this->date,
+                'time'      => $this->time_log,
+                'status'    => $this->status,
+                'method'    => $this->device_id ? 'Device' : 'Manual',
+            ],
+            'created_at'   => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

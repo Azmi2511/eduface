@@ -97,4 +97,87 @@ class AttendanceController extends Controller
         ];
         return $map[$day];
     }
+
+    /**
+     * Simpan Absensi Secara MANUAL (Admin & Teacher)
+     */
+    public function store(AttendanceLogRequest $request)
+    {
+        $request->validate([
+            'student_nisn' => 'required|exists:students,nisn',
+            'date'         => 'required|date',
+            'time_log'     => 'required', // Format H:i:s
+            'status'       => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpha',
+            'schedule_id'  => 'nullable|exists:schedules,id',
+        ]);
+
+        $student = Student::where('nisn', $request->student_nisn)->first();
+        $scheduleId = $request->schedule_id;
+
+        // Logic mencari jadwal otomatis jika schedule_id kosong (seperti controller kedua)
+        if (!$scheduleId) {
+            $carbonDate = Carbon::parse($request->date);
+            $dayName = $this->getIndonesianDay($carbonDate->format('l'));
+            
+            $matchedSchedule = Schedule::where('class_id', $student->class_id)
+                ->where('day_of_week', $dayName)
+                ->where('start_time', '<=', $request->time_log)
+                ->where('end_time', '>=', $request->time_log)
+                ->first();
+
+            if ($matchedSchedule) {
+                $scheduleId = $matchedSchedule->id;
+            }
+        }
+
+        $log = AttendanceLog::updateOrCreate(
+            [
+                'student_nisn' => $request->student_nisn,
+                'date'         => $request->date,
+                'schedule_id'  => $scheduleId,
+            ],
+            [
+                'time_log'  => $request->time_log,
+                'status'    => $request->status,
+                'device_id' => null, 
+            ]
+        );
+
+        return new AttendanceResource($log->load(['student.user', 'student.class', 'schedule.subject']));
+    }
+
+    /**
+     * Update status absensi (Contoh: Dari Alpa ke Hadir)
+     */
+    public function update(UpdateAttendanceRequest $request, $id)
+    {
+        $request->validate([
+            'status'   => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpha',
+            'time_log' => 'nullable'
+        ]);
+
+        $log = AttendanceLog::findOrFail($id);
+        $log->update($request->validated());
+
+        return (new AttendanceResource($log->load(['student.user', 'student.class', 'schedule.subject'])))
+            ->additional(['message' => 'Status absensi berhasil diperbarui']);
+    }
+
+    /**
+     * Hapus log absensi (Admin Only)
+     */
+    public function destroy($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Hanya admin yang dapat menghapus log.'], 403);
+        }
+
+        $log = AttendanceLog::findOrFail($id);
+        $log->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data absensi berhasil dihapus dari sistem.'
+        ]);
+    }
 }
