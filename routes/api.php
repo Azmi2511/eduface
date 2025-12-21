@@ -25,7 +25,7 @@ use App\Http\Controllers\Api\V1\SystemSettingController;
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->as('api.v1.')->group(function () {
 
     // --- 🔑 PUBLIC ROUTES ---
     Route::post('/login', [AuthController::class, 'login']);
