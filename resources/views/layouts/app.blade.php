@@ -157,6 +157,10 @@
             showToast('error', "{{ session('error') }}", 'border-red-500');
         @endif
 
+        @if (session('info'))
+            showToast('info', "{{ session('info') }}", 'border-blue-500');
+        @endif
+
         @if ($errors->any())
             showToast('error', "Mohon periksa kembali input form Anda.", 'border-red-500');
         @endif

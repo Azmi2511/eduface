@@ -50,13 +50,15 @@ class NotificationsController extends Controller
         $updatedCount = Notification::where('user_id', auth()->id())
                                     ->where('is_read', false)
                                     ->update(['is_read' => true]);
-        
-        if ($updatedCount > 0) {
-            $message = 'Semua ' . $updatedCount . ' notifikasi baru telah ditandai sebagai sudah dibaca.';
-        } else {
-            $message = 'Tidak ada notifikasi baru untuk ditandai.';
-        }
 
-        return response()->json(['status' => 'success', 'message' => $message], 200);
+        $message = ($updatedCount > 0) 
+            ? "Semua $updatedCount notifikasi baru telah ditandai sebagai sudah dibaca." 
+            : "Tidak ada notifikasi baru untuk ditandai.";
+
+        if ($updatedCount > 0) {
+            return redirect()->back()->with('success', 'Notifikasi berhasil diperbarui.');
+        } else {
+            return redirect()->back()->with('info', 'Tidak ada notifikasi baru untuk ditandai.');
+        }
     }
 }
