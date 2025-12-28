@@ -54,7 +54,6 @@ class NotificationsController extends Controller
         $message = ($updatedCount > 0) 
             ? "Semua $updatedCount notifikasi baru telah ditandai sebagai sudah dibaca." 
             : "Tidak ada notifikasi baru untuk ditandai.";
-
         if ($updatedCount > 0) {
             return redirect()->back()->with('success', 'Notifikasi berhasil diperbarui.');
         } else {
