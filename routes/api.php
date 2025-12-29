@@ -32,6 +32,8 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
     
     // --- 🛡️ PROTECTED ROUTES (Sanctum) ---
     Route::middleware('auth:sanctum')->group(function () {
+
+        Route::get('dashboard', [DashboardController::class, 'index']);
         
         // 👤 User & Profile
         Route::post('/logout', [AuthController::class, 'logout']);
