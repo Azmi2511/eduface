@@ -5,36 +5,57 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Resources\Api\V1\UserResource;
 
 class AuthController extends Controller
 {
+
     /**
      * Handle user login and token creation.
      */
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required',
-            'password' => 'required',
-            'device_name' => 'required'
+            'login' => 'required|string',
+            'password' => 'required'
         ]);
 
-        $user = User::where('username', $request->username)->first();
+        $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        $credentials = [
+            $loginType => $request->login,
+            'password' => $request->password
+        ];
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Username/Email atau password salah.'
+            ], 401);
         }
 
+        $user = User::where($loginType, $request->login)->firstOrFail();
+
+        $user->load(['student.schoolClass', 'teacher', 'parentProfile']);
+
+        if ($user->is_active == 0) {
+            return response()->json(['message' => 'Akun anda tidak aktif.'], 403);
+        }
+
+        $token = $user->createToken('Mobile Device')->plainTextToken;
+
         return response()->json([
-            'token' => $user->createToken($request->device_name)->plainTextToken,
-            'user'  => new UserResource($user)
+            'message' => 'Login success',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
         ]);
     }
 
     /**
-     * Handle user logout and token deletion.
+     * Summary of logout
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
     {
