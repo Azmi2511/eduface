@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 // Import Controllers
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\TeacherController;
 use App\Http\Controllers\Api\V1\StudentController;

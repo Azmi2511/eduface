@@ -6,95 +6,99 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\AttendanceLog;
-use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /**
-     * Get Overview Stats for Dashboard
-     * * Mengambil statistik kehadiran hari ini, data grafik 7 hari terakhir, 
-     * dan aktivitas terbaru.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $today = Carbon::today()->toDateString();
+        try {
+            $user = $request->user();
+            $today = Carbon::today()->toDateString();
 
-        // 1. Statistik Utama
-        $total_students = Student::count();
+            $parentRecord = DB::table('parents')->where('user_id', $user->id)->first();
 
-        // Mengambil ID log terakhir untuk setiap siswa hari ini agar tidak double count
-        $latest_ids = AttendanceLog::selectRaw('MAX(id) as id')
-            ->whereDate('date', $today)
-            ->groupBy('student_nisn')
-            ->pluck('id');
+            if (!$parentRecord) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Profil orang tua tidak ditemukan'
+                ], 404);
+            }
 
-        $today_logs = AttendanceLog::whereIn('id', $latest_ids)->get();
-
-        $total_present = $today_logs->where('status', 'Hadir')->count();
-        $total_late    = $today_logs->where('status', 'Terlambat')->count();
-        $total_permit  = $today_logs->whereIn('status', ['Izin', 'Sakit'])->count();
-        $total_absent  = $total_students - ($total_present + $total_late + $total_permit);
-        
-        $attendance_percentage = $total_students > 0 
-            ? round((($total_present + $total_late) / $total_students) * 100) 
-            : 0;
-
-        // 2. Data Chart (7 Hari Terakhir)
-        $chart = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $check_date = Carbon::today()->subDays($i);
-            $date_string = $check_date->toDateString();
+            $children = Student::where('parent_id', $parentRecord->id)->with('user')->get();
             
-            $count = AttendanceLog::whereDate('date', $date_string)
-                ->distinct('student_nisn')
-                ->count('student_nisn');
+            if ($children->isEmpty()) {
+                return response()->json([
+                    'status' => 'success',
+                    'parent_name' => $user->full_name,
+                    'children' => [],
+                    'statistics' => [
+                        'attendancePercentage' => "0%",
+                        'lateCount' => 0,
+                        'absentCount' => 0,
+                        'permissionCount' => 0
+                    ],
+                    'attendance_logs' => []
+                ]);
+            }
 
-            $chart[] = [
-                'label' => $check_date->translatedFormat('d M'),
-                'value' => $count
-            ];
-        }
+            $childNisns = $children->pluck('nisn');
 
-        // 3. Aktivitas Terbaru (Log Kehadiran)
-        $recent_activity = AttendanceLog::with(['student.user', 'student.class'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($log) {
-                return [
-                    'student_name' => $log->student->user->full_name ?? 'N/A',
-                    'class'        => $log->student->class->class_name ?? '-',
-                    'time'         => Carbon::parse($log->time_log)->format('H:i'),
-                    'status'       => $log->status,
-                ];
-            });
+            $logsToday = AttendanceLog::whereIn('student_nisn', $childNisns)
+                ->whereDate('date', $today)
+                ->get();
 
-        // 4. User Terbaru (Opsional untuk Admin)
-        $recent_users = User::select('id', 'full_name', 'role', 'created_at')
-            ->orderBy('created_at', 'desc')
-            ->limit(3)
-            ->get();
+            $totalPresent = $logsToday->where('status', 'Hadir')->count();
+            $totalLate    = $logsToday->where('status', 'Terlambat')->count();
+            $totalPermit  = $logsToday->whereIn('status', ['Izin', 'Sakit'])->count();
+            $totalChildren = $children->count();
+            
+            $totalAbsent = max(0, $totalChildren - $logsToday->count());
+            $percentage = $totalChildren > 0 ? round((($totalPresent + $totalLate) / $totalChildren) * 100) : 0;
 
-        return response()->json([
-            'success' => true,
-            'data' => [
+            $attendanceLogs = AttendanceLog::whereIn('student_nisn', $childNisns)
+                ->with(['student.user'])
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($log) {
+                    return [
+                        'id' => $log->id,
+                        'student_name' => optional(optional($log->student)->user)->full_name ?? 'Siswa',
+                        'status' => $log->status,
+                        'time' => $log->time_log ? Carbon::parse($log->time_log)->format('H:i') : '-',
+                        'date' => $log->date ? Carbon::parse($log->date)->format('d M Y') : '-',
+                    ];
+                });
+
+            return response()->json([
+                'status' => 'success',
+                'parent_name' => $user->full_name,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id, 
+                        'name' => optional($c->user)->full_name ?? 'Anak'
+                    ];
+                }),
                 'statistics' => [
-                    'total_students' => $total_students,
-                    'present'        => $total_present,
-                    'late'           => $total_late,
-                    'permit'         => $total_permit,
-                    'absent'         => max(0, $total_absent), // Menghindari nilai negatif
-                    'percentage'     => $attendance_percentage,
+                    'presentCount' => $totalPresent,
+                    'attendancePercentage' => $percentage . "%",
+                    'lateCount' => $totalLate,
+                    'absentCount' => $totalAbsent,
+                    'permissionCount' => $totalPermit
                 ],
-                'chart'           => $chart,
-                'recent_activity' => $recent_activity,
-                'recent_users'    => $recent_users,
-                'settings' => [
-                    'late_limit' => SystemSetting::value('late_limit') ?? '07:30:00',
-                ]
-            ]
-        ]);
+                'attendance_logs' => $attendanceLogs
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Dashboard Error: " . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
