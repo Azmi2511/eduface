@@ -20,34 +20,41 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        
+
         $query = AttendanceLog::with(['student.user', 'student.class', 'schedule.subject']);
 
-        if ($user->role === 'teacher') {
-            $query->whereIn('student_nisn', function($q) use ($user) {
-                $q->select('nisn')->from('students')
-                ->whereIn('class_id', Schedule::where('teacher_id', $user->teacher->id)->pluck('class_id'));
+        if ($user->role === 'parent') {
+            $parent = $user->parentProfile; 
+            
+            if (!$parent) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Data ParentProfile tidak ditemukan untuk user_id: ' . $user->id,
+                    'data' => []
+                ], 404);
+            }
+
+            $query->whereHas('student', function ($q) use ($parent) {
+                $q->where('parent_id', $parent->id);
             });
-        } 
-        elseif ($user->role === 'parent') {
-            $query->whereIn('student_nisn', function($q) use ($user) {
-                $q->select('nisn')->from('students')
-                ->whereIn('parent_id', function($sub) use ($user) {
-                    $sub->select('id')->from('parents')->where('user_id', $user->id);
-                });
-            });
+            
+        } elseif ($user->role === 'student') {
+            if ($user->student) {
+                $query->where('student_nisn', $user->student->nisn);
+            }
         }
 
-        if ($request->has('student_id') && $request->student_id != -1) {
-            $query->whereHas('student', function($q) use ($request) {
-                $q->where('id', $request->student_id);
-            });
+        if ($request->filled('nisn')) {
+            $query->where('student_nisn', $request->nisn);
         }
 
-        $date = $request->get('date', Carbon::today()->toDateString());
-        $query->whereDate('date', $date);
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->date);
+        }
 
-        $logs = $query->latest('time_log')->get();
-        
+        $logs = $query->latest('id')->get();
+
         return AttendanceResource::collection($logs);
     }
 
