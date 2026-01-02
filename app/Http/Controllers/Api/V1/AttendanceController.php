@@ -15,26 +15,39 @@ use Illuminate\Http\Request;
 class AttendanceController extends Controller
 {
     /**
-     * Endpoint untuk LIST riwayat absensi (Admin & Teacher)
-     */
+    * Endpoint untuk LIST riwayat absensi (Admin, Teacher, & Parent)
+    */
     public function index(Request $request)
     {
         $user = auth()->user();
         $query = AttendanceLog::with(['student.user', 'student.class', 'schedule.subject']);
 
-        // Filter Role: Teacher hanya lihat kelasnya
         if ($user->role === 'teacher') {
             $query->whereIn('student_nisn', function($q) use ($user) {
                 $q->select('nisn')->from('students')
-                  ->whereIn('class_id', Schedule::where('teacher_id', $user->teacher->id)->pluck('class_id'));
+                ->whereIn('class_id', Schedule::where('teacher_id', $user->teacher->id)->pluck('class_id'));
+            });
+        } 
+        elseif ($user->role === 'parent') {
+            $query->whereIn('student_nisn', function($q) use ($user) {
+                $q->select('nisn')->from('students')
+                ->whereIn('parent_id', function($sub) use ($user) {
+                    $sub->select('id')->from('parents')->where('user_id', $user->id);
+                });
             });
         }
 
-        // Filter Tanggal
+        if ($request->has('student_id') && $request->student_id != -1) {
+            $query->whereHas('student', function($q) use ($request) {
+                $q->where('id', $request->student_id);
+            });
+        }
+
         $date = $request->get('date', Carbon::today()->toDateString());
         $query->whereDate('date', $date);
 
         $logs = $query->latest('time_log')->get();
+        
         return AttendanceResource::collection($logs);
     }
 
