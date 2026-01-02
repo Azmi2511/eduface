@@ -5,31 +5,40 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Http\Requests\Api\V1\Schedule\StoreRequest;
+use App\Http\Requests\Api\V1\Schedule\UpdateRequest;
 use App\Http\Resources\Api\V1\ScheduleResource;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
-    /**
-     * Menampilkan daftar jadwal.
-     */
     public function index(Request $request)
     {
         $user = auth()->user();
         $query = Schedule::with(['class', 'subject', 'teacher.user']);
 
-        // Filter Berdasarkan Role
         if ($user->role === 'teacher') {
             $query->whereHas('teacher', fn($q) => $q->where('user_id', $user->id));
         } elseif ($user->role === 'student') {
+            if (!$user->student) {
+                return ScheduleResource::collection(collect());
+            }
             $query->where('class_id', $user->student->class_id);
         } elseif ($user->role === 'parent') {
-            // Mengambil jadwal untuk semua anak dari orang tua ini
-            $classIds = $user->parentProfile->students->pluck('class_id');
+            if (!$user->parentProfile) {
+                return ScheduleResource::collection(collect());
+            }
+
+            $classIds = $user->parentProfile->students()
+                             ->whereNotNull('class_id')
+                             ->pluck('class_id');
+
+            if ($classIds->isEmpty()) {
+                return ScheduleResource::collection(collect());
+            }
+
             $query->whereIn('class_id', $classIds);
         }
 
-        // Filter Tambahan
         if ($request->filled('day')) {
             $query->where('day_of_week', $request->day);
         }
@@ -45,21 +54,10 @@ class ScheduleController extends Controller
         return ScheduleResource::collection($schedules);
     }
 
-    /**
-     * Menambahkan jadwal baru.
-     */
     public function store(StoreRequest $request)
     {
-        // Cek Bentrok (Contoh sederhana untuk Guru)
-        $isConflict = Schedule::where('teacher_id', $request->teacher_id)
-            ->where('day_of_week', $request->day_of_week)
-            ->where(function($q) use ($request) {
-                $q->whereBetween('start_time', [$request->start_time, $request->end_time])
-                  ->orWhereBetween('end_time', [$request->start_time, $request->end_time]);
-            })->exists();
-
-        if ($isConflict) {
-            return response()->json(['message' => 'Guru sudah memiliki jadwal di jam tersebut.'], 422);
+        if ($this->isConflict((object)$request->all())) {
+            return response()->json(['message' => 'Jadwal bentrok dengan jadwal lain.'], 422);
         }
 
         $schedule = Schedule::create($request->validated());
@@ -67,29 +65,22 @@ class ScheduleController extends Controller
             ->additional(['message' => 'Jadwal berhasil dibuat']);
     }
 
-    /**
-     * Menampilkan detail jadwal.
-     */
     public function show(Schedule $schedule)
     {
         return new ScheduleResource($schedule->load(['class', 'subject', 'teacher.user']));
     }
 
-    /**
-     * Memperbarui jadwal.
-     */
     public function update(UpdateRequest $request, Schedule $schedule)
     {
         $criticalFields = ['start_time', 'end_time', 'day_of_week', 'teacher_id', 'class_id'];
     
         if ($request->hasAny($criticalFields)) {
-            
             $mergedData = (object) array_merge($schedule->toArray(), $request->all());
 
             if ($this->isConflict($mergedData, $schedule->id)) {
                 return response()->json([
                     'status'  => 'error',
-                    'message' => 'Perubahan gagal! Jadwal baru menyebabkan bentrok dengan jadwal lain (Guru atau Kelas sudah terisi pada jam tersebut).'
+                    'message' => 'Perubahan gagal! Jadwal baru menyebabkan bentrok.'
                 ], 422);
             }
         }
@@ -100,14 +91,12 @@ class ScheduleController extends Controller
             ->additional(['message' => 'Jadwal berhasil diperbarui']);
     }
 
-    /**
-     * Menghapus jadwal.
-     */
     public function destroy(Schedule $schedule)
     {
         $schedule->delete();
         return response()->json(['message' => 'Jadwal berhasil dihapus']);
     }
+
     private function isConflict($request, $excludeId = null)
     {
         $query = Schedule::where('day_of_week', $request->day_of_week)

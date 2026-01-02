@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\AttendanceLog;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -51,18 +50,26 @@ class DashboardController extends Controller
                 ->whereDate('date', $today)
                 ->get();
 
-            $totalPresent = $logsToday->where('status', 'Hadir')->count();
-            $totalLate    = $logsToday->where('status', 'Terlambat')->count();
-            $totalPermit  = $logsToday->whereIn('status', ['Izin', 'Sakit'])->count();
-            $totalChildren = $children->count();
+            $totalPresentOnly = $logsToday->where('status', 'Hadir')->count();
+            $totalLate        = $logsToday->where('status', 'Terlambat')->count();
+            $totalAttending   = $totalPresentOnly + $totalLate;
+
+            $totalPermit      = $logsToday->whereIn('status', ['Izin', 'Sakit'])->count();
+            $totalChildren    = $children->count();
             
-            $totalAbsent = max(0, $totalChildren - $logsToday->count());
-            $percentage = $totalChildren > 0 ? round((($totalPresent + $totalLate) / $totalChildren) * 100) : 0;
+            $hasLogNisns = $logsToday->pluck('student_nisn')->toArray();
+            $noLogCount  = $children->whereNotIn('nisn', $hasLogNisns)->count();
+            $explicitAbsentCount = $logsToday->where('status', 'Alpa')->count();
+            $totalAbsent = $noLogCount + $explicitAbsentCount;
+
+            $percentage = $totalChildren > 0 
+                ? round(($totalAttending / $totalChildren) * 100) 
+                : 0;
 
             $attendanceLogs = AttendanceLog::whereIn('student_nisn', $childNisns)
+                ->whereDate('date', $today)
                 ->with(['student.user'])
                 ->orderBy('created_at', 'desc')
-                ->limit(10)
                 ->get()
                 ->map(function ($log) {
                     return [
@@ -77,14 +84,33 @@ class DashboardController extends Controller
             return response()->json([
                 'status' => 'success',
                 'parent_name' => $user->full_name,
-                'children' => $children->map(function($c) {
+                'children' => $children->map(function($c) use ($today) {
+                    $childLogs = AttendanceLog::where('student_nisn', $c->nisn)
+                        ->whereDate('date', $today)
+                        ->get();
+
+                    $presentCount = $childLogs->whereIn('status', ['Hadir', 'Terlambat'])->count();
+                    $lateCount    = $childLogs->where('status', 'Terlambat')->count();
+                    $permitCount  = $childLogs->whereIn('status', ['Izin', 'Sakit'])->count();
+                    
+                    // Jika tidak ada log sama sekali, berarti Alpa = 1
+                    $absentCount  = ($childLogs->count() == 0) ? 1 : $childLogs->where('status', 'Alpa')->count();
+                    $percentage   = $presentCount > 0 ? "100%" : "0%";
+
                     return [
-                        'id' => $c->id, 
-                        'name' => optional($c->user)->full_name ?? 'Anak'
+                        'id'   => $c->id, 
+                        'name' => optional($c->user)->full_name ?? 'Anak',
+                        'statistics' => [
+                            'presentCount' => $presentCount,
+                            'attendancePercentage' => $percentage,
+                            'lateCount' => $lateCount,
+                            'absentCount' => $absentCount,
+                            'permissionCount' => $permitCount
+                        ]
                     ];
                 }),
                 'statistics' => [
-                    'presentCount' => $totalPresent,
+                    'presentCount' => $totalAttending, 
                     'attendancePercentage' => $percentage . "%",
                     'lateCount' => $totalLate,
                     'absentCount' => $totalAbsent,
@@ -97,7 +123,7 @@ class DashboardController extends Controller
             Log::error("Dashboard Error: " . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Terjadi kesalahan pada server'
             ], 500);
         }
     }

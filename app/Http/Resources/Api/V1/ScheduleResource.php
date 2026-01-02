@@ -15,18 +15,18 @@ class ScheduleResource extends JsonResource
             'start_time'  => $this->start_time,
             'end_time'    => $this->end_time,
             'subject'     => [
-                'id'   => $this->subject->id,
-                'name' => $this->subject->subject_name,
+                'id'   => $this->subject?->id ?? 0,
+                'name' => $this->subject?->subject_name ?? 'Tanpa Mapel',
             ],
             'class'       => [
-                'id'   => $this->class->id,
-                'name' => $this->class->class_name,
-                'level'=> $this->class->grade_level,
+                'id'   => $this->class?->id ?? 0,
+                'name' => $this->class?->class_name ?? 'Tanpa Kelas',
+                'level'=> $this->class?->grade_level ?? 0,
             ],
             'teacher'     => [
-                'id'        => $this->teacher->id,
-                'full_name' => $this->teacher->user->full_name,
-                'code'      => $this->teacher->teacher_code,
+                'id'        => $this->teacher?->id ?? 0,
+                'full_name' => $this->teacher?->user?->full_name ?? 'Guru Tidak Terdaftar',
+                'code'      => $this->teacher?->teacher_code ?? '-',
             ],
         ];
     }
