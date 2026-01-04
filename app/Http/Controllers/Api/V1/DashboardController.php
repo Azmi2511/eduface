@@ -100,6 +100,7 @@ class DashboardController extends Controller
                     return [
                         'id'   => $c->id, 
                         'name' => optional($c->user)->full_name ?? 'Anak',
+                        'nisn' => $c->nisn,
                         'statistics' => [
                             'presentCount' => $presentCount,
                             'attendancePercentage' => $percentage,

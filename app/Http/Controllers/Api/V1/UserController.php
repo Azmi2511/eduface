@@ -96,4 +96,18 @@ class UserController extends Controller
         $user->delete();
         return response()->json(['message' => 'User deleted successfully']);
     }
+
+    /**
+     * Summary of updateFcmToken
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate(['fcm_token' => 'required|string']);
+        
+        auth()->user()->update(['fcm_token' => $request->fcm_token]);
+        
+        return response()->json(['message' => 'FCM Token updated']);
+    }
 }

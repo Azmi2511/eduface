@@ -34,12 +34,17 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
     // --- 🛡️ PROTECTED ROUTES (Sanctum) ---
     Route::middleware('auth:sanctum')->group(function () {
 
+        // 📊 Dashboard
         Route::get('dashboard', [DashboardController::class, 'index']);
         
         // 👤 User & Profile
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [UserController::class, 'me']);
-        Route::patch('/me/update', [UserController::class, 'updateProfile']); // Tambahan untuk edit profil mandiri
+        Route::patch('/me/update', [UserController::class, 'updateProfile']);
+        
+        // 🔥 FCM Token Update (PENTING untuk Push Notification)
+        Route::post('/user/update-fcm', [UserController::class, 'updateFcmToken']);
+        
         Route::apiResource('users', UserController::class);
 
         // 👨‍🏫 Teacher Management
@@ -52,7 +57,6 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
             ->parameters(['classes' => 'schoolClass']);
 
         // 👨‍👩‍👧 Parent & Student Management
-        Route::patch('parents/{parent}/fcm-token', [ParentController::class, 'updateFcmToken']);
         Route::apiResource('parents', ParentController::class);
         
         Route::get('stats/students', [StudentController::class, 'stats']);
@@ -64,7 +68,6 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
         Route::apiResource('schedules', ScheduleController::class);
 
         // 📸 Attendance & Devices (IoT)
-        // PENTING: Letakkan route statis DI ATAS apiResource
         Route::get('attendance/export', [AttendanceController::class, 'export']); 
         Route::post('attendance/device-scan', [AttendanceController::class, 'deviceStore']);
         Route::apiResource('attendance', AttendanceController::class);
@@ -74,7 +77,7 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
         // 📢 Announcements
         Route::apiResource('announcements', AnnouncementController::class);
 
-        // 🔔 Notifications
+        // 🔔 Notification History (Inbox di Android)
         Route::prefix('notifications')->group(function () {
             Route::get('/', [NotificationsController::class, 'index']);
             Route::get('/unread-count', [NotificationsController::class, 'unreadCount']);
@@ -82,7 +85,8 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
             Route::post('/mark-all-read', [NotificationsController::class, 'markAllRead']);
         });
 
-        // 📝 Permissions (Sakit/Izin)
+        // 📝 Permissions (Izin & Sakit)
+        // updateStatus digunakan Guru/Admin untuk Approve/Reject
         Route::patch('permissions/{permission}/status', [PermissionController::class, 'updateStatus']);
         Route::apiResource('permissions', PermissionController::class);
 

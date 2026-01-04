@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class PermissionResource extends JsonResource
 {
@@ -20,7 +22,7 @@ class PermissionResource extends JsonResource
                 'end'   => $this->end_date,
             ],
             'description'     => $this->description,
-            'proof_url'       => $this->proof_file_path ? asset('storage/' . $this->proof_file_path) : null,
+            'proof_url' => $this->proof_url ? url(Storage::url($this->proof_url)) : null,
             'approval_status' => $this->approval_status,
             'approved_by'     => $this->approvedBy->full_name ?? null,
             'created_at'      => $this->created_at->format('Y-m-d H:i'),
