@@ -75,7 +75,6 @@ class PermissionController extends Controller
     {
         $request->validate(['status' => 'required|in:Approved,Rejected']);
 
-        // Keamanan: Hanya Guru atau Admin yang bisa mengubah status
         if (!in_array(auth()->user()->role, ['admin', 'teacher'])) {
             return response()->json(['message' => 'Akses ditolak'], 403);
         }
@@ -87,18 +86,18 @@ class PermissionController extends Controller
                 'approved_by'     => auth()->id()
             ]);
 
-            // Jika disetujui, otomatis isi tabel AttendanceLog
             if ($request->status === 'Approved') {
                 $this->syncWithAttendance($permission);
             }
 
-            // Kirim Notifikasi via FCM HTTP v1
-            $userParent = $permission->parent->user;
+            $userParent = $permission->parent?->user;
             if ($userParent && $userParent->fcm_token) {
+                $statusIndo = ($request->status == "Rejected") ? "Ditolak" : "Diterima";
+                $studentName = $permission->student->user->full_name ?? 'Siswa';
                 NotificationHelper::sendPush(
                     $userParent->fcm_token,
-                    "Update Izin: " . $request->status,
-                    "Pengajuan izin " . $permission->student->user->name . " telah " . strtolower($request->status) . "."
+                    "Update Izin",
+                    "Pengajuan izin " . $studentName . " telah " . strtolower($statusIndo) . "."
                 );
             }
 
@@ -113,9 +112,6 @@ class PermissionController extends Controller
         }
     }
 
-    /**
-     * Sinkronisasi data izin ke daftar absensi harian.
-     */
     private function syncWithAttendance(Permission $permission)
     {
         $period = CarbonPeriod::create($permission->start_date, $permission->end_date);
@@ -123,13 +119,14 @@ class PermissionController extends Controller
         foreach ($period as $date) {
             AttendanceLog::updateOrCreate(
                 [
-                    'student_id' => $permission->student_id,
-                    'date'       => $date->format('Y-m-d'),
+                    'student_nisn' => $permission->student->nisn,
+                    'date'         => $date->format('Y-m-d'),
                 ],
                 [
-                    'status'     => $permission->type, // Izin atau Sakit
-                    'note'       => $permission->description,
-                    'is_excused' => true
+                    'status'       => $permission->type,
+                    'time_log'     => now()->toTimeString(),
+                    'device_id'    => null,
+                    'schedule_id'  => null,
                 ]
             );
         }

@@ -32,13 +32,24 @@ class NotificationHelper
                         'title' => $title,
                         'body'  => $body,
                     ],
+                    'android' => [
+                        'priority' => 'high',
+                        'notification' => [
+                            'channel_id' => 'izin_channel',
+                            'notification_priority' => 'PRIORITY_MAX',
+                            'sound' => 'default',
+                        ],
+                    ],
                     'data' => [
                         'type' => 'permission_update',
                     ],
                 ],
             ]);
 
-            return $response->json();
+            $result = $response->json();
+            Log::info('FCM Response: ', $result);
+            
+            return $result;
 
         } catch (\Exception $e) {
             Log::error('FCM Error: ' . $e->getMessage());

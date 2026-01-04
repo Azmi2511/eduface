@@ -15,7 +15,6 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id')->nullable()->unique();
             $table->enum('relationship', ['Ayah','Ibu','Wali'])->nullable();
-            $table->text('fcm_token')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

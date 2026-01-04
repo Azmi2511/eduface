@@ -21,6 +21,7 @@ class User extends Authenticatable
         'gender',
         'profile_picture',
         'role',
+        'fcm_token',
         'is_active',
     ];
 

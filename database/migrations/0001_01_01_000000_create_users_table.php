@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('gender', ['L','P'])->nullable();
             $table->string('profile_picture')->nullable();
             $table->enum('role', ['admin','teacher','student','parent']);
+            $table->text('fcm_token')->nullable();
             $table->boolean('is_active')->default(1);
             $table->rememberToken();
             $table->timestamps();

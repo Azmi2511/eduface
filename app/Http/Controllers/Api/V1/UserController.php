@@ -105,9 +105,18 @@ class UserController extends Controller
     public function updateFcmToken(Request $request)
     {
         $request->validate(['fcm_token' => 'required|string']);
+
+        $user = auth()->user();
         
-        auth()->user()->update(['fcm_token' => $request->fcm_token]);
+        \Log::info('Update FCM Start', [
+            'user_id' => $user->id,
+            'token_dikirim' => $request->fcm_token
+        ]);
+
+        $result = $user->update(['fcm_token' => $request->fcm_token]);
         
+        \Log::info('Update Result: ' . ($result ? 'Berhasil' : 'Gagal'));
+
         return response()->json(['message' => 'FCM Token updated']);
     }
 }
