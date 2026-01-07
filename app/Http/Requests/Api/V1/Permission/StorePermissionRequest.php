@@ -15,7 +15,7 @@ class StorePermissionRequest extends FormRequest
             'type'            => 'required|in:Sakit,Izin',
             'start_date'      => 'required|date|after_or_equal:today',
             'end_date'        => 'required|date|after_or_equal:start_date',
-            'description'     => 'required|string|min:10',
+            'description'     => 'required|string',
             'proof_file'      => 'nullable|image|mimes:jpg,jpeg,png,pdf|max:2048', // Max 2MB
         ];
     }

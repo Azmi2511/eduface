@@ -44,7 +44,7 @@ class PermissionController extends Controller
             return response()->json(['message' => 'Hanya orang tua yang dapat mengajukan izin'], 403);
         }
 
-        $isChildOfMine = DB::table('student_profiles')
+        $isChildOfMine = DB::table('students')
             ->where('id', $request->student_id)
             ->where('parent_id', $user->parentProfile->id)
             ->exists();
