@@ -10,173 +10,164 @@ $active_menu = 'announcements';
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
 
-    <main class="flex-1 overflow-y-auto p-8">
-
-        {{-- Flash Message Helper (Jika belum ada di layout) --}}
-        @if(session('success'))
-        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-            <span class="block sm:inline">{{ session('success') }}</span>
-        </div>
-        @endif
-        @if(session('error'))
-        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
-        @endif
-
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            {{-- Header Card --}}
-            <div class="px-6 py-5 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h3 class="text-lg font-bold text-gray-800">Riwayat Pengumuman Terbaru</h3>
-                <button onclick="toggleModal('addAnnModal')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center cursor-pointer shadow-lg shadow-green-500/30">
-                    <i class="fas fa-plus mr-2"></i> Pengumuman Baru
-                </button>
+    <main class="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
+        {{-- Header Section --}}
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Manajemen Pengumuman</h2>
+                <p class="text-sm text-gray-500 mt-1">Publikasikan informasi dan kelola riwayat pesan untuk seluruh civitas sekolah.</p>
             </div>
-            
-            {{-- Table --}}
+            <button onclick="toggleModal('addAnnModal')" class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-semibold shadow-lg shadow-indigo-200">
+                <i class="fas fa-plus mr-2 text-sm"></i> Pengumuman Baru
+            </button>
+        </div>
+
+        {{-- Stats Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ number_format($announcements->total()) }}</h3>
+                    <p class="text-sm text-gray-500 font-medium">Total Pengumuman</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-paperclip"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $announcements->whereNotNull('attachment_file')->count() }}</h3>
+                    <p class="text-sm text-gray-500 font-medium">Lampiran Berkas</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">Publik</h3>
+                    <p class="text-sm text-gray-500 font-medium">Status Pengiriman</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Filter Section --}}
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
+            <form method="GET" action="{{ route('announcements.index') }}" class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">Cari Pesan</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-search text-xs"></i>
+                        </span>
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Ketik kata kunci pengumuman..."
+                            class="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all">
+                    </div>
+                </div>
+                <div class="w-full md:w-auto">
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-2.5 px-8 rounded-xl transition duration-200 shadow-lg shadow-gray-200">
+                        Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- Table Section --}}
+        <div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-50 flex justify-between items-center bg-white">
+                <h3 class="font-bold text-gray-800">Riwayat Pengumuman</h3>
+            </div>
+
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
-                        <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-                            <th class="px-6 py-4">#</th>
-                            <th class="px-6 py-4">Pesan</th>
-                            <th class="px-6 py-4">Berkas</th>
-                            <th class="px-6 py-4">Link</th>
-                            <th class="px-6 py-4">Pengiriman</th>
+                        <tr class="bg-gray-50/50 text-gray-400 text-[11px] uppercase font-bold tracking-widest">
+                            <th class="px-6 py-4 w-12 text-center">No</th>
+                            <th class="px-6 py-4">Informasi Pengumuman</th>
+                            <th class="px-6 py-4">Berkas & Link</th>
+                            <th class="px-6 py-4">Waktu Kirim</th>
                             <th class="px-6 py-4">Penerima</th>
                             <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+
+                    <tbody class="divide-y divide-gray-50 bg-white">
                         @forelse($announcements as $announcement)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4 text-sm text-center text-gray-500">
+                            <tr class="hover:bg-indigo-50/30 transition duration-150">
+                                <td class="px-6 py-5 text-sm text-center text-gray-400">
                                     {{ $loop->iteration + ($announcements->currentPage() - 1) * $announcements->perPage() }}
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900 line-clamp-2">{{ $announcement->message }}</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if($announcement->attachment_file)
-                                        @php
-                                            $ext = strtoupper(pathinfo($announcement->attachment_file, PATHINFO_EXTENSION));
-                                            $badgeColor = match($ext) {
-                                                'PDF' => 'bg-red-50 text-red-600 border-red-100',
-                                                'JPG', 'JPEG', 'PNG' => 'bg-blue-50 text-blue-600 border-blue-100',
-                                                'DOC', 'DOCX' => 'bg-blue-50 text-blue-700 border-blue-100',
-                                                'XLS', 'XLSX' => 'bg-green-50 text-green-600 border-green-100',
-                                                default => 'bg-gray-100 text-gray-600',
-                                            };
-                                            $parts = explode('_', $announcement->attachment_file, 2);
-                                            $realName = isset($parts[1]) ? $parts[1] : $announcement->attachment_file;
-                                            $displayName = strlen($realName) > 15 ? substr($realName, 0, 10) . '...' . strtolower($ext) : $realName;
-                                        @endphp
 
-                                        <a href="{{ asset('uploads/' . $announcement->attachment_file) }}" target="_blank" title="{{ $realName }}" class="group flex items-center w-fit">
-                                            <div class="flex items-center justify-center w-8 h-8 rounded-lg border {{ $badgeColor }} mr-2 group-hover:scale-105 transition-transform">
-                                                <span class="text-[10px] font-bold">{{ $ext }}</span>
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600 group-hover:underline transition">
-                                                    {{ $displayName }}
-                                                </span>
-                                            </div>
-                                        </a>
-                                    @else
-                                        <span class="text-sm text-gray-400 opacity-50">-</span>
-                                    @endif
+                                <td class="px-6 py-5">
+                                    <div class="max-w-xs md:max-w-md">
+                                        <p class="text-sm text-gray-800 font-semibold truncate">{{ $announcement->message }}</p>
+                                        <p class="text-[11px] text-gray-400 mt-0.5 italic">ID: #ANN-{{ $announcement->id }}</p>
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    @if($announcement->attachment_link)
-                                        <a href="{{ $announcement->attachment_link }}" target="_blank" class="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition">
-                                            <i class="fas fa-external-link-alt mr-2"></i>
-                                            <span class="truncate max-w-[150px]">Link</span>
-                                        </a>
-                                    @else
-                                        <span class="text-sm text-gray-400">-</span>
-                                    @endif
+
+                                <td class="px-6 py-5">
+                                    <div class="flex flex-col gap-2">
+                                        @if($announcement->attachment_file)
+                                            @php
+                                                $ext = strtoupper(pathinfo($announcement->attachment_file, PATHINFO_EXTENSION));
+                                                $parts = explode('_', $announcement->attachment_file, 2);
+                                                $realName = $parts[1] ?? $announcement->attachment_file;
+                                            @endphp
+                                            <a href="{{ asset('uploads/' . $announcement->attachment_file) }}" target="_blank" class="inline-flex items-center text-[11px] font-bold text-indigo-600 hover:text-indigo-800">
+                                                <span class="px-1.5 py-0.5 bg-indigo-50 border border-indigo-100 rounded mr-1.5">{{ $ext }}</span>
+                                                {{ Str::limit($realName, 15) }}
+                                            </a>
+                                        @endif
+                                        @if($announcement->attachment_link)
+                                            <a href="{{ $announcement->attachment_link }}" target="_blank" class="inline-flex items-center text-[11px] font-bold text-blue-500 hover:text-blue-700">
+                                                <i class="fas fa-link mr-1.5 text-[9px]"></i> Tautan Eksternal
+                                            </a>
+                                        @endif
+                                        @if(!$announcement->attachment_file && !$announcement->attachment_link)
+                                            <span class="text-gray-300 text-xs">-</span>
+                                        @endif
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4">
+
+                                <td class="px-6 py-5 text-sm">
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-medium text-gray-900">
+                                        <span class="font-bold text-gray-700">
                                             {{ \Carbon\Carbon::parse($announcement->sent_at)->translatedFormat('d M Y') }}
                                         </span>
-                                        <span class="text-xs text-gray-500">
+                                        <span class="text-[11px] text-gray-400">
                                             {{ \Carbon\Carbon::parse($announcement->sent_at)->format('H:i') }} WIB
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+
+                                <td class="px-6 py-5">
                                     @php
-                                        $labels = [
-                                            'all'     => 'Semua Pengguna',
-                                            'student' => 'Semua Siswa',
-                                            'teacher' => 'Semua Guru',
-                                            'parent'  => 'Semua Orang Tua',
-                                        ];
-
-                                        // AMBIL DATA
-                                        $rawType = $announcement->getRawOriginal('recipient'); 
-                                        $recipId = $announcement->recipient_id; // Cek kolom ID
-
-                                        $isSpecific = ($rawType === 'specific' || !empty($recipId));
-
-                                        // Variable Default
-                                        $displayName = '-';
-                                        $displayEmail = null;
-                                        $badgeColor = 'bg-gray-100 text-gray-800';
-                                        $icon = 'fas fa-users';
-
-                                        if ($isSpecific) {
-                                            $targetUser = $announcement->recipient; 
-
-                                            if ($targetUser) {
-                                                $displayName = $targetUser->full_name;
-                                                $displayEmail = $targetUser->email;
-                                                $badgeColor = 'bg-blue-100 text-blue-800 border border-blue-200';
-                                                $icon = 'fas fa-user';
-                                            } else {
-                                                $displayName = 'User Tidak Ditemukan';
-                                                $displayEmail = '(ID: ' . $recipId . ')';
-                                                $badgeColor = 'bg-red-50 text-red-600 border border-red-200';
-                                                $icon = 'fas fa-user-slash';
-                                            }
-                                        } else {
-                                            $safeType = $rawType ?? 'all';
-                                            $displayName = $labels[$safeType] ?? ucfirst($safeType);
-                                            if (trim($displayName) == '') $displayName = 'Semua Pengguna';
-                                        }
+                                        $rawType = $announcement->getRawOriginal('recipient');
+                                        $isSpecific = ($rawType === 'specific' || !empty($announcement->recipient_id));
+                                        $displayName = $isSpecific ? ($announcement->recipient->full_name ?? 'User') : (['all'=>'Semua', 'student'=>'Siswa', 'teacher'=>'Guru', 'parent'=>'Wali'][$rawType] ?? 'Semua');
                                     @endphp
-
-                                    <div class="flex flex-col items-start justify-center">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeColor }}">
-                                            <i class="{{ $icon }} mr-1.5 text-[10px]"></i>
-                                            <span class="truncate max-w-[120px]" title="{{ $displayName }}">
-                                                {{ $displayName }}
-                                            </span>
-                                        </span>
-
-                                        @if($isSpecific && $displayEmail)
-                                            <span class="text-[10px] text-gray-500 mt-1 ml-1 truncate max-w-[140px]" title="{{ $displayEmail }}">
-                                                {{ $displayEmail }}
-                                            </span>
-                                        @endif
-                                    </div>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase {{ $isSpecific ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-100 text-slate-600' }}">
+                                        <i class="{{ $isSpecific ? 'fas fa-user' : 'fas fa-users' }} mr-1.5"></i>
+                                        {{ $displayName }}
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex item-center justify-center space-x-2">
-                                        <button onclick="openViewModal(@js($announcement), @js($realName ?? null))" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-blue-600 transition" title="Lihat Detail">
-                                            <i class="far fa-eye"></i>
+
+                                <td class="px-6 py-5 text-center">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <button onclick="openViewModal(@js($announcement), @js($realName ?? null))" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
+                                            <i class="far fa-eye text-sm"></i>
                                         </button>
 
-                                        <form id="delete-form-{{ $announcement->id }}" action="{{ route('announcements.destroy', $announcement->id) }}" method="POST" class="inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" 
-                                            class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-600 transition" 
-                                            onclick="confirmAction(event, 'delete-form-{{ $announcement->id }}', 'Hapus Pengumuman?', 'Pengumuman ini akan hilang permanen!')"
-                                            title="Hapus Pengumuman">
-                                                <i class="far fa-trash-alt"></i>
+                                        <form id="delete-form-{{ $announcement->id }}" action="{{ route('announcements.destroy', $announcement->id) }}" method="POST" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="button" onclick="confirmAction(event, 'delete-form-{{ $announcement->id }}', 'Hapus Pengumuman?', 'Data yang dihapus tidak dapat dikembalikan.')"
+                                                class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all shadow-sm">
+                                                <i class="far fa-trash-alt text-sm"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -184,10 +175,13 @@ $active_menu = 'announcements';
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                <td colspan="6" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center">
-                                        <i class="far fa-folder-open text-4xl text-gray-300 mb-3"></i>
-                                        <p>Tidak ada pengumuman ditemukan.</p>
+                                        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
+                                            <i class="fas fa-bullhorn text-3xl text-gray-200"></i>
+                                        </div>
+                                        <h4 class="text-lg font-bold text-gray-800">Belum Ada Pengumuman</h4>
+                                        <p class="text-sm text-gray-400 mt-1">Buat pengumuman pertama Anda dengan tombol di pojok kanan atas.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -196,10 +190,25 @@ $active_menu = 'announcements';
                 </table>
             </div>
 
-            {{-- Pagination --}}
+            {{-- Custom Pagination --}}
             @if($announcements->hasPages())
-                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
-                    {{ $announcements->appends(request()->query())->links() }}
+                <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 bg-gray-50/30">
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        Halaman {{ $announcements->currentPage() }} dari {{ $announcements->lastPage() }}
+                    </div>
+                    <div class="flex space-x-2">
+                        @if ($announcements->onFirstPage())
+                            <span class="px-4 py-2 text-xs font-bold text-gray-300 bg-white border border-gray-100 rounded-xl cursor-not-allowed">Prev</span>
+                        @else
+                            <a href="{{ $announcements->previousPageUrl() }}" class="px-4 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm">Prev</a>
+                        @endif
+
+                        @if ($announcements->hasMorePages())
+                            <a href="{{ $announcements->nextPageUrl() }}" class="px-4 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm">Next</a>
+                        @else
+                            <span class="px-4 py-2 text-xs font-bold text-gray-300 bg-white border border-gray-100 rounded-xl cursor-not-allowed">Next</span>
+                        @endif
+                    </div>
                 </div>
             @endif
         </div>
@@ -315,8 +324,9 @@ $active_menu = 'announcements';
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-[11px] font-medium text-gray-400 mb-1">Dokumen (PDF/Img Max 2MB)</label>
-                                    <input type="file" name="attachment_file" 
+                                    <input type="file" name="attachment_file" id="attachment_file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                                         class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition bg-white border border-gray-200 rounded-lg cursor-pointer p-1">
+                                    <p class="text-[10px] text-slate-400 mt-1">Format: PDF, Word, Excel, atau Gambar (Maks. 5MB)</p>
                                 </div>
                                 
                                 <div>

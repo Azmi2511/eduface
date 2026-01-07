@@ -10,12 +10,35 @@ $active_menu = 'attendance';
 
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
-    <main class="flex-1 overflow-y-auto p-8">
-        
-        {{-- 1. Statistics Cards --}}
+    <main class="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Monitoring Presensi Siswa</h2>
+                <p class="text-sm text-gray-500 mt-1">Pantau kehadiran harian, kelola data scan, dan rekapitulasi kehadiran siswa.</p>
+            </div>
+            <div class="flex gap-3">
+                <form action="{{ route('attendance.export') }}" method="POST" class="contents">
+                    @csrf
+                    <input type="hidden" name="date" value="{{ request('date', $dateFilter) }}">
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                    <input type="hidden" name="search" value="{{ request('search') }}">
+                    @if(request('schedule_id'))
+                        <input type="hidden" name="schedule_id" value="{{ request('schedule_id') }}">
+                        <input type="hidden" name="class_id" value="{{ $selectedSchedule->class_id ?? '' }}">
+                    @endif
+                    <button type="submit" class="inline-flex items-center px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition-all font-bold shadow-sm text-sm">
+                        <i class="fas fa-file-excel mr-2 text-emerald-600"></i> Export Excel
+                    </button>
+                </form>
+                <button onclick="toggleModal('cameraModal')" class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all font-bold shadow-lg shadow-indigo-200 text-sm">
+                    <i class="fas fa-camera mr-2"></i> Scan Presensi
+                </button>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
-                <div class="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mr-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mr-4">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div>
@@ -23,8 +46,9 @@ $active_menu = 'attendance';
                     <p class="text-sm text-gray-500 font-medium">Hadir</p>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
-                <div class="w-14 h-14 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mr-4">
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mr-4">
                     <i class="fas fa-clock"></i>
                 </div>
                 <div>
@@ -32,282 +56,206 @@ $active_menu = 'attendance';
                     <p class="text-sm text-gray-500 font-medium">Terlambat</p>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
-                <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mr-4">
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mr-4">
                     <i class="fas fa-info-circle"></i>
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">{{ $counts['permit'] }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Izin</p>
+                    <p class="text-sm text-gray-500 font-medium">Izin / Sakit</p>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm flex items-center">
-                <div class="w-14 h-14 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center text-2xl mr-4">
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-2xl mr-4">
                     <i class="fas fa-user-slash"></i>
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">{{ $counts['absent'] }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Belum Hadir / Alpha</p>
+                    <p class="text-sm text-gray-500 font-medium">Alpha</p>
                 </div>
             </div>
         </div>
 
-        {{-- 2. Filters & Export --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <div class="flex items-center text-gray-800">
-                    <div class="bg-blue-50 p-2 rounded-lg mr-3 text-blue-600">
-                        <i class="fas fa-filter text-lg"></i>
-                    </div>
-                    <h3 class="text-lg font-bold">Filter Data Absensi</h3>
-                </div>
-                
-                <form action="{{ route('attendance.export') }}" method="POST" class="contents">
-                    @csrf
-                    <input type="hidden" name="date" value="{{ request('date', $dateFilter) }}">
-                    <input type="hidden" name="status" value="{{ request('status') }}">
-                    <input type="hidden" name="search" value="{{ request('search') }}">
-                    
-                    {{-- Pastikan schedule_id ikut terkirim saat export --}}
-                    @if(request('schedule_id'))
-                        <input type="hidden" name="schedule_id" value="{{ request('schedule_id') }}">
-                        <input type="hidden" name="class_id" value="{{ $selectedSchedule->class_id ?? '' }}">
-                    @endif
-                    
-                    <button type="submit" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center md:w-auto w-full">
-                        <i class="fas fa-file-excel mr-2"></i> Export Excel
-                    </button>
-                </form>
-            </div>
-
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
             <form method="GET" action="{{ route('attendance.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                
-                {{-- FILTER TANGGAL --}}
                 <div class="{{ Auth::user()->role == 'teacher' ? 'md:col-span-2' : 'md:col-span-3' }}">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tanggal</label>
-                    <input type="date" name="date" value="{{ request('date', $dateFilter) }}" onchange="this.form.submit()"
-                        class="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm">
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">Tanggal</label>
+                    <input type="date" name="date" value="{{ request('date', $dateFilter) }}"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all">
                 </div>
 
-                {{-- FILTER JADWAL (KHUSUS GURU) --}}
                 @if(Auth::user()->role == 'teacher')
                 <div class="md:col-span-3">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pilih Jadwal</label>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">Jadwal Pelajaran</label>
                     <div class="relative">
-                        <select name="schedule_id" onchange="this.form.submit()" 
-                            class="w-full appearance-none border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm cursor-pointer truncate">
-                            <option value="">-- Semua Siswa Saya --</option>
+                        <select name="schedule_id" class="w-full appearance-none border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all bg-white">
+                            <option value="">Semua Siswa Bimbingan</option>
                             @foreach($availableSchedules as $schedule)
                                 <option value="{{ $schedule->id }}" @selected(request('schedule_id') == $schedule->id)>
                                     {{ substr($schedule->start_time, 0, 5) }} - {{ $schedule->subject->subject_name ?? 'Mapel' }} ({{ $schedule->class->class_name ?? 'Kls' }})
                                 </option>
                             @endforeach
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                            <i class="fas fa-chevron-down text-xs"></i>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
                         </div>
                     </div>
                 </div>
                 @endif
 
-                {{-- FILTER STATUS --}}
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Status</label>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">Status</label>
                     <div class="relative">
-                        <select name="status" class="w-full appearance-none border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm cursor-pointer">
-                            <option value="">Semua</option>
+                        <select name="status" class="w-full appearance-none border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all bg-white">
+                            <option value="">Semua Status</option>
                             <option value="Hadir" @selected(request('status') == 'Hadir')>Hadir</option>
                             <option value="Terlambat" @selected(request('status') == 'Terlambat')>Terlambat</option>
                             <option value="Izin" @selected(request('status') == 'Izin')>Izin</option>
-                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha / Belum</option>
+                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha</option>
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                            <i class="fas fa-chevron-down text-xs"></i>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
                         </div>
                     </div>
                 </div>
 
-                {{-- SEARCH --}}
                 <div class="{{ Auth::user()->role == 'teacher' ? 'md:col-span-3' : 'md:col-span-4' }}">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pencarian</label>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">Pencarian</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                            <i class="fas fa-search"></i>
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-search text-xs"></i>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama siswa..." 
-                            class="w-full pl-10 border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau NISN..."
+                            class="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all">
                     </div>
                 </div>
 
-                {{-- BUTTONS --}}
                 <div class="md:col-span-2 flex gap-2">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-sm hover:shadow-md flex-1 text-center">
+                    <button type="submit" class="flex-1 bg-slate-800 hover:bg-black text-white font-bold py-2.5 rounded-xl transition duration-200 shadow-lg shadow-gray-200 text-sm">
                         Filter
                     </button>
-                    <a href="{{ route('attendance.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2.5 rounded-lg text-sm font-medium transition flex-none flex items-center justify-center" title="Reset Filter">
-                        <i class="fas fa-sync-alt"></i>
+                    <a href="{{ route('attendance.index') }}" class="w-11 h-11 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-xl transition-all border border-gray-200 group" title="Reset Filter">
+                        <i class="fas fa-sync-alt text-sm group-hover:rotate-180 transition-transform duration-500"></i>
                     </a>
                 </div>
             </form>
         </div>
-
-        {{-- 3. Data Table --}}
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="px-6 pt-5 pb-0 border-b border-gray-100">
-                <div class="flex space-x-8">
-                    <a href="{{ route('attendance.index') }}" class="pb-4 text-sm font-medium {{ !request('status') && !request('date') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Default</a>
-                    <a href="{{ route('attendance.index', ['date' => date('Y-m-d')]) }}" class="pb-4 text-sm font-medium {{ request('date') == date('Y-m-d') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' }}">Hari Ini</a>
+        
+        <div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-50 bg-white flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-800">Laporan: {{ \Carbon\Carbon::parse($dateFilter)->translatedFormat('d F Y') }}</h3>
+                    @if(isset($selectedSchedule) && $selectedSchedule)
+                        <p class="text-[11px] text-indigo-600 font-bold uppercase tracking-wider mt-1">
+                            <i class="fas fa-chalkboard-teacher mr-1"></i> {{ $selectedSchedule->subject->subject_name }} - {{ $selectedSchedule->class->class_name }}
+                        </p>
+                    @endif
+                </div>
+                <div class="flex bg-gray-100 p-1 rounded-xl">
+                    <a href="{{ route('attendance.index') }}" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all {{ !request('date') ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">Default</a>
+                    <a href="{{ route('attendance.index', ['date' => date('Y-m-d')]) }}" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all {{ request('date') == date('Y-m-d') ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">Hari Ini</a>
                 </div>
             </div>
 
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-800">
-                            Laporan: {{ \Carbon\Carbon::parse($dateFilter)->translatedFormat('d F Y') }}
-                        </h3>
-                        {{-- INFO JADWAL TERPILIH --}}
-                        @if(isset($selectedSchedule) && $selectedSchedule)
-                            <p class="text-sm text-blue-600 mt-1 flex items-center">
-                                <i class="fas fa-chalkboard-teacher mr-2"></i> 
-                                <span>
-                                    <strong>{{ $selectedSchedule->subject->subject_name }}</strong> - Kelas {{ $selectedSchedule->class->class_name }}
-                                    <span class="text-gray-500 text-xs ml-1">({{ substr($selectedSchedule->start_time, 0, 5) }} - {{ substr($selectedSchedule->end_time, 0, 5) }})</span>
-                                </span>
-                            </p>
-                        @elseif(Auth::user()->role == 'teacher')
-                            <p class="text-xs text-gray-500 mt-1">Menampilkan seluruh siswa bimbingan Anda.</p>
-                        @endif
-                    </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                        <tr class="bg-gray-50/50 text-gray-400 text-[11px] uppercase font-bold tracking-widest">
+                            <th class="px-6 py-4">Siswa</th>
+                            <th class="px-6 py-4">Informasi</th>
+                            <th class="px-6 py-4 text-center">Jam Masuk</th>
+                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4 text-center">Aksi Cepat</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 bg-white">
+                        @forelse($students as $student)
+                            <tr class="hover:bg-indigo-50/30 transition duration-150">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs mr-3 border border-indigo-100">
+                                            {{ strtoupper(substr($student->user->full_name, 0, 2)) }}
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-800">{{ $student->user->full_name }}</div>
+                                            <div class="text-[11px] text-gray-400 font-medium">NISN: {{ $student->nisn }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-lg">{{ $student->class->class_name ?? '-' }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-xs font-mono font-bold {{ $student->today_time != '-' ? 'text-gray-800' : 'text-gray-300' }}">
+                                        {{ $student->today_time != '-' ? \Carbon\Carbon::parse($student->today_time)->format('H:i') : '--:--' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @php
+                                        $statusLabel = $student->today_status;
+                                        $statusClasses = match($statusLabel) {
+                                            'Hadir' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                            'Terlambat' => 'bg-amber-50 text-amber-600 border-amber-100',
+                                            'Izin', 'Sakit' => 'bg-blue-50 text-blue-600 border-blue-100',
+                                            'Alpha' => 'bg-rose-50 text-rose-600 border-rose-100',
+                                            default => 'bg-gray-50 text-gray-400 border-gray-100'
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border {{ $statusClasses }}">
+                                        {{ $statusLabel }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @php
+                                        $log = $student->attendanceLogs->first();
+                                        $routeUrl = $log ? route('attendance.update', $log->id) : route('attendance.store');
+                                        $currentStatus = $log ? $log->status : null;
+                                    @endphp
+                                    <form action="{{ $routeUrl }}" method="POST" class="flex justify-center gap-1.5">
+                                        @csrf
+                                        @if($log) @method('PUT') @endif
+                                        <input type="hidden" name="student_nisn" value="{{ $student->nisn }}">
+                                        <input type="hidden" name="date" value="{{ request('date', $dateFilter) }}">
+                                        <input type="hidden" name="time_log" value="{{ $log ? $log->time_log : \Carbon\Carbon::now()->toTimeString() }}">
+                                        @if(isset($selectedSchedule))
+                                            <input type="hidden" name="schedule_id" value="{{ $selectedSchedule->id }}">
+                                        @endif
 
-                    <div class="flex gap-2">
-                        <button onclick="toggleModal('cameraModal')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center">
-                                <i class="fas fa-camera mr-2"></i> Otomatis
-                        </button>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-                                <th class="px-6 py-4">Nama</th>
-                                <th class="px-6 py-4">NISN</th>
-                                <th class="px-6 py-4">Kelas</th>
-                                <th class="px-6 py-4 text-center">Jam Masuk</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-center">Aksi</th>
+                                        <button type="submit" name="status" value="Hadir" title="Hadir"
+                                            class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border {{ in_array($currentStatus, ['Hadir', 'Terlambat']) ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white text-emerald-600 border-gray-200 hover:border-emerald-300' }}">H</button>
+                                        
+                                        <button type="submit" name="status" value="Izin" title="Izin"
+                                            class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border {{ $currentStatus == 'Izin' ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-blue-600 border-gray-200 hover:border-blue-300' }}">I</button>
+                                        
+                                        <button type="submit" name="status" value="Sakit" title="Sakit"
+                                            class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border {{ $currentStatus == 'Sakit' ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-white text-purple-600 border-gray-200 hover:border-purple-300' }}">S</button>
+                                        
+                                        <button type="submit" name="status" value="Alpha" title="Alpha"
+                                            class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border {{ $currentStatus == 'Alpha' ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-white text-rose-600 border-gray-200 hover:border-rose-300' }}">A</button>
+                                    </form>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse($students as $student)
-                                <tr class="hover:bg-gray-50 transition group">
-                                    {{-- Data Siswa --}}
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $student->user->full_name ?? '-' }}</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-500">{{ $student->nisn }}</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-500">{{ $student->class->class_name ?? '-' }}</div>
-                                    </td>
-
-                                    {{-- Jam Masuk --}}
-                                    <td class="px-6 py-4 text-center">
-                                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-mono">
-                                            {{ $student->today_time != '-' ? \Carbon\Carbon::parse($student->today_time)->format('H:i') : '-' }}
-                                        </span>
-                                    </td>
-
-                                    {{-- Badge Status (Text) --}}
-                                    <td class="px-6 py-4 text-center">
-                                        @php
-                                            $statusLabel = $student->today_status;
-                                            $statusClass = match($statusLabel) {
-                                                'Hadir' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                                                'Terlambat' => 'bg-amber-100 text-amber-700 border-amber-200',
-                                                'Izin' => 'bg-blue-100 text-blue-700 border-blue-200',
-                                                'Sakit' => 'bg-purple-100 text-purple-700 border-purple-200',
-                                                'Alpha' => 'bg-rose-100 text-rose-700 border-rose-200',
-                                                default => 'bg-gray-100 text-gray-400 border-gray-200 dashed border'
-                                            };
-                                        @endphp
-                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border {{ $statusClass }}">
-                                            {{ $statusLabel }}
-                                        </span>
-                                    </td>
-
-                                    {{-- KOLOM AKSI (TOMBOL H, I, S, A) --}}
-                                    <td class="px-6 py-4 text-center">
-                                        @php
-                                            // Ambil Log berdasarkan Filter Query Controller
-                                            $log = $student->attendanceLogs->first();
-                                            $routeUrl = $log ? route('attendance.update', $log->id) : route('attendance.store');
-                                            $currentStatus = $log ? $log->status : null;
-                                        @endphp
-
-                                        <form action="{{ $routeUrl }}" method="POST" class="flex justify-center items-center gap-1">
-                                            @csrf
-                                            @if($log)
-                                                @method('PUT')
-                                            @endif
-                                            
-                                            <input type="hidden" name="student_nisn" value="{{ $student->nisn }}">
-                                            <input type="hidden" name="date" value="{{ request('date', $dateFilter) }}">
-                                            
-                                            {{-- LOGIKA PENTING: Jika update, pertahankan jam lama. Jika baru, pakai jam sekarang --}}
-                                            <input type="hidden" name="time_log" value="{{ $log ? $log->time_log : \Carbon\Carbon::now()->toTimeString() }}">
-                                            
-                                            {{-- LOGIKA PENTING: Kirim Schedule ID agar status tidak lari ke jadwal lain --}}
-                                            @if(isset($selectedSchedule))
-                                                <input type="hidden" name="schedule_id" value="{{ $selectedSchedule->id }}">
-                                            @endif
-
-                                            {{-- Tombol H (Hadir) --}}
-                                            <button type="submit" name="status" value="Hadir" 
-                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
-                                                {{ in_array($currentStatus, ['Hadir', 'Terlambat']) 
-                                                    ? 'bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-200' 
-                                                    : 'bg-white text-emerald-600 border-gray-200 hover:bg-emerald-50 hover:border-emerald-300' 
-                                                }}" title="Set Hadir">H</button>
-
-                                            {{-- Tombol I (Izin) --}}
-                                            <button type="submit" name="status" value="Izin" 
-                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
-                                                {{ $currentStatus == 'Izin' 
-                                                    ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-200' 
-                                                    : 'bg-white text-blue-600 border-gray-200 hover:bg-blue-50 hover:border-blue-300' 
-                                                }}" title="Set Izin">I</button>
-
-                                            {{-- Tombol S (Sakit) --}}
-                                            <button type="submit" name="status" value="Sakit" 
-                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
-                                                {{ $currentStatus == 'Sakit' 
-                                                    ? 'bg-purple-600 text-white border-purple-600 ring-2 ring-purple-200' 
-                                                    : 'bg-white text-purple-600 border-gray-200 hover:bg-purple-50 hover:border-purple-300' 
-                                                }}" title="Set Sakit">S</button>
-
-                                            {{-- Tombol A (Alpha) --}}
-                                            <button type="submit" name="status" value="Alpha" 
-                                                class="w-8 h-8 rounded-lg font-bold text-xs transition border shadow-sm
-                                                {{ $currentStatus == 'Alpha' 
-                                                    ? 'bg-rose-600 text-white border-rose-600 ring-2 ring-rose-200' 
-                                                    : 'bg-white text-rose-600 border-gray-200 hover:bg-rose-50 hover:border-rose-300' 
-                                                }}" title="Set Alpha">A</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Data siswa tidak ditemukan untuk kriteria ini.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl text-xs text-gray-500">
-                    Menampilkan seluruh siswa untuk tanggal {{ \Carbon\Carbon::parse($dateFilter)->format('d-m-Y') }}
-                </div>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-20 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100 text-gray-200">
+                                            <i class="fas fa-users-slash text-2xl"></i>
+                                        </div>
+                                        <h4 class="text-sm font-bold text-gray-800">Tidak Ada Data Siswa</h4>
+                                        <p class="text-xs text-gray-400 mt-1">Sesuaikan filter untuk mencari data lain.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/30 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">
+                Sistem Monitoring Presensi Otomatis & Real-time
             </div>
         </div>
     </main>

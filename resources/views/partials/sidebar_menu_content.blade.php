@@ -9,6 +9,7 @@
     $canAccessTeachers = in_array($userRole, ['admin']);
     $canAccessParents = in_array($userRole, ['admin', 'parent']);
     $canAccessClasses = in_array($userRole, ['admin', 'teacher']);
+    $canAccessPermissions = in_array($userRole, ['admin', 'teacher']);
     $canAccessSchedules = true;
     
     $canAccessAttendance = true; 
@@ -29,7 +30,8 @@
       ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
       : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
     <div class="w-6 mr-3 flex justify-center">
-        <i class="fas fa-home text-lg {{ $active == 'dashboard' ? 'text-blue-600' : 'text-white' }}"></i>
+        {{-- Ikon Dashboard lebih modern --}}
+        <i class="fas fa-tachometer-alt text-lg {{ $active == 'dashboard' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
     Dashboard
 </a>
@@ -45,7 +47,8 @@
             {{ $is_master_open ? 'bg-white/10 border-white/20 text-white' : 'text-white/90 hover:bg-white/20 hover:border-white/30' }}">
         <div class="flex items-center">
              <div class="w-6 mr-3 flex justify-center">
-                <i class="fas fa-database text-lg"></i>
+                {{-- Ikon Master Data: Layer Group --}}
+                <i class="fas fa-layer-group text-lg"></i>
             </div>
             Data Master
         </div>
@@ -56,7 +59,7 @@
         
         @if($canAccessUsers)
         <a href="{{ route('users.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'users' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-             <i class="fas fa-users w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Semua Pengguna
+             <i class="fas fa-users-cog w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Semua Pengguna
         </a>
         @endif
         
@@ -74,13 +77,15 @@
         
         @if($canAccessParents)
         <a href="{{ route('parents.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'parents' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            <i class="fas fa-solid fa-person-breastfeeding w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Orang Tua
+            {{-- Mengganti ikon person-breastfeeding ke yang lebih umum --}}
+            <i class="fas fa-user-friends w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Orang Tua
         </a>
         @endif
         
         @if($canAccessSchedules)
         <a href="{{ route('schedules.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'schedules' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            <i class="fas fa-book-reader w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Jadwal
+            {{-- Mengganti ke ikon Kalender Jadwal --}}
+            <i class="fas fa-calendar-alt w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Jadwal
         </a>
         @endif
         
@@ -99,9 +104,24 @@
           ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
           : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
         <div class="w-6 mr-3 flex justify-center">
-            <i class="fas fa-calendar-check text-lg {{ $active == 'attendance' ? 'text-blue-600' : 'text-white' }}"></i>
+            {{-- Ikon Absensi: User Clock lebih relevan untuk kehadiran --}}
+            <i class="fas fa-user-check text-lg {{ $active == 'attendance' ? 'text-blue-600' : 'text-white' }}"></i>
         </div>
         Absensi
+    </a>
+    @endif
+
+    @if($canAccessPermissions)
+    <a href="{{ route('permissions.index') }}" 
+       class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+       {{ $active == 'permissions' 
+          ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
+          : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
+        <div class="w-6 mr-3 flex justify-center">
+            {{-- Ikon Izin: File Signature --}}
+            <i class="fas fa-file-signature text-lg {{ $active == 'permissions' ? 'text-blue-600' : 'text-white' }}"></i>
+        </div>
+        Perizinan
     </a>
     @endif
     
@@ -142,8 +162,9 @@
       ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
       : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
     <div class="w-6 mr-3 flex justify-center">
-        <i class="fas fa-cog text-lg {{ $active == 'settings' ? 'text-blue-600' : 'text-white' }}"></i>
+        {{-- Ikon Setting: Cogs (Jamak) --}}
+        <i class="fas fa-cogs text-lg {{ $active == 'settings' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
-    Konfigurasi Sistem
+    Konfigurasi
 </a>
 @endif

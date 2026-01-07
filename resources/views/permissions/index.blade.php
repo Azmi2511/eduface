@@ -4,142 +4,160 @@ $active_menu = 'permissions';
 
 @extends('layouts.app')
 
-@section('title', 'Halaman Izin')
-@section('header_title', 'Manajemen Izin')
+@section('title', 'Manajemen Izin')
+@section('header_title', 'Manajemen Izin Siswa')
 
 @section('content')
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
-    <main class="flex-1 overflow-y-auto p-8">
+    <main class="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Manajemen Izin & Sakit</h2>
+                <p class="text-sm text-gray-500 mt-1">Pantau dan kelola pengajuan ketidakhadiran siswa secara real-time.</p>
+            </div>
+        </div>
 
-        {{-- 1. Statistics Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {{-- Card Unread --}}
-            <div class="bg-white p-6 rounded-xl shadow-sm flex items-center border-l-4 border-blue-500">
-                <div class="w-14 h-14 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-2xl mr-4">
-                    <i class="fas fa-message"></i>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-clock"></i>
                 </div>
                 <div>
-                    {{-- Pastikan variabel dikirim dari controller, gunakan null coalescing (?? 0) agar aman --}}
-                    <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_unread ?? 0) }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Pesan Belum Dibaca</p>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $pending_count ?? 0 }}</h3>
+                    <p class="text-sm text-gray-500 font-medium">Menunggu Persetujuan</p>
                 </div>
             </div>
 
-            {{-- Card Total --}}
-            <div class="bg-white p-6 rounded-xl shadow-sm flex items-center border-l-4 border-blue-500">
-                <div class="w-14 h-14 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-2xl mr-4">
-                    <i class="fas fa-bell"></i>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-file-medical"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_data ?? 0) }}</h3>
-                    <p class="text-sm text-gray-500 font-medium">Total Notifikasi</p>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $permissions->total() }}</h3>
+                    <p class="text-sm text-gray-500 font-medium">Total Pengajuan</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <div class="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $permissions->where('approval_status', 'Approved')->count() }}</h3>
+                    <p class="text-sm text-gray-500 font-medium">Izin Disetujui</p>
                 </div>
             </div>
         </div>
 
-        {{-- 2. Search Form --}}
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <form method="GET" action="{{ route('notifications.index') }}" class="flex flex-col md:flex-row gap-4 items-end">
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
+            <form method="GET" action="{{ route('permissions.index') }}" class="flex flex-col md:flex-row gap-4 items-end">
                 <div class="flex-1 w-full">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cari Notifikasi</label>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">Cari Data Izin</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                            <i class="fas fa-search"></i>
+                            <i class="fas fa-search text-xs"></i>
                         </span>
                         <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Cari berdasarkan isi pesan..."
-                            class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm">
+                            placeholder="Cari nama siswa, NISN, atau alasan..."
+                            class="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all">
                     </div>
                 </div>
-                <div>
-                    <button type="submit"
-                        class="bg-[#2F80ED] hover:bg-blue-600 text-white font-medium py-2.5 px-6 rounded-lg transition duration-200">
-                        Cari
+                <div class="w-full md:w-auto">
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-2.5 px-8 rounded-xl transition duration-200 shadow-lg shadow-gray-200">
+                        Filter
                     </button>
                 </div>
             </form>
         </div>
 
-        {{-- 3. Data Table --}}
-        <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-100">
-            <div class="px-6 py-5 border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-800">Riwayat Pesan Masuk</h3>
+        <div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-50 bg-white">
+                <h3 class="font-bold text-gray-800">Riwayat Pengajuan Siswa</h3>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
-                        <tr class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold tracking-wider">
-                            <th class="px-6 py-4 w-12 text-center">#</th>
-                            <th class="px-6 py-4">Isi Pesan</th>
-                            <th class="px-6 py-4">Waktu Diterima</th>
+                        <tr class="bg-gray-50/50 text-gray-400 text-[11px] uppercase font-bold tracking-widest">
+                            <th class="px-6 py-4 w-12 text-center">No</th>
+                            <th class="px-6 py-4">Siswa</th>
+                            <th class="px-6 py-4">Tipe & Keterangan</th>
+                            <th class="px-6 py-4">Rentang Tanggal</th>
                             <th class="px-6 py-4 text-center">Status</th>
                             <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-gray-100 bg-white">
-                        @forelse($notifications as $notif)
-                            {{-- Row Class: Jika belum dibaca (0), beri background biru tipis --}}
-                            <tr class="hover:bg-gray-50 transition duration-150 {{ $notif->is_read == 0 ? 'bg-blue-50/30' : '' }}">
-                                
-                                <td class="px-6 py-4 text-sm text-center text-gray-500">
-                                    {{ $loop->iteration + ($notifications->currentPage() - 1) * $notifications->perPage() }}
+                    <tbody class="divide-y divide-gray-50 bg-white">
+                        @forelse($permissions as $permit)
+                            <tr class="hover:bg-indigo-50/30 transition duration-150">
+                                <td class="px-6 py-5 text-sm text-center text-gray-400">
+                                    {{ $loop->iteration + ($permissions->currentPage() - 1) * $permissions->perPage() }}
                                 </td>
 
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-5">
                                     <div class="flex items-center">
-                                        <div class="flex-shrink-0 w-8 h-8 mr-3 rounded-full flex items-center justify-center 
-                                            {{ $notif->is_read == 0 ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400' }}">
-                                            <i class="{{ $notif->is_read == 0 ? 'fas fa-envelope' : 'fas fa-envelope-open' }}"></i>
+                                        <div class="flex-shrink-0 w-10 h-10 mr-3 rounded-xl bg-gray-100 overflow-hidden border border-gray-100 shadow-sm">
+                                            <img src="{{ $permit->student->user->profile_picture ? asset('storage/'.$permit->student->user->profile_picture) : 'https://ui-avatars.com/api/?name='.urlencode($permit->student->user->full_name).'&background=6366f1&color=fff' }}" alt="">
                                         </div>
-                                        <div class="text-sm text-gray-700 font-medium">
-                                            {{ Str::limit($notif->message, 60) }}
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-800">{{ $permit->student->user->full_name }}</div>
+                                            <div class="text-[11px] text-gray-400 font-medium">NISN: {{ $permit->student->nisn }}</div>
                                         </div>
                                     </div>
                                 </td>
 
-                                <td class="px-6 py-4 text-sm text-gray-500">
+                                <td class="px-6 py-5">
                                     <div class="flex flex-col">
-                                        {{-- PERBAIKAN: Menggunakan Carbon::parse() untuk menghindari error 'format on string' --}}
-                                        <span class="font-medium text-gray-700">
-                                            {{ \Carbon\Carbon::parse($notif->created_at)->format('d M Y') }}
+                                        <span class="text-sm font-bold {{ $permit->type == 'Sakit' ? 'text-rose-600' : 'text-indigo-600' }}">
+                                            {{ $permit->type }}
                                         </span>
-                                        <span class="text-xs">
-                                            {{ \Carbon\Carbon::parse($notif->created_at)->format('H:i') }} WIB
+                                        <span class="text-[11px] text-gray-400 italic truncate max-w-[180px]">{{ $permit->description }}</span>
+                                    </div>
+                                </td>
+
+                                <td class="px-6 py-5">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-gray-700">
+                                            {{ \Carbon\Carbon::parse($permit->start_date)->translatedFormat('d M Y') }}
+                                        </span>
+                                        <span class="text-[11px] text-gray-400">
+                                            s/d {{ \Carbon\Carbon::parse($permit->end_date)->translatedFormat('d M Y') }}
                                         </span>
                                     </div>
                                 </td>
-                                
-                                <td class="px-6 py-4 text-center">
-                                    @if($notif->is_read == 1)
-                                        <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold border border-gray-200">
-                                            Sudah Dibaca
-                                        </span>
-                                    @else
-                                        <span class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-semibold border border-blue-200 animate-pulse">
-                                            Baru
-                                        </span>
-                                    @endif
+
+                                <td class="px-6 py-5 text-center">
+                                    @php
+                                        $statusClasses = [
+                                            'Approved' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                            'Rejected' => 'bg-rose-50 text-rose-600 border-rose-100',
+                                            'Pending'  => 'bg-amber-50 text-amber-600 border-amber-100'
+                                        ];
+                                        $statusLabels = ['Approved' => 'Disetujui', 'Rejected' => 'Ditolak', 'Pending' => 'Pending'];
+                                        $currentStatus = $permit->approval_status;
+                                    @endphp
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border {{ $statusClasses[$currentStatus] ?? $statusClasses['Pending'] }}">
+                                        {{ $statusLabels[$currentStatus] ?? 'Pending' }}
+                                    </span>
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    {{-- PERBAIKAN: Cek apakah link ada isinya sebelum dipanggil url() --}}
-                                    <a href="{{ route('notifications.read', $notif->id) }}"
-                                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition shadow-sm {{ empty($notif->link) ? 'cursor-not-allowed opacity-50' : '' }}">
-                                        <i class="far fa-eye mr-2"></i> Lihat Detail
+                                    <a href="{{ route('permissions.show', $permit->id) }}"
+                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition shadow-sm">
+                                        <i class="fas fa-search-plus mr-2"></i> Detail
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <td colspan="6" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center">
-                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                            <i class="far fa-bell-slash text-2xl text-gray-400"></i>
+                                        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
+                                            <i class="fas fa-file-signature text-3xl text-gray-200"></i>
                                         </div>
-                                        <h4 class="text-lg font-medium text-gray-900">Belum ada notifikasi</h4>
-                                        <p class="text-sm text-gray-500 mt-1">Semua informasi terbaru akan muncul di sini.</p>
+                                        <h4 class="text-lg font-bold text-gray-800">Tidak Ada Data Izin</h4>
+                                        <p class="text-sm text-gray-400 mt-1">Belum ada pengajuan izin yang masuk saat ini.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -148,41 +166,26 @@ $active_menu = 'permissions';
                 </table>
             </div>
 
-            {{-- 4. Pagination --}}
-            @if($notifications->lastPage() > 1)
-                <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-                    <div class="text-sm text-gray-500">
-                        Halaman <span class="font-medium">{{ $notifications->currentPage() }}</span> dari <span class="font-medium">{{ $notifications->lastPage() }}</span>
+            @if($permissions->hasPages())
+                <div class="flex items-center justify-between px-6 py-4 border-t border-gray-50 bg-gray-50/30">
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        Halaman {{ $permissions->currentPage() }} dari {{ $permissions->lastPage() }}
                     </div>
-
                     <div class="flex space-x-2">
-                        {{-- Previous Button --}}
-                        @if ($notifications->onFirstPage())
-                            <span class="px-3 py-1.5 text-sm font-medium text-gray-300 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
-                                <i class="fas fa-chevron-left mr-1"></i> Prev
-                            </span>
+                        @if ($permissions->onFirstPage())
+                            <span class="px-4 py-2 text-xs font-bold text-gray-300 bg-white border border-gray-100 rounded-xl cursor-not-allowed">Prev</span>
                         @else
-                            {{-- Tambahkan parameter pencarian ke link pagination --}}
-                            <a href="{{ $notifications->appends(request()->query())->previousPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
-                                <i class="fas fa-chevron-left mr-1"></i> Prev
-                            </a>
+                            <a href="{{ $permissions->appends(request()->query())->previousPageUrl() }}" class="px-4 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm">Prev</a>
                         @endif
 
-                        {{-- Next Button --}}
-                        @if ($notifications->hasMorePages())
-                            {{-- Tambahkan parameter pencarian ke link pagination --}}
-                            <a href="{{ $notifications->appends(request()->query())->nextPageUrl() }}" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
-                                Next <i class="fas fa-chevron-right ml-1"></i>
-                            </a>
+                        @if ($permissions->hasMorePages())
+                            <a href="{{ $permissions->appends(request()->query())->nextPageUrl() }}" class="px-4 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm">Next</a>
                         @else
-                            <span class="px-3 py-1.5 text-sm font-medium text-gray-300 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
-                                Next <i class="fas fa-chevron-right ml-1"></i>
-                            </span>
+                            <span class="px-4 py-2 text-xs font-bold text-gray-300 bg-white border border-gray-100 rounded-xl cursor-not-allowed">Next</span>
                         @endif
                     </div>
                 </div>
             @endif
-
         </div>
     </main>
 </div>

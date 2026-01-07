@@ -18,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\PermissionController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
@@ -55,9 +56,10 @@ Route::middleware(['session.auth'])->group(function () {
 
     Route::resource('schedules', ScheduleController::class);
 
-    Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
+    Route::resource('notifications', NotificationsController::class);
     Route::get('/notifications/{id}/read', [NotificationsController::class, 'read'])->name('notifications.read');
     Route::get('/notifications/markAllRead', [NotificationsController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('/notifications/{id}', [NotificationsController::class, 'show'])->name('notifications.show');
 
     Route::resource('attendance', AttendanceController::class);
     Route::post('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
@@ -92,6 +94,9 @@ Route::middleware(['session.auth'])->group(function () {
     Route::middleware(['role:admin,teacher'])->group(function () {
         Route::resource('classes', ClassesController::class);
         Route::resource('students', StudentsController::class);
+        Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+        Route::get('/permissions/{id}', [PermissionController::class, 'show'])->name('permissions.show');
+        Route::post('/permissions/{id}/status', [PermissionController::class, 'updateStatus'])->name('permissions.updateStatus');
     });
 
     Route::middleware(['role:admin,parent'])->group(function () {
