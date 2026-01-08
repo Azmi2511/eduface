@@ -10,7 +10,6 @@ class ParentProfile extends Model
 
     protected $fillable = [
         'user_id',
-        'relationship',
         'fcm_token',
     ];
 

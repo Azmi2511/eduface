@@ -7,48 +7,38 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Schedule;
 use App\Models\SystemSetting;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
+use App\Helpers\NotificationHelper;
 
 class AttendanceController extends Controller
 {
     private function getAccessibleNisns(): ?array
     {
         $user = Auth::user();
-        $userId = auth()->id();
-
-        if (!$user) {
-            return [];
-        }
-
-        if ($user->role === 'admin') {
-            return null;
-        }
+        if (!$user) return [];
+        if ($user->role === 'admin') return null;
 
         if ($user->role === 'student') {
-            $student = Student::where('user_id', $userId)->first();
+            $student = Student::where('user_id', $user->id)->first();
             return $student ? [$student->nisn] : [];
         }
 
         if ($user->role === 'parent') {
-            $parent = DB::table('parents')->where('user_id', $userId)->first();
-            if (!$parent) return [];
-            return Student::where('parent_id', $parent->id)->pluck('nisn')->toArray();
+            $parent = DB::table('parents')->where('user_id', $user->id)->first();
+            return $parent ? Student::where('parent_id', $parent->id)->pluck('nisn')->toArray() : [];
         }
 
         if ($user->role === 'teacher') {
-            $teacher = Teacher::where('user_id', $userId)->first();
+            $teacher = Teacher::where('user_id', $user->id)->first();
             if (!$teacher) return [];
-
-            $classIds = Schedule::where('teacher_id', $teacher->id)
-                        ->pluck('class_id')
-                        ->unique()
-                        ->toArray();
-
+            $classIds = Schedule::where('teacher_id', $teacher->id)->pluck('class_id')->unique()->toArray();
             return Student::whereIn('class_id', $classIds)->pluck('nisn')->toArray();
         }
 
@@ -57,9 +47,7 @@ class AttendanceController extends Controller
 
     public function index(Request $request)
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
-            abort(403);
-        }
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) abort(403);
 
         $dateFilter = $request->input('date', date('Y-m-d'));
         $scheduleId = $request->input('schedule_id');
@@ -70,46 +58,25 @@ class AttendanceController extends Controller
         $selectedSchedule = null;
 
         if (Auth::user()->role == 'teacher') {
-            $carbonDate = Carbon::parse($dateFilter);
-            $englishDay = $carbonDate->format('l');
-            $daysMap = [
-                'Sunday' => 'Minggu',
-                'Monday' => 'Senin',
-                'Tuesday' => 'Selasa',
-                'Wednesday' => 'Rabu',
-                'Thursday' => 'Kamis',
-                'Friday' => 'Jumat',
-                'Saturday' => 'Sabtu'
-            ];
-            $dayName = $daysMap[$englishDay] ?? $englishDay;
+            $dayName = $this->translateDay(Carbon::parse($dateFilter)->format('l'));
             $availableSchedules = Schedule::where('teacher_id', Auth::user()->teacher->id)
                 ->where('day_of_week', $dayName)
                 ->orderBy('start_time')
                 ->get();
         }
 
-        if ($scheduleId) {
-            $selectedSchedule = Schedule::findOrFail($scheduleId);
-        }
+        if ($scheduleId) $selectedSchedule = Schedule::find($scheduleId);
 
         $query = Student::with(['user', 'class', 'attendanceLogs' => function ($q) use ($dateFilter, $scheduleId) {
             $q->where('date', $dateFilter);
-            
-            if ($scheduleId) {
-                $q->where('schedule_id', $scheduleId);
-            }
+            if ($scheduleId) $q->where('schedule_id', $scheduleId);
         }]);
 
         if ($selectedSchedule) {
             $query->where('class_id', $selectedSchedule->class_id);
         } elseif (Auth::user()->role == 'teacher') {
             $todayClassIds = $availableSchedules->pluck('class_id')->unique();
-            
-            if ($todayClassIds->isNotEmpty()) {
-                $query->whereIn('class_id', $todayClassIds);
-            } else {
-                $query->whereRaw('1 = 0'); 
-            }
+            $todayClassIds->isNotEmpty() ? $query->whereIn('class_id', $todayClassIds) : $query->whereRaw('1 = 0');
         }
 
         if ($search) {
@@ -119,54 +86,32 @@ class AttendanceController extends Controller
         }
 
         $students = $query->orderBy('class_id')->get();
-
-        $counts = [
-            'present' => 0,
-            'late' => 0,
-            'permit' => 0,
-            'absent' => 0
-        ];
+        $counts = ['present' => 0, 'late' => 0, 'permit' => 0, 'absent' => 0];
 
         $students->transform(function ($student) use ($statusFilter, &$counts) {
             $log = $student->attendanceLogs->first();
-
             $student->today_status = $log ? $log->status : 'Belum Hadir';
             $student->today_time = $log ? $log->time_log : '-';
             $student->log_id = $log ? $log->id : null;
 
             if ($statusFilter && $student->today_status !== $statusFilter) {
-                if ($statusFilter == 'Alpha' && $student->today_status == 'Belum Hadir') {
-                    
-                } else {
-                    return null;
-                }
+                if (!($statusFilter == 'Alpha' && $student->today_status == 'Belum Hadir')) return null;
             }
 
             if ($student->today_status == 'Hadir') $counts['present']++;
             elseif ($student->today_status == 'Terlambat') $counts['late']++;
-            elseif ($student->today_status == 'Izin' || $student->today_status == 'Sakit') $counts['permit']++;
+            elseif (in_array($student->today_status, ['Izin', 'Sakit'])) $counts['permit']++;
             else $counts['absent']++;
 
             return $student;
         });
 
         $students = $students->filter();
-
-        return view('attendance.index', compact(
-            'students', 
-            'dateFilter', 
-            'counts', 
-            'availableSchedules', 
-            'selectedSchedule'
-        ));
+        return view('attendance.index', compact('students', 'dateFilter', 'counts', 'availableSchedules', 'selectedSchedule'));
     }
 
     public function store(Request $request)
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
-            abort(403);
-        }
-
         $request->validate([
             'student_nisn' => 'required|exists:students,nisn',
             'date' => 'required|date',
@@ -176,107 +121,71 @@ class AttendanceController extends Controller
         ]);
 
         $student = Student::where('nisn', $request->student_nisn)->firstOrFail();
-        $scheduleId = $request->schedule_id;
-
-        if (!$scheduleId) {
-            $carbonDate = Carbon::parse($request->date);
-            $daysMap = [
-                'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 
-                'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
-            ];
-            $dayName = $daysMap[$carbonDate->format('l')];
-            $timeLog = $request->time_log;
-
-            $matchedSchedule = Schedule::where('class_id', $student->class_id)
-                ->where('day_of_week', $dayName)
-                ->where('start_time', '<=', $timeLog)
-                ->where('end_time', '>=', $timeLog)
-                ->first();
-
-            if ($matchedSchedule) {
-                $scheduleId = $matchedSchedule->id;
-            }
+        
+        if ($request->filled('schedule_id')) {
+            $activeSchedule = Schedule::with('subject')->find($request->schedule_id);
+        } else {
+            $dayName = $this->translateDay(Carbon::parse($request->date)->format('l'));
+            $activeSchedule = $this->findMatchingSchedule($student->class_id, $dayName, $request->time_log);
         }
 
         AttendanceLog::updateOrCreate(
-            [
-                'student_nisn' => $request->student_nisn,
-                'date' => $request->date,
-                'schedule_id' => $scheduleId
-            ],
-            [
-                'time_log' => $request->time_log,
-                'status' => $request->status,
-                'device_id' => null,
-            ]
+            ['student_nisn' => $request->student_nisn, 'date' => $request->date, 'schedule_id' => $activeSchedule?->id],
+            ['time_log' => $request->time_log, 'status' => $request->status, 'device_id' => null]
         );
+
+        $this->notifyParentPush($student, $request->status, $request->time_log, $activeSchedule);
 
         return redirect()->back()->with('success', 'Data berhasil disimpan');
     }
 
     public function update(Request $request, $id)
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
-            abort(403);
-        }
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) abort(403);
 
-        $log = AttendanceLog::findOrFail($id);
+        $log = AttendanceLog::with('student')->findOrFail($id);
 
         if ($log->status === $request->status) {
             $log->delete();
-            return redirect()->back()->with('success', 'Status absensi berhasil di-reset.');
+            return redirect()->back()->with('success', 'Status berhasil di-reset.');
         }
 
-        $updateData = [
-            'status' => $request->status,
-            'time_log' => $request->time_log, 
-        ];
-
+        $activeSchedule = null;
         if ($request->filled('schedule_id')) {
-            $updateData['schedule_id'] = $request->schedule_id;
+            $activeSchedule = Schedule::with('subject')->find($request->schedule_id);
+        } else {
+            $dayName = $this->translateDay(Carbon::parse($log->date)->format('l'));
+            $activeSchedule = $this->findMatchingSchedule($log->student->class_id, $dayName, $request->time_log);
         }
 
-        $log->update($updateData);
+        $log->update([
+            'status' => $request->status,
+            'time_log' => $request->time_log,
+            'schedule_id' => $activeSchedule?->id ?? $log->schedule_id
+        ]);
 
-        return redirect()->back()->with('success', 'Status berhasil diubah menjadi: ' . $request->status);
+        $this->notifyParentPush($log->student, $request->status, $request->time_log, $activeSchedule);
+
+        return redirect()->back()->with('success', 'Status berhasil diupdate.');
     }
 
     public function destroy($id)
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
-            abort(403);
-        }
-
+        if (!Auth::check() || Auth::user()->role !== 'admin') abort(403);
         AttendanceLog::findOrFail($id)->delete();
-
         return redirect()->route('attendance.index')->with('success', 'Data berhasil dihapus');
     }
-    
+
     public function export(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
+        if (!Auth::check()) return redirect()->route('login');
         $query = AttendanceLog::query()->with(['student.user', 'student.class']);
-
         $accessibleNisns = $this->getAccessibleNisns();
-        if (is_array($accessibleNisns)) {
-            $query->whereIn('student_nisn', $accessibleNisns);
-        }
+        if (is_array($accessibleNisns)) $query->whereIn('student_nisn', $accessibleNisns);
 
-        if ($request->filled('date')) {
-            $query->whereDate('date', $request->date);
-        }
-        
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('schedule_id')) {
-             $query->where('schedule_id', $request->schedule_id);
-        }
-
+        if ($request->filled('date')) $query->whereDate('date', $request->date);
+        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('schedule_id')) $query->where('schedule_id', $request->schedule_id);
         if ($request->filled('class_id')) {
             $query->whereHas('student', function($q) use ($request) {
                 $q->where('class_id', $request->class_id);
@@ -284,118 +193,95 @@ class AttendanceController extends Controller
         }
 
         $data = $query->get();
+        if ($data->isEmpty()) return back()->with('error', 'Tidak ada data.');
 
-        if ($data->isEmpty()) {
-            return back()->with('error', 'Tidak ada data absensi untuk kriteria tersebut.');
-        }
-
-        $fileName = 'Laporan-Absensi-' . Carbon::now()->format('Ymd-His') . '.xlsx';
-        
-        return Excel::download(new AttendanceExport($query), $fileName);
+        return Excel::download(new AttendanceExport($query), 'Laporan-Absensi-' . now()->format('YmdHis') . '.xlsx');
     }
 
     public function storeAjax(Request $request)
     {
         try {
-            $request->validate([
-                'nisn' => 'required|string|exists:students,nisn',
-                'device_id' => 'nullable|exists:devices,id'
-            ]);
-
-            $nisn = $request->nisn;
+            $request->validate(['nisn' => 'required|string|exists:students,nisn']);
             
             $now = Carbon::now();
-            $date = $now->toDateString();
-            $time = $now->toTimeString();
+            $student = Student::where('nisn', $request->nisn)->first();
+            $dayName = $this->translateDay($now->format('l'));
             
-            $settings = SystemSetting::first(); 
+            $settings = SystemSetting::first();
             $globalTolerance = $settings->tolerance_minutes ?? 15;
             
-            $student = Student::where('nisn', $nisn)->first();
-            
-            if (!$student) {
-                return response()->json(['success' => false, 'message' => 'Siswa tidak ditemukan'], 404);
-            }
-
-            $daysMap = [
-                'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 
-                'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
-            ];
-            $todayName = $daysMap[$now->format('l')];
-            
-            $activeSchedule = Schedule::with('subject')
-                ->where('class_id', $student->class_id)
-                ->where('day_of_week', $todayName)
-                ->where(function($q) use ($time) {
-                    $q->whereRaw("SUBTIME(start_time, '00:30:00') <= ?", [$time])
-                      ->where('end_time', '>=', $time);
-                })
-                ->first();
-
-            
-            $scheduleId = null;
+            $activeSchedule = $this->findMatchingSchedule($student->class_id, $dayName, $now->toTimeString());
             $status = 'Hadir';
-            $logMessage = '';
 
             if ($activeSchedule) {
-                $scheduleId = $activeSchedule->id;
-                
                 $startTime = Carbon::parse($activeSchedule->start_time);
-                $lateLimit = $startTime->copy()->addMinutes($globalTolerance);
-
-                if ($now->greaterThan($lateLimit)) {
-                    $status = 'Terlambat';
-                }
-
-                $subjectName = $activeSchedule->subject->subject_name ?? 'Pelajaran';
-                $logMessage = "Absen Mapel: $subjectName ($status)";
-
+                if ($now->greaterThan($startTime->addMinutes($globalTolerance))) $status = 'Terlambat';
+                $logMessage = "Absen Mapel: " . ($activeSchedule->subject->subject_name ?? 'Pelajaran') . " ($status)";
             } else {
-                // return response()->json(['success' => false, 'message' => 'Tidak ada jadwal aktif saat ini.'], 404);
-                
-                // Jika ingin tetap mencatat sebagai "Masuk Sekolah" (General):
                 $limitMasuk = $settings->late_limit ?? '07:30:00';
-                if ($time > $limitMasuk) {
-                    $status = 'Terlambat';
-                }
+                if ($now->toTimeString() > $limitMasuk) $status = 'Terlambat';
                 $logMessage = "Absen Masuk Sekolah ($status)";
             }
-            $matchAttributes = [
-                'student_nisn' => $nisn,
-                'date'         => $date,
-                'schedule_id'  => $scheduleId, 
-            ];
 
-            // Data yang diupdate
-            $updateValues = [
-                'time_log'    => $time,
-                'status'      => $status,
-                'device_id'   => $request->device_id ?? null,
-                // created_at & updated_at otomatis dihandle Eloquent jika timestamps aktif
-            ];
+            AttendanceLog::updateOrCreate(
+                ['student_nisn' => $request->nisn, 'date' => $now->toDateString(), 'schedule_id' => $activeSchedule?->id],
+                ['time_log' => $now->toTimeString(), 'status' => $status, 'device_id' => $request->device_id]
+            );
 
-            $log = AttendanceLog::updateOrCreate($matchAttributes, $updateValues);
+            $this->notifyParentPush($student, $status, $now->toTimeString(), $activeSchedule);
 
-            return response()->json([
-                'success' => true,
-                'message' => $logMessage,
-                'data'    => $log,
-                'student_name' => $student->user->full_name ?? 'Siswa', // Asumsi relasi ke user
-            ]);
-
+            return response()->json(['success' => true, 'message' => $logMessage, 'student_name' => $student->user->full_name]);
         } catch (\Exception $e) {
-            Log::error('Attendance Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false, 
-                'message' => 'Server Error: ' . $e->getMessage()
-            ], 500);
+            Log::error('Attendance Ajax Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
-    private function getCurrentScheduleId($carbonTime)
+    private function translateDay($englishDay)
     {
-        return Schedule::where('start_time', '<=', $carbonTime)
-            ->where('end_time', '>=', $carbonTime)
-            ->value('id');
+        $map = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
+        return $map[$englishDay] ?? $englishDay;
+    }
+
+    private function findMatchingSchedule($classId, $dayName, $time)
+    {
+        return Schedule::with('subject')
+            ->where('class_id', $classId)
+            ->where('day_of_week', $dayName)
+            ->where(function($q) use ($time) {
+                $q->whereRaw("SUBTIME(start_time, '00:30:00') <= ?", [$time])
+                  ->where('end_time', '>=', $time);
+            })
+            ->first();
+    }
+
+    private function notifyParentPush($student, $status, $time, $schedule = null)
+    {
+        $student->loadMissing('parent.user', 'user');
+        $userParent = $student->parent?->user;
+        if (!$userParent) return;
+
+        $context = "Sekolah";
+        if ($schedule && $schedule->subject) {
+            $context = "Mapel " . $schedule->subject->subject_name;
+        }
+
+        $studentName = $student->user->full_name ?? 'Siswa';
+        $message = "Presensi $studentName tercatat $status untuk $context pukul " . substr($time, 0, 5) . " WIB.";
+
+        if ($userParent->fcm_token) {
+            try {
+                NotificationHelper::sendPush($userParent->fcm_token, "Update Presensi: $status", $message);
+            } catch (\Exception $e) {
+                Log::error("FCM Error: " . $e->getMessage());
+            }
+        }
+
+        Notification::create([
+            'user_id' => $userParent->id,
+            'message' => $message,
+            'is_read' => 0,
+            'created_at' => now(),
+        ]);
     }
 }

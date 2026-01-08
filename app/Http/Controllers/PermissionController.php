@@ -6,9 +6,12 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Permission;
 use App\Models\AttendanceLog;
+use App\Models\Schedule;
+use App\Models\Student;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\NotificationHelper;
 use Carbon\CarbonPeriod;
+use Carbon\Carbon;
 
 class PermissionController extends Controller
 {
@@ -49,15 +52,29 @@ class PermissionController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate(['status' => 'required|in:Approved,Rejected']);
+        $user = auth()->user();
 
-        if (!in_array(auth()->user()->role, ['admin', 'teacher'])) {
+        if (!in_array($user->role, ['admin', 'teacher'])) {
             return redirect()->back()->with('error', 'Akses ditolak');
         }
 
-        $permission = Permission::with(['student.user', 'parent.user'])->findOrFail($id);
+        $permission = Permission::with(['student.class'])->findOrFail($id);
+
+        if ($user->role === 'teacher') {
+            $isHomeroomTeacher = DB::table('classes')
+                ->where('id', $permission->student->class_id)
+                ->where('teacher_id', $user->teacher->id)
+                ->exists();
+
+            if (!$isHomeroomTeacher) {
+                return redirect()->back()->with('error', 'Hanya Wali Kelas atau Admin yang dapat menyetujui izin ini.');
+            }
+        }
 
         DB::beginTransaction();
         try {
+            $oldStatus = $permission->approval_status;
+
             $permission->update([
                 'approval_status' => $request->status,
                 'approved_by'     => auth()->id()
@@ -65,6 +82,8 @@ class PermissionController extends Controller
 
             if ($request->status === 'Approved') {
                 $this->syncWithAttendance($permission);
+            } elseif ($oldStatus === 'Approved' && $request->status === 'Rejected') {
+                $this->cleanupAttendance($permission);
             }
 
             $userParent = $permission->parent?->user;
@@ -86,6 +105,31 @@ class PermissionController extends Controller
         }
     }
 
+    public function destroy($id)
+    {
+        $user = auth()->user();
+        $permission = Permission::findOrFail($id);
+
+        if ($user->role === 'teacher') {
+            $isHomeroomTeacher = DB::table('classes')
+                ->where('id', $permission->student->class_id)
+                ->where('teacher_id', $user->teacher->id)
+                ->exists();
+            if (!$isHomeroomTeacher) return redirect()->back()->with('error', 'Akses ditolak');
+        }
+
+        DB::beginTransaction();
+        try {
+            $this->cleanupAttendance($permission);
+            $permission->delete();
+            DB::commit();
+            return redirect()->back()->with('success', 'Data izin dan log absensi terkait telah dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus data.');
+        }
+    }
+
     public function show($id)
     {
         $permit = Permission::with(['student.user', 'parent.user', 'approvedBy'])->findOrFail($id);
@@ -94,21 +138,64 @@ class PermissionController extends Controller
 
     private function syncWithAttendance(Permission $permission)
     {
+        $student = $permission->student;
         $period = CarbonPeriod::create($permission->start_date, $permission->end_date);
 
         foreach ($period as $date) {
+            $dateString = $date->format('Y-m-d');
+            $dayName = $this->translateDay($date->format('l'));
+
+            $schedules = Schedule::where('class_id', $student->class_id)
+                ->where('day_of_week', $dayName)
+                ->get();
+
+            if ($schedules->isNotEmpty()) {
+                foreach ($schedules as $sch) {
+                    AttendanceLog::updateOrCreate(
+                        [
+                            'student_nisn' => $student->nisn,
+                            'date'         => $dateString,
+                            'schedule_id'  => $sch->id,
+                        ],
+                        [
+                            'status'       => $permission->type,
+                            'time_log'     => '00:00:00',
+                            'device_id'    => null,
+                        ]
+                    );
+                }
+            }
+
             AttendanceLog::updateOrCreate(
                 [
-                    'student_nisn' => $permission->student->nisn,
-                    'date'         => $date->format('Y-m-d'),
+                    'student_nisn' => $student->nisn,
+                    'date'         => $dateString,
+                    'schedule_id'  => null,
                 ],
                 [
                     'status'       => $permission->type,
-                    'time_log'     => now()->toTimeString(),
+                    'time_log'     => '00:00:00',
                     'device_id'    => null,
-                    'schedule_id'  => null,
                 ]
             );
         }
+    }
+
+    private function cleanupAttendance(Permission $permission)
+    {
+        AttendanceLog::where('student_nisn', $permission->student->nisn)
+            ->whereBetween('date', [$permission->start_date, $permission->end_date])
+            ->whereNull('device_id')
+            ->whereIn('status', ['Izin', 'Sakit'])
+            ->delete();
+    }
+
+    private function translateDay($englishDay)
+    {
+        $map = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
+        return $map[$englishDay] ?? $englishDay;
     }
 }

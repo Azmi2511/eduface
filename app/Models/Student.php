@@ -11,6 +11,7 @@ class Student extends Model
         'nisn',
         'class_id',
         'parent_id',
+        'relationship',
         'photo_path',
         'face_registered'
     ];

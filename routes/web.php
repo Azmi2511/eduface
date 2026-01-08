@@ -56,10 +56,12 @@ Route::middleware(['session.auth'])->group(function () {
 
     Route::resource('schedules', ScheduleController::class);
 
-    Route::resource('notifications', NotificationsController::class);
+    Route::post('/notifications/mark-all-read', [NotificationsController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::delete('/notifications/destroy-all', [NotificationsController::class, 'destroyAll'])->name('notifications.destroyAll');
     Route::get('/notifications/{id}/read', [NotificationsController::class, 'read'])->name('notifications.read');
-    Route::get('/notifications/markAllRead', [NotificationsController::class, 'markAllRead'])->name('notifications.markAllRead');
-    Route::get('/notifications/{id}', [NotificationsController::class, 'show'])->name('notifications.show');
+    Route::resource('notifications', NotificationsController::class)->only([
+        'index', 'show', 'destroy'
+    ]);
 
     Route::resource('attendance', AttendanceController::class);
     Route::post('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');

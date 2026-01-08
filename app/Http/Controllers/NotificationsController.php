@@ -11,7 +11,6 @@ class NotificationsController extends Controller
     public function index(Request $request)
     {
         $userId = Auth::id();
-
         $query = Notification::where('user_id', $userId);
 
         if ($request->filled('search')) {
@@ -19,11 +18,7 @@ class NotificationsController extends Controller
         }
 
         $notifications = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        $total_unread = Notification::where('user_id', $userId)
-            ->where('is_read', 0)
-            ->count();
-
+        $total_unread = Notification::where('user_id', $userId)->where('is_read', 0)->count();
         $total_data = Notification::where('user_id', $userId)->count();
 
         return view('notifications.index', compact('notifications', 'total_unread', 'total_data'));
@@ -42,9 +37,7 @@ class NotificationsController extends Controller
 
     public function read($id)
     {
-        $notification = Notification::where('user_id', auth()->id())
-                                    ->where('id', $id)
-                                    ->firstOrFail();
+        $notification = Notification::where('user_id', auth()->id())->findOrFail($id);
 
         if ($notification->is_read == 0) {
             $notification->update(['is_read' => 1]);
@@ -62,10 +55,10 @@ class NotificationsController extends Controller
                                     ->update(['is_read' => true]);
 
         if ($updatedCount > 0) {
-            return redirect()->back()->with('success', "Semua $updatedCount notifikasi baru telah ditandai sebagai dibaca.");
+            return redirect()->back()->with('success', "Semua $updatedCount notifikasi telah ditandai dibaca.");
         } 
         
-        return redirect()->back()->with('info', 'Tidak ada notifikasi baru untuk ditandai.');
+        return redirect()->back()->with('info', 'Tidak ada notifikasi baru.');
     }
 
     public function destroy($id)
@@ -81,9 +74,9 @@ class NotificationsController extends Controller
         $deletedCount = Notification::where('user_id', auth()->id())->delete();
 
         if ($deletedCount > 0) {
-            return redirect()->route('notifications.index')->with('success', 'Seluruh riwayat notifikasi telah dibersihkan.');
+            return redirect()->route('notifications.index')->with('success', 'Semua riwayat telah dihapus.');
         }
 
-        return redirect()->route('notifications.index')->with('info', 'Tidak ada notifikasi untuk dihapus.');
+        return redirect()->route('notifications.index')->with('info', 'Tidak ada notifikasi.');
     }
 }

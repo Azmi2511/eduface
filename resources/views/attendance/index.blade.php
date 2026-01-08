@@ -78,19 +78,26 @@ $active_menu = 'attendance';
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
-            <form method="GET" action="{{ route('attendance.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                <div class="{{ Auth::user()->role == 'teacher' ? 'md:col-span-2' : 'md:col-span-3' }}">
-                    <label class="block text-sm font-semibold text-gray-600 mb-2">Tanggal</label>
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 mb-8">
+            <form method="GET" action="{{ route('attendance.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-5 items-end">
+                
+                @php 
+                    $isTeacher = Auth::user()->role == 'teacher'; 
+                @endphp
+
+                <div class="{{ $isTeacher ? 'md:col-span-2' : 'md:col-span-3' }}">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Tanggal</label>
                     <input type="date" name="date" value="{{ request('date', $dateFilter) }}"
-                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all">
+                        onchange="this.form.submit()"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none text-sm transition-all duration-200">
                 </div>
 
-                @if(Auth::user()->role == 'teacher')
-                <div class="md:col-span-3">
-                    <label class="block text-sm font-semibold text-gray-600 mb-2">Jadwal Pelajaran</label>
+                @if($isTeacher)
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Jadwal Pelajaran</label>
                     <div class="relative">
-                        <select name="schedule_id" class="w-full appearance-none border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all bg-white">
+                        <select name="schedule_id" onchange="this.form.submit()"
+                            class="w-full appearance-none bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none text-sm transition-all duration-200 cursor-pointer">
                             <option value="">Semua Siswa Bimbingan</option>
                             @foreach($availableSchedules as $schedule)
                                 <option value="{{ $schedule->id }}" @selected(request('schedule_id') == $schedule->id)>
@@ -99,44 +106,45 @@ $active_menu = 'attendance';
                             @endforeach
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                            <i class="fas fa-chevron-down text-[10px]"></i>
+                            <i class="fas fa-angle-down text-xs"></i>
                         </div>
                     </div>
                 </div>
                 @endif
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-600 mb-2">Status</label>
+                <div class="{{ $isTeacher ? 'md:col-span-2' : 'md:col-span-3' }}">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Status</label>
                     <div class="relative">
-                        <select name="status" class="w-full appearance-none border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all bg-white">
+                        <select name="status" onchange="this.form.submit()"
+                            class="w-full appearance-none bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none text-sm transition-all duration-200 cursor-pointer">
                             <option value="">Semua Status</option>
-                            <option value="Hadir" @selected(request('status') == 'Hadir')>Hadir</option>
-                            <option value="Terlambat" @selected(request('status') == 'Terlambat')>Terlambat</option>
-                            <option value="Izin" @selected(request('status') == 'Izin')>Izin</option>
-                            <option value="Alpha" @selected(request('status') == 'Alpha')>Alpha</option>
+                            @foreach(['Hadir', 'Terlambat', 'Izin', 'Alpha'] as $st)
+                                <option value="{{ $st }}" @selected(request('status') == $st)>{{ $st }}</option>
+                            @endforeach
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                            <i class="fas fa-chevron-down text-[10px]"></i>
+                            <i class="fas fa-angle-down text-xs"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="{{ Auth::user()->role == 'teacher' ? 'md:col-span-3' : 'md:col-span-4' }}">
-                    <label class="block text-sm font-semibold text-gray-600 mb-2">Pencarian</label>
+                <div class="{{ $isTeacher ? 'md:col-span-3' : 'md:col-span-5' }}">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Pencarian</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
                             <i class="fas fa-search text-xs"></i>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau NISN..."
-                            class="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all">
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                            placeholder="Nama / NISN..."
+                            onchange="this.form.submit()"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-2.5 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none text-sm transition-all duration-200">
                     </div>
                 </div>
 
-                <div class="md:col-span-2 flex gap-2">
-                    <button type="submit" class="flex-1 bg-slate-800 hover:bg-black text-white font-bold py-2.5 rounded-xl transition duration-200 shadow-lg shadow-gray-200 text-sm">
-                        Filter
-                    </button>
-                    <a href="{{ route('attendance.index') }}" class="w-11 h-11 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-xl transition-all border border-gray-200 group" title="Reset Filter">
+                <div class="md:col-span-1">
+                    <a href="{{ route('attendance.index') }}" 
+                        class="w-full h-[42px] flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-500 text-gray-400 rounded-2xl transition-all duration-300 border border-gray-200 group" 
+                        title="Reset Filter">
                         <i class="fas fa-sync-alt text-sm group-hover:rotate-180 transition-transform duration-500"></i>
                     </a>
                 </div>

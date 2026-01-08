@@ -31,7 +31,7 @@
       : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
     <div class="w-6 mr-3 flex justify-center">
         {{-- Ikon Dashboard lebih modern --}}
-        <i class="fas fa-tachometer-alt text-lg {{ $active == 'dashboard' ? 'text-blue-600' : 'text-white' }}"></i>
+        <i class="fas fa-home text-lg {{ $active == 'dashboard' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
     Dashboard
 </a>

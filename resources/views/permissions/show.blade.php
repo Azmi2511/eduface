@@ -7,7 +7,6 @@
 <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
     <main class="flex-1 overflow-y-auto p-8">
         
-        {{-- Tombol Kembali --}}
         <div class="mb-6">
             <a href="{{ route('permissions.index') }}" class="inline-flex items-center text-gray-600 hover:text-blue-600 transition">
                 <i class="fas fa-arrow-left mr-2"></i> Kembali ke Daftar
@@ -16,7 +15,6 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {{-- Kolom Kiri: Informasi Detail --}}
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -32,12 +30,12 @@
                             <div>
                                 <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Nama Siswa</label>
                                 <p class="text-sm font-bold text-gray-800">{{ $permit->student->user->full_name }}</p>
-                                <p class="text-xs text-gray-500 italic">NISN: {{ $permit->student->nisn }}</p>
+                                <p class="text-xs text-gray-500 italic">NISN: {{ $permit->student->nisn }} | Kelas: {{ $permit->student->class->name ?? '-' }}</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Diajukan Oleh</label>
                                 <p class="text-sm font-bold text-gray-800">{{ $permit->parent->user->full_name }}</p>
-                                <p class="text-xs text-gray-500 italic">Hubungan: {{ $permit->parent->relationship }}</p>
+                                <p class="text-xs text-gray-500 italic">Hubungan: {{ $permit->student->relationship }}</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Tipe Izin</label>
@@ -76,10 +74,7 @@
                 </div>
             </div>
 
-            {{-- Kolom Kanan: Bukti Lampiran & Aksi --}}
             <div class="space-y-6">
-                
-                {{-- Card Bukti --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="font-bold text-gray-800 mb-4 flex items-center">
                         <i class="fas fa-paperclip mr-2 text-blue-500"></i> Lampiran Bukti
@@ -104,30 +99,45 @@
                     @endif
                 </div>
 
-                {{-- Card Aksi (Hanya muncul untuk Teacher/Admin jika status Pending) --}}
-                @if(auth()->user()->role !== 'parent' && $permit->approval_status == 'Pending')
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="font-bold text-gray-800 mb-4">Verifikasi Izin</h3>
-                        <p class="text-xs text-gray-500 mb-4">Pastikan data dan bukti sudah sesuai sebelum memberikan keputusan.</p>
-                        
-                        <div class="flex flex-col gap-3">
-                            <form action="{{ route('permissions.updateStatus', $permit->id) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="status" value="Approved">
-                                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 rounded-lg transition shadow-md flex items-center justify-center">
-                                    <i class="fas fa-check-circle mr-2"></i> Setujui Izin
-                                </button>
-                            </form>
+                @php
+                    $isHomeroom = false;
+                    if(auth()->user()->role === 'teacher' && auth()->user()->teacher) {
+                        $isHomeroom = $permit->student->class->teacher_id == auth()->user()->teacher->id;
+                    }
+                    $canVerify = auth()->user()->role === 'admin' || $isHomeroom;
+                @endphp
 
-                            <form action="{{ route('permissions.updateStatus', $permit->id) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="status" value="Rejected">
-                                <button type="submit" class="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-2.5 rounded-lg transition flex items-center justify-center">
-                                    <i class="fas fa-times-circle mr-2"></i> Tolak Pengajuan
-                                </button>
-                            </form>
+                @if($permit->approval_status == 'Pending')
+                    @if($canVerify)
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="font-bold text-gray-800 mb-4">Verifikasi Izin</h3>
+                            <p class="text-xs text-gray-500 mb-4">Pastikan data dan bukti sudah sesuai sebelum memberikan keputusan.</p>
+                            
+                            <div class="flex flex-col gap-3">
+                                <form action="{{ route('permissions.updateStatus', $permit->id) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="Approved">
+                                    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 rounded-lg transition shadow-md flex items-center justify-center">
+                                        <i class="fas fa-check-circle mr-2"></i> Setujui Izin
+                                    </button>
+                                </form>
+
+                                <form action="{{ route('permissions.updateStatus', $permit->id) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="Rejected">
+                                    <button type="submit" class="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-2.5 rounded-lg transition flex items-center justify-center">
+                                        <i class="fas fa-times-circle mr-2"></i> Tolak Pengajuan
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    @elseif(auth()->user()->role === 'teacher')
+                        <div class="bg-amber-50 rounded-xl border border-amber-200 p-6 text-center">
+                            <i class="fas fa-info-circle text-amber-500 text-2xl mb-2"></i>
+                            <p class="text-sm font-bold text-amber-800">Otoritas Terbatas</p>
+                            <p class="text-xs text-amber-600 mt-1">Hanya Wali Kelas atau Admin yang dapat melakukan verifikasi izin ini.</p>
+                        </div>
+                    @endif
                 @endif
 
             </div>
