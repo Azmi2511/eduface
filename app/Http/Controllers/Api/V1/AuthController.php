@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         $user = User::where($loginType, $request->login)->firstOrFail();
 
-        $user->load(['student.schoolClass', 'teacher', 'parentProfile']);
+        $user->load(['student.schoolClass', 'student.user', 'teacher', 'parentProfile']);
 
         if ($user->is_active == 0) {
             return response()->json(['message' => 'Akun anda tidak aktif.'], 403);
@@ -53,9 +53,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Summary of logout
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Handle user logout.
      */
     public function logout(Request $request)
     {

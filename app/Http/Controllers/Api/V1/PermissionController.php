@@ -8,6 +8,7 @@ use App\Models\Notification;
 use App\Models\Permission;
 use App\Models\AttendanceLog;
 use App\Models\Schedule;
+use App\Models\Student;
 use App\Http\Resources\Api\V1\PermissionResource;
 use App\Http\Requests\Api\V1\Permission\StorePermissionRequest;
 use Illuminate\Http\Request;
@@ -17,13 +18,30 @@ use Carbon\Carbon;
 
 class PermissionController extends Controller
 {
+    /**
+     * Menampilkan daftar izin.
+     */
     public function index(Request $request)
     {
         $user = auth()->user();
         $query = Permission::with(['student.user', 'approvedBy']);
 
         if ($user->role === 'parent') {
-            $query->where('parent_id', $user->parentProfile->id);
+            $parentId = $user->parentProfile->id ?? DB::table('parents')->where('user_id', $user->id)->value('id');
+
+            if ($parentId) {
+                $query->where('parent_id', $parentId);
+            } else {
+                return response()->json(['message' => 'Profil orang tua tidak ditemukan'], 404);
+            }
+        } elseif ($user->role === 'student') {
+            $student = Student::where('user_id', $user->id)->first();
+
+            if ($student) {
+                $query->where('student_id', $student->id);
+            } else {
+                return response()->json(['message' => 'Profil siswa tidak ditemukan'], 404);
+            }
         }
 
         if ($request->has('student_id')) {
@@ -33,10 +51,13 @@ class PermissionController extends Controller
         return PermissionResource::collection($query->latest()->paginate(10));
     }
 
+    /**
+     * Menyimpan pengajuan izin baru.
+     */
     public function store(StorePermissionRequest $request)
     {
         $user = auth()->user();
-        
+
         if ($user->role !== 'parent') {
             return response()->json(['message' => 'Hanya orang tua yang dapat mengajukan izin'], 403);
         }
@@ -76,7 +97,7 @@ class PermissionController extends Controller
                 Notification::create([
                     'user_id' => $teacher->user_id,
                     'message' => "Pengajuan izin baru: " . $studentData->full_name . " (" . $permission->type . ")",
-                    'link'    => "permissions/" . $permission->id, 
+                    'link'    => "permissions/" . $permission->id,
                     'is_read' => false
                 ]);
             }
@@ -96,6 +117,9 @@ class PermissionController extends Controller
         }
     }
 
+    /**
+     * Memperbarui status izin (Approve/Reject).
+     */
     public function updateStatus(Request $request, Permission $permission)
     {
         $request->validate(['status' => 'required|in:Approved,Rejected']);
@@ -137,6 +161,9 @@ class PermissionController extends Controller
         }
     }
 
+    /**
+     * Sinkronisasi data izin ke tabel absensi.
+     */
     private function syncWithAttendance(Permission $permission)
     {
         $student = $permission->student;
@@ -182,6 +209,9 @@ class PermissionController extends Controller
         }
     }
 
+    /**
+     * Helper translate hari ke bahasa Indonesia.
+     */
     private function translateDay($englishDay)
     {
         $map = [

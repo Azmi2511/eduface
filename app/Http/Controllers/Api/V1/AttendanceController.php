@@ -8,40 +8,37 @@ use App\Models\Student;
 use App\Models\Schedule;
 use App\Models\Device;
 use App\Http\Resources\Api\V1\AttendanceResource;
-use App\Http\Requests\Api\V1\Attendance\DeviceLogRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * Class AttendanceController - Mengelola data absensi siswa.
+ */
 class AttendanceController extends Controller
 {
     /**
-    * Endpoint untuk LIST riwayat absensi (Admin, Teacher, & Parent)
-    */
+     * Menampilkan daftar riwayat absensi (dibatasi 50 data terakhir).
+     */
     public function index(Request $request)
     {
         $user = auth()->user();
-        
+        $query = AttendanceLog::with(['student.user', 'student.schoolClass', 'schedule.subject']);
 
-        $query = AttendanceLog::with(['student.user', 'student.class', 'schedule.subject']);
-
-        if ($user->role === 'parent') {
-            $parent = $user->parentProfile; 
-            
+        if ($user->role === 'parent' || $user->role === 'orang_tua') {
+            $parent = $user->parentProfile ?? DB::table('parents')->where('user_id', $user->id)->first();
             if (!$parent) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data ParentProfile tidak ditemukan untuk user_id: ' . $user->id,
-                    'data' => []
-                ], 404);
+                return response()->json(['message' => 'Data profil orang tua tidak ditemukan'], 404);
             }
-
             $query->whereHas('student', function ($q) use ($parent) {
                 $q->where('parent_id', $parent->id);
             });
-            
-        } elseif ($user->role === 'student') {
-            if ($user->student) {
-                $query->where('student_nisn', $user->student->nisn);
+        } elseif ($user->role === 'student' || $user->role === 'siswa') {
+            $studentProfile = Student::where('user_id', $user->id)->first();
+            if ($studentProfile) {
+                $query->where('student_nisn', $studentProfile->nisn);
+            } else {
+                return response()->json(['message' => 'Profil siswa tidak ditemukan'], 404);
             }
         }
 
@@ -53,41 +50,38 @@ class AttendanceController extends Controller
             $query->whereDate('date', $request->date);
         }
 
-        $logs = $query->latest('id')->get();
+        $logs = $query->latest('date')->latest('time_log')->limit(50)->get();
 
         return AttendanceResource::collection($logs);
     }
 
     /**
-     * Endpoint UTAMA untuk Device IoT (Wajah/Kartu)
+     * Endpoint penerima data dari mesin IoT.
      */
-    public function deviceStore(DeviceLogRequest $request)
+    public function deviceStore(Request $request)
     {
-        $device = Device::where('api_token', $request->api_token)->first();
-        $student = Student::with('user')->where('nisn', $request->nisn)->first();
-        
+        $device = Device::where('api_token', $request->api_token)->firstOrFail();
+        $student = Student::with('user')->where('nisn', $request->nisn)->firstOrFail();
+
         $now = Carbon::now();
         $todayName = $this->getIndonesianDay($now->format('l'));
         $time = $now->toTimeString();
 
-        // 1. Cari Jadwal yang sedang berlangsung (Toleransi 30 menit sebelum mulai)
         $activeSchedule = Schedule::where('class_id', $student->class_id)
             ->where('day_of_week', $todayName)
             ->where('start_time', '<=', $now->addMinutes(30)->toTimeString())
             ->where('end_time', '>=', $time)
             ->first();
 
-        // 2. Tentukan Status (Logic dari SystemSetting bisa ditaruh di sini)
         $status = 'Hadir';
         if ($activeSchedule) {
             $startTime = Carbon::parse($activeSchedule->start_time);
-            if ($now->greaterThan($startTime->addMinutes(15))) { // Contoh toleransi 15 menit
+            if ($now->greaterThan($startTime->addMinutes(15))) {
                 $status = 'Terlambat';
             }
         }
 
-        // 3. Simpan atau Perbarui (Upsert)
-        $log = AttendanceLog::updateOrCreate(
+        AttendanceLog::updateOrCreate(
             [
                 'student_nisn' => $student->nisn,
                 'date'         => $now->toDateString(),
@@ -109,36 +103,38 @@ class AttendanceController extends Controller
         ]);
     }
 
+    /**
+     * Helper konversi nama hari ke Bahasa Indonesia.
+     */
     private function getIndonesianDay($day)
     {
         $map = [
             'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
             'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
         ];
-        return $map[$day];
+        return $map[$day] ?? $day;
     }
 
     /**
-     * Simpan Absensi Secara MANUAL (Admin & Teacher)
+     * Input absensi manual oleh Admin atau Guru.
      */
-    public function store(AttendanceLogRequest $request)
+    public function store(Request $request)
     {
         $request->validate([
             'student_nisn' => 'required|exists:students,nisn',
             'date'         => 'required|date',
-            'time_log'     => 'required', // Format H:i:s
-            'status'       => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpha',
+            'time_log'     => 'required',
+            'status'       => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpa',
             'schedule_id'  => 'nullable|exists:schedules,id',
         ]);
 
         $student = Student::where('nisn', $request->student_nisn)->first();
         $scheduleId = $request->schedule_id;
 
-        // Logic mencari jadwal otomatis jika schedule_id kosong (seperti controller kedua)
         if (!$scheduleId) {
             $carbonDate = Carbon::parse($request->date);
             $dayName = $this->getIndonesianDay($carbonDate->format('l'));
-            
+
             $matchedSchedule = Schedule::where('class_id', $student->class_id)
                 ->where('day_of_week', $dayName)
                 ->where('start_time', '<=', $request->time_log)
@@ -159,32 +155,32 @@ class AttendanceController extends Controller
             [
                 'time_log'  => $request->time_log,
                 'status'    => $request->status,
-                'device_id' => null, 
+                'device_id' => null,
             ]
         );
 
-        return new AttendanceResource($log->load(['student.user', 'student.class', 'schedule.subject']));
+        return new AttendanceResource($log->load(['student.user', 'student.schoolClass', 'schedule.subject']));
     }
 
     /**
-     * Update status absensi (Contoh: Dari Alpa ke Hadir)
+     * Memperbarui status absensi siswa.
      */
-    public function update(UpdateAttendanceRequest $request, $id)
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'status'   => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpha',
+            'status'   => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpa',
             'time_log' => 'nullable'
         ]);
 
         $log = AttendanceLog::findOrFail($id);
-        $log->update($request->validated());
+        $log->update($request->all());
 
-        return (new AttendanceResource($log->load(['student.user', 'student.class', 'schedule.subject'])))
+        return (new AttendanceResource($log->load(['student.user', 'student.schoolClass', 'schedule.subject'])))
             ->additional(['message' => 'Status absensi berhasil diperbarui']);
     }
 
     /**
-     * Hapus log absensi (Admin Only)
+     * Menghapus data log absensi.
      */
     public function destroy($id)
     {
@@ -197,7 +193,7 @@ class AttendanceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Data absensi berhasil dihapus dari sistem.'
+            'message' => 'Data absensi berhasil dihapus.'
         ]);
     }
 }

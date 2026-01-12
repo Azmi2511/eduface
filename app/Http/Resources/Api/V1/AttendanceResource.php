@@ -24,6 +24,7 @@ class AttendanceResource extends JsonResource
                 'teacher' => $this->schedule->teacher->user->full_name ?? 'Wali Kelas',
                 'class'   => $this->student->class->class_name ?? '-',
             ],
+            'device_name' => $this->device->device_name ?? 'Manual / Web',
         ];
     }
 }

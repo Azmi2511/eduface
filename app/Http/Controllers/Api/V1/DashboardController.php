@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    /**
+     * Summary of index
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         try {
@@ -19,22 +24,36 @@ class DashboardController extends Controller
             $today = Carbon::today()->toDateString();
 
             $parentRecord = DB::table('parents')->where('user_id', $user->id)->first();
+            $isStudentLogin = false;
+
+            if (!$parentRecord) {
+                $studentProfile = Student::where('user_id', $user->id)->first();
+                if ($studentProfile) {
+                    $isStudentLogin = true;
+                    $parentRecord = DB::table('parents')->where('id', $studentProfile->parent_id)->first();
+                }
+            }
 
             if (!$parentRecord) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Profil orang tua tidak ditemukan'
+                    'message' => 'Profil tidak ditemukan'
                 ], 404);
             }
 
-            $children = Student::where('parent_id', $parentRecord->id)->with('user')->get();
-            
+            if ($isStudentLogin) {
+                $children = Student::where('user_id', $user->id)->with('user')->get();
+            } else {
+                $children = Student::where('parent_id', $parentRecord->id)->with('user')->get();
+            }
+
             if ($children->isEmpty()) {
                 return response()->json([
                     'status' => 'success',
                     'parent_name' => $user->full_name,
                     'children' => [],
                     'statistics' => [
+                        'presentCount' => 0,
                         'attendancePercentage' => "0%",
                         'lateCount' => 0,
                         'absentCount' => 0,
@@ -46,78 +65,70 @@ class DashboardController extends Controller
 
             $childNisns = $children->pluck('nisn');
 
-            $logsToday = AttendanceLog::whereIn('student_nisn', $childNisns)
+            $allLogsToday = AttendanceLog::whereIn('student_nisn', $childNisns)
                 ->whereDate('date', $today)
+                ->with(['student.user'])
                 ->get();
 
-            $totalPresentOnly = $logsToday->where('status', 'Hadir')->count();
-            $totalLate        = $logsToday->where('status', 'Terlambat')->count();
+            $totalPresentOnly = $allLogsToday->where('status', 'Hadir')->count();
+            $totalLate         = $allLogsToday->where('status', 'Terlambat')->count();
             $totalAttending   = $totalPresentOnly + $totalLate;
-
-            $totalPermit      = $logsToday->whereIn('status', ['Izin', 'Sakit'])->count();
+            $totalPermit      = $allLogsToday->whereIn('status', ['Izin', 'Sakit'])->count();
             $totalChildren    = $children->count();
             
-            $hasLogNisns = $logsToday->pluck('student_nisn')->toArray();
+            $hasLogNisns = $allLogsToday->pluck('student_nisn')->toArray();
             $noLogCount  = $children->whereNotIn('nisn', $hasLogNisns)->count();
-            $explicitAbsentCount = $logsToday->where('status', 'Alpa')->count();
+            $explicitAbsentCount = $allLogsToday->where('status', 'Alpa')->count();
             $totalAbsent = $noLogCount + $explicitAbsentCount;
 
-            $percentage = $totalChildren > 0 
+            $overallPercentage = $totalChildren > 0 
                 ? round(($totalAttending / $totalChildren) * 100) 
                 : 0;
 
-            $attendanceLogs = AttendanceLog::whereIn('student_nisn', $childNisns)
-                ->whereDate('date', $today)
-                ->with(['student.user'])
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function ($log) {
-                    return [
-                        'id' => $log->id,
-                        'student_name' => optional(optional($log->student)->user)->full_name ?? 'Siswa',
-                        'status' => $log->status,
-                        'time' => $log->time_log ? Carbon::parse($log->time_log)->format('H:i') : '-',
-                        'date' => $log->date ? Carbon::parse($log->date)->format('d M Y') : '-',
-                    ];
-                });
+            $formattedLogs = $allLogsToday->sortByDesc('created_at')->values()->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'student_name' => $log->student->user->full_name ?? 'Siswa',
+                    'status' => $log->status,
+                    'time' => $log->time_log ? Carbon::parse($log->time_log)->format('H:i') : '-',
+                    'date' => $log->date ? Carbon::parse($log->date)->format('d M Y') : '-',
+                ];
+            });
+
+            $childrenData = $children->map(function($c) use ($allLogsToday) {
+                $childLogs = $allLogsToday->where('student_nisn', $c->nisn);
+                $presentCount = $childLogs->whereIn('status', ['Hadir', 'Terlambat'])->count();
+                $lateCount    = $childLogs->where('status', 'Terlambat')->count();
+                $permitCount  = $childLogs->whereIn('status', ['Izin', 'Sakit'])->count();
+                $absentCount  = ($childLogs->count() == 0) ? 1 : $childLogs->where('status', 'Alpa')->count();
+                $percentage   = $presentCount > 0 ? "100%" : "0%";
+
+                return [
+                    'id'   => $c->id, 
+                    'name' => $c->user->full_name ?? 'Siswa',
+                    'nisn' => $c->nisn,
+                    'statistics' => [
+                        'presentCount' => $presentCount,
+                        'attendancePercentage' => $percentage,
+                        'lateCount' => $lateCount,
+                        'absentCount' => $absentCount,
+                        'permissionCount' => $permitCount
+                    ]
+                ];
+            });
 
             return response()->json([
                 'status' => 'success',
-                'parent_name' => $user->full_name,
-                'children' => $children->map(function($c) use ($today) {
-                    $childLogs = AttendanceLog::where('student_nisn', $c->nisn)
-                        ->whereDate('date', $today)
-                        ->get();
-
-                    $presentCount = $childLogs->whereIn('status', ['Hadir', 'Terlambat'])->count();
-                    $lateCount    = $childLogs->where('status', 'Terlambat')->count();
-                    $permitCount  = $childLogs->whereIn('status', ['Izin', 'Sakit'])->count();
-                    
-                    // Jika tidak ada log sama sekali, berarti Alpa = 1
-                    $absentCount  = ($childLogs->count() == 0) ? 1 : $childLogs->where('status', 'Alpa')->count();
-                    $percentage   = $presentCount > 0 ? "100%" : "0%";
-
-                    return [
-                        'id'   => $c->id, 
-                        'name' => optional($c->user)->full_name ?? 'Anak',
-                        'nisn' => $c->nisn,
-                        'statistics' => [
-                            'presentCount' => $presentCount,
-                            'attendancePercentage' => $percentage,
-                            'lateCount' => $lateCount,
-                            'absentCount' => $absentCount,
-                            'permissionCount' => $permitCount
-                        ]
-                    ];
-                }),
+                'parent_name' => $isStudentLogin ? ($parentRecord->name ?? 'Orang Tua') : $user->full_name,
+                'children' => $childrenData,
                 'statistics' => [
                     'presentCount' => $totalAttending, 
-                    'attendancePercentage' => $percentage . "%",
+                    'attendancePercentage' => $overallPercentage . "%",
                     'lateCount' => $totalLate,
                     'absentCount' => $totalAbsent,
                     'permissionCount' => $totalPermit
                 ],
-                'attendance_logs' => $attendanceLogs
+                'attendance_logs' => $formattedLogs
             ]);
 
         } catch (\Exception $e) {
