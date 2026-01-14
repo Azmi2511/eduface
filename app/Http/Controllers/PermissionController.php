@@ -58,7 +58,7 @@ class PermissionController extends Controller
             return redirect()->back()->with('error', 'Akses ditolak');
         }
 
-        $permission = Permission::with(['student.class'])->findOrFail($id);
+        $permission = Permission::with(['student.schoolClass'])->findOrFail($id);
 
         if ($user->role === 'teacher') {
             $isHomeroomTeacher = DB::table('classes')

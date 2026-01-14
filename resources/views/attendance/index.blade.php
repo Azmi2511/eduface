@@ -382,7 +382,7 @@ $active_menu = 'attendance';
 @endsection
 @push('scripts')
 <script>
-    const API_URL = config('services.fastapi.url');
+    const API_URL = "{{ config('services.fastapi.url') }}";
     
     let isRunning = false;
     let isProcessing = false;

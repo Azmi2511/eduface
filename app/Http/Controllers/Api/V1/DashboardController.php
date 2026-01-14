@@ -23,29 +23,35 @@ class DashboardController extends Controller
             $user = $request->user();
             $today = Carbon::today()->toDateString();
 
-            $parentRecord = DB::table('parents')->where('user_id', $user->id)->first();
+            $isRegistered = false; 
             $isStudentLogin = false;
+            $parentRecord = null;
+            $children = collect();
 
-            if (!$parentRecord) {
+            if ($user->role === 'student') {
+                $isStudentLogin = true;
                 $studentProfile = Student::where('user_id', $user->id)->first();
+                
                 if ($studentProfile) {
-                    $isStudentLogin = true;
+                    $children = collect([$studentProfile]);
+                    $isRegistered = $studentProfile->face_registered == 1;
+                    
                     $parentRecord = DB::table('parents')->where('id', $studentProfile->parent_id)->first();
+                }
+
+            } elseif ($user->role === 'parent') {
+                $parentRecord = DB::table('parents')->where('user_id', $user->id)->first();
+                
+                if ($parentRecord) {
+                    $children = Student::where('parent_id', $parentRecord->id)->with('user')->get();
                 }
             }
 
-            if (!$parentRecord) {
-                return response()->json([
+            if (($user->role === 'parent' && !$parentRecord) || ($user->role === 'student' && $children->isEmpty())) {
+                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Profil tidak ditemukan'
+                    'message' => 'Data profil pengguna tidak ditemukan di sistem.'
                 ], 404);
-            }
-
-            if ($isStudentLogin) {
-                $children = Student::where('user_id', $user->id)->with('user')->get();
-                $isRegistered = Student::where('face_registered', true)->where('user_id', $user->id)->exists();
-            } else {
-                $children = Student::where('parent_id', $parentRecord->id)->with('user')->get();
             }
 
             if ($children->isEmpty()) {
@@ -60,7 +66,8 @@ class DashboardController extends Controller
                         'absentCount' => 0,
                         'permissionCount' => 0
                     ],
-                    'attendance_logs' => []
+                    'attendance_logs' => [],
+                    'is_face_registered' => false
                 ]);
             }
 

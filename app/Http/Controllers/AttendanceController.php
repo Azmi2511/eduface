@@ -67,7 +67,7 @@ class AttendanceController extends Controller
 
         if ($scheduleId) $selectedSchedule = Schedule::find($scheduleId);
 
-        $query = Student::with(['user', 'class', 'attendanceLogs' => function ($q) use ($dateFilter, $scheduleId) {
+        $query = Student::with(['user', 'schoolClass', 'attendanceLogs' => function ($q) use ($dateFilter, $scheduleId) {
             $q->where('date', $dateFilter);
             if ($scheduleId) $q->where('schedule_id', $scheduleId);
         }]);
@@ -179,7 +179,7 @@ class AttendanceController extends Controller
     public function export(Request $request)
     {
         if (!Auth::check()) return redirect()->route('login');
-        $query = AttendanceLog::query()->with(['student.user', 'student.class']);
+        $query = AttendanceLog::query()->with(['student.user', 'student.schoolClass']);
         $accessibleNisns = $this->getAccessibleNisns();
         if (is_array($accessibleNisns)) $query->whereIn('student_nisn', $accessibleNisns);
 
