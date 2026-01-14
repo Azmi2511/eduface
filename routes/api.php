@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\FaceRegistrationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\TeacherController;
@@ -34,10 +36,13 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
         
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [UserController::class, 'me']);
-        Route::patch('/me/update', [UserController::class, 'updateProfile']);
+        Route::put('/me/update', [ProfileController::class, 'update']);
+        Route::put('/me/password', [ProfileController::class, 'updatePassword']);
         Route::post('/user/update-fcm', [UserController::class, 'updateFcmToken']);
         
         Route::apiResource('users', UserController::class);
+
+        Route::post('/face/register', [FaceRegistrationController::class, 'register']);
 
         Route::get('available-teachers', [TeacherController::class, 'available']);
         Route::apiResource('teachers', TeacherController::class);

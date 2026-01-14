@@ -382,7 +382,7 @@ $active_menu = 'attendance';
 @endsection
 @push('scripts')
 <script>
-    const API_URL = "http://127.0.0.1:8001";
+    const API_URL = config('services.fastapi.url');
     
     let isRunning = false;
     let isProcessing = false;

@@ -14,11 +14,11 @@ class StudentsController extends AdminBaseController
     public function index(Request $request)
     {
         // Query dengan Eager Loading
-        $query = Student::with(['user', 'parent.user', 'class']);
+        $query = Student::with(['user', 'parent.user', 'schoolClass']);
         $user = auth()->user();
 
         if ($user->role === 'teacher') {
-            $query->whereHas('class.schedules.teacher', function($q) use ($user) {
+            $query->whereHas('schoolClass.schedules.teacher', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
         }
@@ -48,7 +48,7 @@ class StudentsController extends AdminBaseController
         $statsQuery = User::where('role', 'student');
 
         if ($user->role === 'teacher') {
-            $statsQuery->whereHas('student.class.schedules.teacher', function($q) use ($user) {
+            $statsQuery->whereHas('student.Schoolclass.schedules.teacher', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
         }

@@ -43,6 +43,7 @@ class DashboardController extends Controller
 
             if ($isStudentLogin) {
                 $children = Student::where('user_id', $user->id)->with('user')->get();
+                $isRegistered = Student::where('face_registered', true)->where('user_id', $user->id)->exists();
             } else {
                 $children = Student::where('parent_id', $parentRecord->id)->with('user')->get();
             }
@@ -128,7 +129,8 @@ class DashboardController extends Controller
                     'absentCount' => $totalAbsent,
                     'permissionCount' => $totalPermit
                 ],
-                'attendance_logs' => $formattedLogs
+                'attendance_logs' => $formattedLogs,
+                'is_face_registered' => $isRegistered
             ]);
 
         } catch (\Exception $e) {

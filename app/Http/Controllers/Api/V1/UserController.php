@@ -43,6 +43,15 @@ class UserController extends Controller
         ]);
     }
 
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        $user->load(['teacher', 'student', 'parentProfile']);
+
+        return new UserResource($user);
+    }
+
     /**
      * Menambahkan pengguna baru.
      */
