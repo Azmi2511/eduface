@@ -237,6 +237,15 @@ class AttendanceController extends Controller
         }
     }
 
+    public function scan()
+    {
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
+            abort(403);
+        }
+        
+        return view('attendance.scan');
+    }
+
     private function translateDay($englishDay)
     {
         $map = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];

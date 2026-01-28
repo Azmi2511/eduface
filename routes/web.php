@@ -63,6 +63,7 @@ Route::middleware(['session.auth'])->group(function () {
         'index', 'show', 'destroy'
     ]);
 
+    Route::get('/attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
     Route::resource('attendance', AttendanceController::class);
     Route::post('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
 

@@ -30,9 +30,9 @@ $active_menu = 'attendance';
                         <i class="fas fa-file-excel mr-2 text-emerald-600"></i> Export Excel
                     </button>
                 </form>
-                <button onclick="toggleModal('cameraModal')" class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all font-bold shadow-lg shadow-indigo-200 text-sm">
+                <a href="{{ route('attendance.scan') }}" target="_blank" class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all font-bold shadow-lg shadow-indigo-200 text-sm">
                     <i class="fas fa-camera mr-2"></i> Scan Presensi
-                </button>
+                </a>
             </div>
         </div>
 
@@ -382,7 +382,7 @@ $active_menu = 'attendance';
 @endsection
 @push('scripts')
 <script>
-    const API_URL = "{{ config('services.fastapi.url') }}";
+    const API_URL = "http://localhost:8001";
     
     let isRunning = false;
     let isProcessing = false;
