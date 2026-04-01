@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SystemSetting;
 use App\Models\User;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -47,36 +48,40 @@ class SettingsController extends AdminBaseController
     public function updateAttendance(Request $request)
     {
         $request->validate([
-            'entry_time'        => 'required',
+            'entry_time'        => 'required', 
             'late_limit'        => 'required',
             'exit_time'         => 'required',
-            'tolerance_minutes' => 'required|integer',
+            'tolerance_minutes' => 'required|integer|min:0',
         ]);
 
-        SystemSetting::updateOrCreate(['id' => 1], [
-            'entry_time'        => $request->entry_time,
-            'late_limit'        => $request->late_limit,
-            'exit_time'         => $request->exit_time,
-            'tolerance_minutes' => $request->tolerance_minutes,
-            'face_rec_enabled'  => $request->has('face_rec_enabled') ? 1 : 0,
-        ]);
+        DB::transaction(function () use ($request) {
+            // Menggunakan ternary untuk memastikan nilai 1 atau 0 yang eksplisit
+            SystemSetting::updateOrCreate(['id' => 1], [
+                'entry_time'          => $request->entry_time,
+                'late_limit'          => $request->late_limit,
+                'exit_time'           => $request->exit_time,
+                'tolerance_minutes'   => $request->tolerance_minutes,
+                'face_rec_enabled'    => $request->has('face_rec_enabled') ? 1 : 0,
+                'upload_file_enabled' => $request->has('upload_file_enabled') ? 1 : 0,
+            ]);
 
-        $today = date('Y-m-d');
-        $newLateLimit = $request->late_limit;
+            $today = now()->toDateString();
+            
+            // Reset status berdasarkan jam baru untuk log hari ini
+            // Kita gunakan update tunggal dengan case jika ingin lebih efisien, 
+            // tapi cara Anda sudah cukup baik.
+            DB::table('attendance_logs')
+                ->where('date', $today)
+                ->whereIn('status', ['Hadir', 'Terlambat'])
+                ->update([
+                    'status' => DB::raw("CASE 
+                        WHEN time_log > '{$request->late_limit}' THEN 'Terlambat' 
+                        ELSE 'Hadir' 
+                    END")
+                ]);
+        });
 
-        \DB::table('attendance_logs')
-            ->where('date', $today)
-            ->whereIn('status', ['Hadir', 'Terlambat'])
-            ->whereTime('time_log', '>', $newLateLimit)
-            ->update(['status' => 'Terlambat']);
-
-        \DB::table('attendance_logs')
-            ->where('date', $today)
-            ->whereIn('status', ['Hadir', 'Terlambat'])
-            ->whereTime('time_log', '<=', $newLateLimit)
-            ->update(['status' => 'Hadir']);
-
-        return redirect()->route('settings.index')->with('success', 'Pengaturan Absensi berhasil disimpan dan status siswa hari ini diperbarui!');
+        return back()->with('success', 'Pengaturan absensi diperbarui!');
     }
 
     /**

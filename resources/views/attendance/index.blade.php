@@ -382,7 +382,7 @@ $active_menu = 'attendance';
 @endsection
 @push('scripts')
 <script>
-    const API_URL = "http://localhost:8001";
+    const API_URL = "{{ config('app.python_api_url') }}";
     
     let isRunning = false;
     let isProcessing = false;

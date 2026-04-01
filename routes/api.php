@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\UploadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,7 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
     Route::get('/register-data', [RegisterController::class, 'getRegisterData']);
     Route::post('/send-otp', [RegisterController::class, 'sendOtp']);
     Route::post('/verify-register', [RegisterController::class, 'verifyAndRegister']);
+    // Route::post('/upload-file', [UploadController::class, 'uploadFile']);
 
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -83,5 +85,9 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
             Route::apiResource('settings', SystemSettingController::class)->only(['index', 'update']);
         });
 
+        Route::get('/settings', [SystemSettingController::class, 'index']);
+        Route::put('/settings/general', [SystemSettingController::class, 'updateGeneral']);
+        Route::put('/settings/attendance', [SystemSettingController::class, 'updateAttendance']);
+        Route::put('/settings/notification', [SystemSettingController::class, 'updateNotification']);
     });
 });

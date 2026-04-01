@@ -23,6 +23,7 @@ class SystemSetting extends Model
         'exit_time',
         'tolerance_minutes',
         'face_rec_enabled',
+        'upload_file_enabled',
         'min_accuracy',
         'notif_late',
         'notif_absent',

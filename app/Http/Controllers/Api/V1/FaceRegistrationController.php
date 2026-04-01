@@ -51,7 +51,7 @@ class FaceRegistrationController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Wajah berhasil didaftarkan ke sistem AI.',
+                    'message' => 'Wajah berhasil didaftarkan.',
                     'data' => $response->json()
                 ]);
             } else {

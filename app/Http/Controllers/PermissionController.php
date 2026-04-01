@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Auth;
 use Illuminate\Http\Request;
 use App\Models\Permission;
@@ -89,12 +90,19 @@ class PermissionController extends Controller
             $userParent = $permission->parent?->user;
             if ($userParent && $userParent->fcm_token) {
                 $statusIndo = ($request->status == "Rejected") ? "Ditolak" : "Disetujui";
+                $statusText = ($statusIndo == 'Disetujui') ? "telah kami setujui" : "mohon maaf belum dapat kami setujui";
                 $studentName = $permission->student->user->full_name ?? 'Siswa';
                 NotificationHelper::sendPush(
                     $userParent->fcm_token,
                     "Update Izin Siswa",
                     "Pengajuan izin " . $studentName . " telah " . strtolower($statusIndo) . "."
                 );
+                Notification::create([
+                    'user_id' => $userParent->id,
+                    'title'   => "Konfirmasi Pengajuan Izin",
+                    'message' => "Terkait pengajuan izin ananda " . $studentName . ", " . $statusText . ".",
+                    'type'    => 'permission_update',
+                ]);
             }
 
             DB::commit();
@@ -159,7 +167,7 @@ class PermissionController extends Controller
                         ],
                         [
                             'status'       => $permission->type,
-                            'time_log'     => '00:00:00',
+                            'time_log'     => NOW(),
                             'device_id'    => null,
                         ]
                     );
