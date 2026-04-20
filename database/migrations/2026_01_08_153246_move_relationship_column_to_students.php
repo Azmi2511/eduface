@@ -15,13 +15,17 @@ return new class extends Migration
                   ->after('parent_id');
         });
         if (Schema::hasColumn('parents', 'relationship')) {
-            DB::statement("UPDATE students s 
-                           JOIN parents p ON s.parent_id = p.id 
-                           SET s.relationship = CASE 
-                                WHEN p.relationship LIKE '%Ayah%' THEN 'Ayah'
-                                WHEN p.relationship LIKE '%Ibu%' THEN 'Ibu'
-                                ELSE 'Wali'
-                           END");
+            DB::statement("UPDATE students 
+                           SET relationship = (
+                               SELECT CASE 
+                                   WHEN p.relationship LIKE '%Ayah%' THEN 'Ayah'
+                                   WHEN p.relationship LIKE '%Ibu%' THEN 'Ibu'
+                                   ELSE 'Wali'
+                               END 
+                               FROM parents p 
+                               WHERE p.id = students.parent_id
+                           ) 
+                           WHERE parent_id IS NOT NULL");
 
             Schema::table('parents', function (Blueprint $table) {
                 $table->dropColumn('relationship');

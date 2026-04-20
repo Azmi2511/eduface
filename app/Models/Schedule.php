@@ -10,6 +10,7 @@ class Schedule extends Model
         'class_id',
         'subject_id',
         'teacher_id',
+        'day',
         'day_of_week',
         'start_time',
         'end_time',
@@ -33,5 +34,14 @@ class Schedule extends Model
     public function attendanceLogs()
     {
         return $this->hasMany(AttendanceLog::class);
+    }
+
+    public function getDayAttribute()
+    {
+        if (array_key_exists('day', $this->attributes)) {
+            return $this->attributes['day'];
+        }
+
+        return $this->day_of_week;
     }
 }

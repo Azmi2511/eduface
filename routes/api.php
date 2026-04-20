@@ -25,18 +25,18 @@ use App\Http\Controllers\Api\V1\RegisterController;
 
 Route::prefix('v1')->as('api.v1.')->group(function () {
 
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'apiLogin']);
 
     Route::get('/register-data', [RegisterController::class, 'getRegisterData']);
     Route::post('/send-otp', [RegisterController::class, 'sendOtp']);
     Route::post('/verify-register', [RegisterController::class, 'verifyAndRegister']);
-    // Route::post('/upload-file', [UploadController::class, 'uploadFile']);
+    Route::post('/upload-file', [UploadController::class, 'uploadFile']);
 
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('dashboard', [DashboardController::class, 'index']);
         
-        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/logout', [AuthController::class, 'apiLogout']);
         Route::get('/me', [UserController::class, 'me']);
         Route::put('/me/update', [ProfileController::class, 'update']);
         Route::put('/me/password', [ProfileController::class, 'updatePassword']);

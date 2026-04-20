@@ -15,8 +15,19 @@ class Permission extends Model
         'description',
         'proof_file_path',
         'approval_status',
+        'status',
         'approved_by'
     ];
+
+    public function getStatusAttribute()
+    {
+        return $this->attributes['approval_status'] ?? null;
+    }
+
+    public function setStatusAttribute($value)
+    {
+        $this->attributes['approval_status'] = $value;
+    }
 
     public function student()
     {
