@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\V1\UploadController;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\V1\NotificationsController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\SystemSettingController;
 use App\Http\Controllers\Api\V1\RegisterController;
+use App\Http\Controllers\Api\V1\FaceRecognitionController;
+use App\Http\Controllers\Api\V1\UploadController;
 
 Route::prefix('v1')->as('api.v1.')->group(function () {
 
@@ -30,7 +32,10 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
     Route::get('/register-data', [RegisterController::class, 'getRegisterData']);
     Route::post('/send-otp', [RegisterController::class, 'sendOtp']);
     Route::post('/verify-register', [RegisterController::class, 'verifyAndRegister']);
+    Route::post('/face/register', [FaceRecognitionController::class, 'register']);
+    Route::post('/face/predict', [FaceRecognitionController::class, 'predict']);
     Route::post('/upload-file', [UploadController::class, 'uploadFile']);
+    Route::get('/student/{nisn}', [StudentController::class, 'getNameByNisn']);
 
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -44,7 +49,6 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
         
         Route::apiResource('users', UserController::class);
 
-        Route::post('/face/register', [FaceRegistrationController::class, 'register']);
 
         Route::get('available-teachers', [TeacherController::class, 'available']);
         Route::apiResource('teachers', TeacherController::class);

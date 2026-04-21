@@ -124,4 +124,23 @@ class StudentController extends Controller
 
         return response()->json(['message' => 'Data profil siswa berhasil dihapus']);
     }
+
+    public function getNameByNisn($nisn)
+    {
+        $student = Student::with('user')->where('nisn', $nisn)->first();
+
+        if (!$student) {
+            return response()->json(['status' => 'error']);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'name' => $student->user->full_name ?? $student->full_name,
+                'photo' => $student->user && $student->user->profile_picture
+                    ? asset('storage/' . ltrim($student->user->profile_picture, '/'))
+                    : null
+            ]
+        ]);
+    }
 }
