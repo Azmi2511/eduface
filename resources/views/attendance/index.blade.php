@@ -54,7 +54,7 @@ $active_menu = 'attendance';
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div>
-                    <h3 id="count-present" class="text-2xl font-bold text-gray-900">{{ $counts['present'] }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $counts['present'] }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Hadir</p>
                 </div>
             </div>
@@ -64,7 +64,7 @@ $active_menu = 'attendance';
                     <i class="fas fa-clock"></i>
                 </div>
                 <div>
-                    <h3 id="count-late" class="text-2xl font-bold text-gray-900">{{ $counts['late'] }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $counts['late'] }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Terlambat</p>
                 </div>
             </div>
@@ -74,7 +74,7 @@ $active_menu = 'attendance';
                     <i class="fas fa-info-circle"></i>
                 </div>
                 <div>
-                    <h3 id="count-permit" class="text-2xl font-bold text-gray-900">{{ $counts['permit'] }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $counts['permit'] }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Izin / Sakit</p>
                 </div>
             </div>
@@ -84,7 +84,7 @@ $active_menu = 'attendance';
                     <i class="fas fa-user-slash"></i>
                 </div>
                 <div>
-                    <h3 id="count-absent" class="text-2xl font-bold text-gray-900">{{ $counts['absent'] }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">{{ $counts['absent'] }}</h3>
                     <p class="text-sm text-gray-500 font-medium">Alpha</p>
                 </div>
             </div>
@@ -192,7 +192,7 @@ $active_menu = 'attendance';
                     </thead>
                     <tbody class="divide-y divide-gray-50 bg-white">
                         @forelse($students as $student)
-                            <tr id="student-{{ $student->nisn }}" class="hover:bg-indigo-50/30 transition duration-150">
+                            <tr class="hover:bg-indigo-50/30 transition duration-150">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs mr-3 border border-indigo-100">
@@ -208,7 +208,7 @@ $active_menu = 'attendance';
                                     <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-lg">{{ $student->schoolClass->class_name ?? '-' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="time text-xs font-mono font-bold {{ $student->today_time != '-' ? 'text-gray-800' : 'text-gray-300' }}">
+                                    <span class="text-xs font-mono font-bold {{ $student->today_time != '-' ? 'text-gray-800' : 'text-gray-300' }}">
                                         {{ $student->today_time != '-' ? \Carbon\Carbon::parse($student->today_time)->format('H:i') : '--:--' }}
                                     </span>
                                 </td>
@@ -223,7 +223,7 @@ $active_menu = 'attendance';
                                             default => 'bg-gray-50 text-gray-400 border-gray-100'
                                         };
                                     @endphp
-                                    <span class="status inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border {{ $statusClasses }}">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border {{ $statusClasses }}">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
@@ -670,75 +670,6 @@ $active_menu = 'attendance';
             `;
         }
     }
-
-    function applyRealtimeUpdate(log) {
-        const nisn = log.student_nisn;
-        const row = document.getElementById(`student-${nisn}`);
-        if (!row) return;
-
-        const oldStatus = row.querySelector('.status').innerText.trim();
-
-        const newStatus = log.status;
-        const newTime = log.time_log.substring(0,5);
-
-        const timeEl = row.querySelector('.time');
-        timeEl.innerText = newTime;
-        timeEl.classList.remove('text-gray-300');
-        timeEl.classList.add('text-gray-800');
-
-        const statusEl = row.querySelector('.status');
-
-        const statusMap = {
-            'Hadir': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-            'Terlambat': 'bg-amber-50 text-amber-600 border-amber-100',
-            'Izin': 'bg-blue-50 text-blue-600 border-blue-100',
-            'Sakit': 'bg-blue-50 text-blue-600 border-blue-100',
-            'Alpha': 'bg-rose-50 text-rose-600 border-rose-100'
-        };
-
-        statusEl.className = `status inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border ${statusMap[newStatus] || 'bg-gray-50 text-gray-400 border-gray-100'}`;
-        statusEl.innerText = newStatus;
-
-        updateCounters(oldStatus, newStatus);
-
-        row.classList.add('bg-green-50');
-        setTimeout(() => row.classList.remove('bg-green-50'), 1500);
-    }
-
-    function updateCounters(oldStatus, newStatus) {
-        const map = {
-            'Hadir': 'count-present',
-            'Terlambat': 'count-late',
-            'Izin': 'count-permit',
-            'Sakit': 'count-permit',
-            'Alpha': 'count-absent',
-            'Belum Hadir': 'count-absent'
-        };
-
-        if (map[oldStatus]) {
-            const el = document.getElementById(map[oldStatus]);
-            el.innerText = Math.max(0, parseInt(el.innerText) - 1);
-        }
-
-        if (map[newStatus]) {
-            const el = document.getElementById(map[newStatus]);
-            el.innerText = parseInt(el.innerText) + 1;
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        if (!window.Echo) {
-            console.error("Echo belum di-load");
-            return;
-        }
-
-        window.Echo.channel('attendance-tracker')
-            .listen('.attendance.updated', (e) => {
-                console.log("Realtime Update:", e.log);
-
-                applyRealtimeUpdate(e.log);
-            });
-    });
 </script>
 <style>
     @keyframes fadeInUp {
