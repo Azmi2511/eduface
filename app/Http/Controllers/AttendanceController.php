@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Helpers\NotificationHelper;
+use App\Events\AttendanceProcessed;
 
 class AttendanceController extends Controller
 {
@@ -134,6 +135,8 @@ class AttendanceController extends Controller
             ['time_log' => $request->time_log, 'status' => $request->status, 'device_id' => null]
         );
 
+        broadcast(new AttendanceProcessed($log))->toOthers();
+
         $this->notifyParentPush($student, $request->status, $request->time_log, $activeSchedule);
 
         return redirect()->back()->with('success', 'Data berhasil disimpan');
@@ -163,6 +166,8 @@ class AttendanceController extends Controller
             'time_log' => $request->time_log,
             'schedule_id' => $activeSchedule?->id ?? $log->schedule_id
         ]);
+
+        broadcast(new AttendanceProcessed($log))->toOthers();
 
         $this->notifyParentPush($log->student, $request->status, $request->time_log, $activeSchedule);
 
@@ -227,6 +232,8 @@ class AttendanceController extends Controller
                 ['student_nisn' => $request->nisn, 'date' => $now->toDateString(), 'schedule_id' => $activeSchedule?->id],
                 ['time_log' => $now->toTimeString(), 'status' => $status, 'device_id' => $request->device_id]
             );
+
+            broadcast(new AttendanceProcessed($log))->toOthers();
 
             $this->notifyParentPush($student, $status, $now->toTimeString(), $activeSchedule);
 
