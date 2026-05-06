@@ -3,155 +3,185 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Announcement;
-use App\Models\Notification;
-use App\Models\User;
-use App\Http\Resources\Api\V1\AnnouncementResource;
-use App\Http\Requests\Api\V1\Announcement\StoreAnnouncementRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use App\Models\Announcement;
+use App\Models\User;
+use App\Models\Notification;
+use App\Helpers\NotificationHelper;
+use App\Http\Resources\AnnouncementResource;
 
 class AnnouncementController extends Controller
 {
-    /**
-     * List Pengumuman (Admin View)
-     */
-    public function index()
+    // index
+    public function index(Request $request)
     {
-        $announcements = Announcement::with('recipient')
-            ->latest()
-            ->paginate(10);
+        $query = Announcement::with('recipient')->orderBy('sent_at', 'desc');
 
-        return AnnouncementResource::collection($announcements);
-    }
-
-    /**
-     * Store Pengumuman & Blast Notifikasi
-     */
-    public function store(StoreAnnouncementRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->validated();
-            $data['date_timesend '] = $request->datetime_send;
-            $data['recipient_id'] = ($request->recipient === 'specific') ? $request->user_id : null;
-
-            // Handle File Upload menggunakan Storage (Lebih Aman)
-            if ($request->hasFile('attachment_file')) {
-                $path = $request->file('attachment_file')->store('announcements', 'public');
-                $data['attachment_file'] = $path;
-            }
-
-            $announcement = Announcement::create($data);
-
-            // Logic Mencari Target User
-            $targetUserIds = $this->getTargetUserIds($request);
-
-            // Kirim Notifikasi Bulk
-            if (!empty($targetUserIds)) {
-                $this->sendBulkNotifications($announcement, $targetUserIds, $request->message);
-            }
-
-            DB::commit();
-            return (new AnnouncementResource($announcement))
-                ->additional(['message' => 'Pengumuman berhasil dibuat.']);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['message' => 'Gagal: ' . $e->getMessage()], 500);
+        if ($request->filled('search')) {
+            $query->where('message', 'like', '%' . $request->search . '%');
         }
+
+        $announcements = $query->paginate(10);
+
+        $stats = [
+            'total' => $announcements->total(),
+            'with_attachment' => Announcement::whereNotNull('attachment_file')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => AnnouncementResource::collection($announcements),
+            'meta' => [
+                'current_page' => $announcements->currentPage(),
+                'last_page' => $announcements->lastPage(),
+                'per_page' => $announcements->perPage(),
+                'total' => $announcements->total(),
+                'stats' => $stats
+            ]
+        ]);
     }
 
-    /**
-     * Update Pengumuman
-     */
-    public function update(Request $request, Announcement $announcement)
+    // store
+    public function store(Request $request)
     {
         $request->validate([
-            'message'         => 'required',
+            'recipient'       => 'required|in:all,student,parent,teacher,specific',
+            'user_id'         => 'required_if:recipient,specific|exists:users,id',
+            'message'         => 'required|string',
             'datetime_send'   => 'required|date',
-            'attachment_file' => 'nullable|file|max:2048'
+            'attachment_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
+            'attachment_link' => 'nullable|url'
         ]);
+
+        DB::beginTransaction();
 
         try {
             $data = [
                 'message'         => $request->message,
                 'sent_at'         => $request->datetime_send,
-                'attachment_link' => $request->attachment_link
+                'attachment_link' => $request->attachment_link,
+                'recipient'       => $request->recipient,
+                'recipient_id'    => $request->recipient === 'specific' ? $request->user_id : null
             ];
 
             if ($request->hasFile('attachment_file')) {
-                // Hapus file lama
-                if ($announcement->attachment_file) Storage::disk('public')->delete($announcement->attachment_file);
-                
-                $data['attachment_file'] = $request->file('attachment_file')->store('announcements', 'public');
+                $file = $request->file('attachment_file');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $destinationPath = public_path('uploads');
+
+                if (!File::isDirectory($destinationPath)) {
+                    File::makeDirectory($destinationPath, 0755, true, true);
+                }
+
+                $file->move($destinationPath, $fileName);
+                $data['attachment_file'] = $fileName;
             }
 
-            $announcement->update($data);
+            $announcement = Announcement::create($data);
 
-            // Sync pesan di tabel notifikasi
-            Notification::where('ann_id', $announcement->id)
-                ->update(['message' => Str::limit($request->message, 50)]);
+            $targetUsersQuery = User::where('is_active', 1);
 
-            return new AnnouncementResource($announcement);
+            if ($request->recipient === 'specific') {
+                $targetUsersQuery->where('id', $request->user_id);
+            } elseif ($request->recipient !== 'all') {
+                $targetUsersQuery->where('role', $request->recipient);
+            }
+
+            $targetUsers = $targetUsersQuery->select('id', 'fcm_token')->get();
+
+            $notificationsData = [];
+            $now = now();
+
+            foreach ($targetUsers as $user) {
+                $notificationsData[] = [
+                    'user_id'    => $user->id,
+                    'ann_id'     => $announcement->id,
+                    'message'    => Str::limit($request->message, 50),
+                    'link'       => 'announcements/' . $announcement->id,
+                    'is_read'    => 0,
+                    'created_at' => $now,
+                    'updated_at' => $now
+                ];
+
+                if ($user->fcm_token) {
+                    NotificationHelper::sendPush(
+                        $user->fcm_token,
+                        "Pengumuman Baru",
+                        Str::limit($request->message, 100)
+                    );
+                }
+            }
+
+            foreach (array_chunk($notificationsData, 200) as $chunk) {
+                Notification::insert($chunk);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pengumuman berhasil dibuat',
+                'data' => new AnnouncementResource($announcement)
+            ], 201);
+
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Update gagal.'], 500);
+            DB::rollback();
+
+            if (isset($fileName) && File::exists(public_path('uploads/' . $fileName))) {
+                File::delete(public_path('uploads/' . $fileName));
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat pengumuman',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
-    /**
-     * Hapus Pengumuman
-     */
-    public function destroy(Announcement $announcement)
+    // show
+    public function show($id)
     {
-        if ($announcement->attachment_file) {
-            Storage::disk('public')->delete($announcement->attachment_file);
-        }
-        
-        $announcement->delete(); // Notifikasi terhapus jika di DB diset cascade
-        return response()->json(['message' => 'Pengumuman dihapus.']);
+        $announcement = Announcement::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => new AnnouncementResource($announcement)
+        ]);
     }
 
-    /**
-     * Get Detail Pengumuman
-     */
-    public function show(Announcement $announcement)
+    // destroy
+    public function destroy($id)
     {
-        return new AnnouncementResource($announcement);
-    }
+        $announcement = Announcement::findOrFail($id);
 
-    // --- Private Helper Functions ---
+        DB::beginTransaction();
+        try {
+            if ($announcement->attachment_file) {
+                $path = public_path('uploads/' . $announcement->attachment_file);
+                if (File::exists($path)) File::delete($path);
+            }
 
-    private function getTargetUserIds($request)
-    {
-        if ($request->recipient === 'specific') {
-            return [$request->user_id];
-        }
+            Notification::where('ann_id', $announcement->id)->delete();
+            $announcement->delete();
 
-        $query = User::where('is_active', 1);
-        if ($request->recipient !== 'all') {
-            $query->where('role', $request->recipient);
-        }
-        return $query->pluck('id')->toArray();
-    }
+            DB::commit();
 
-    private function sendBulkNotifications($announcement, $userIds, $message)
-    {
-        $now = now();
-        $notifications = array_map(fn($id) => [
-            'user_id'    => $id,
-            'ann_id'     => $announcement->id,
-            'message'    => Str::limit($message, 50),
-            'link'       => 'announcements/' . $announcement->id,
-            'is_read'    => 0,
-            'created_at' => $now,
-            'updated_at' => $now
-        ], $userIds);
+            return response()->json([
+                'success' => true,
+                'message' => 'Pengumuman berhasil dihapus'
+            ]);
 
-        foreach (array_chunk($notifications, 500) as $chunk) {
-            Notification::insert($chunk);
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus pengumuman'
+            ], 500);
         }
     }
 }

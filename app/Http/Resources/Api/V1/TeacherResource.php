@@ -19,7 +19,7 @@ class TeacherResource extends JsonResource
                 'email'      => $this->user->email,
                 'phone'      => $this->user->phone,
                 'is_active'  => (bool) $this->user->is_active,
-                'profile_picture' => $this->user->profile_picture,
+                'profile_picture' => $this->user->profile_picture ? asset('storage/' . $this->user->profile_picture) : null,
             ],
             'created_at'        => $this->created_at->toDateTimeString(),
         ];

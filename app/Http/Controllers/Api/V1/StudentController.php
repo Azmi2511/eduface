@@ -20,11 +20,11 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Student::with(['user', 'class', 'parent.user']);
+        $query = Student::with(['user', 'schoolClass', 'parent.user']);
 
         // Logic RBAC: Teacher only sees their classes' students
         if ($user->role === 'teacher') {
-            $query->whereHas('class.schedules.teacher', function($q) use ($user) {
+            $query->whereHas('schoolClass.schedules.teacher', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
         }

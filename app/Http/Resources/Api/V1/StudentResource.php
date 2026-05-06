@@ -15,7 +15,7 @@ class StudentResource extends JsonResource
             'face_registered' => (bool) $this->face_registered,
             'photo_url'       => $this->photo_path ? asset('storage/' . $this->photo_path) : null,
             'user'            => new UserResource($this->whenLoaded('user')),
-            'class'           => new SchoolClassResource($this->whenLoaded('class')),
+            'class'           => new SchoolClassResource($this->whenLoaded('schoolClass')),
             'parent'          => new ParentResource($this->whenLoaded('parent')),
             'created_at'      => $this->created_at,
         ];

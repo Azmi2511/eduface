@@ -48,7 +48,8 @@ class AuthController extends Controller
             'message' => 'Login success',
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user
+            'user' => $user,
+            'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null 
         ]);
     }
 

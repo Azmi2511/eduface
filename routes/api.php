@@ -1,12 +1,10 @@
 <?php
 
-use App\Models\Student;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\V1\HomeController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ProfileController;
-use App\Http\Controllers\Api\V1\FaceRegistrationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\TeacherController;
@@ -27,7 +25,7 @@ use App\Http\Controllers\Api\V1\UploadController;
 
 Route::prefix('v1')->as('api.v1.')->group(function () {
 
-    Route::post('/login', [AuthController::class, 'apiLogin']);
+    Route::post('/login', [AuthController::class, 'login']);
 
     Route::get('/register-data', [RegisterController::class, 'getRegisterData']);
     Route::post('/send-otp', [RegisterController::class, 'sendOtp']);
@@ -40,8 +38,9 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('dashboard', [DashboardController::class, 'index']);
+        Route::get('home', [HomeController::class, 'index']);
         
-        Route::post('/logout', [AuthController::class, 'apiLogout']);
+        Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [UserController::class, 'me']);
         Route::put('/me/update', [ProfileController::class, 'update']);
         Route::put('/me/password', [ProfileController::class, 'updatePassword']);
@@ -57,7 +56,7 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
         Route::apiResource('classes', SchoolClassController::class)
             ->parameters(['classes' => 'schoolClass']);
 
-        Route::apiResource('parents', ParentController::class);
+        Route::apiResource('parents', ParentController::class); 
         
         Route::get('stats/students', [StudentController::class, 'stats']);
         Route::apiResource('students', StudentController::class);
