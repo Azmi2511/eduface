@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'nisn',
@@ -19,6 +21,7 @@ class Student extends Model
     protected $casts = [
         'face_registered' => 'boolean',
         'face_registered_at' => 'datetime',
+        'face_descriptor' => 'array',
     ];
 
     public function user()

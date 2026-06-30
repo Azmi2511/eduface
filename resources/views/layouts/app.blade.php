@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
@@ -20,7 +22,7 @@
         /* @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'); */
 
         body {
-           font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
         }
 
         /* Transisi Sidebar Halus */
@@ -89,22 +91,22 @@
     <script src="{{ asset('script/script.js') }}"></script>
     <script>
         function toggleModal(modalID) {
-        const modal = document.getElementById(modalID);
-        if (modal.classList.contains('hidden')) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        } else {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.classList.remove('overflow-hidden');
+            const modal = document.getElementById(modalID);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
         }
-    }
         // --- KONFIGURASI STYLE GLOBAL (Diselaraskan dengan Eduface) ---
         const swalBaseConfig = {
             buttonsStyling: false,
             // Backdrop lebih gelap sedikit agar fokus pengguna terarah
-            backdrop: `rgba(0,0,0, 0.5) left top no-repeat`, 
+            backdrop: `rgba(0,0,0, 0.5) left top no-repeat`,
             // Animasi diperhalus
             showClass: { popup: 'animate__animated animate__fadeInUp animate__faster' },
             hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' },
@@ -166,36 +168,36 @@
         @endif
 
 
-        // --- 2. CONFIRM ACTION (Hapus/Simpan) ---
-        function confirmAction(event, formId, title, text, confirmBtnText = 'Ya, Lanjutkan', confirmBtnColor = 'primary') {
-            event.preventDefault();
+            // --- 2. CONFIRM ACTION (Hapus/Simpan) ---
+            function confirmAction(event, formId, title, text, confirmBtnText = 'Ya, Lanjutkan', confirmBtnColor = 'primary') {
+                event.preventDefault();
 
-            // Logika warna tombol
-            let btnClass = swalBaseConfig.customClass.confirmButton;
-            if(confirmBtnColor === 'danger') {
-                btnClass = swalBaseConfig.customClass.denyButton;
+                // Logika warna tombol
+                let btnClass = swalBaseConfig.customClass.confirmButton;
+                if (confirmBtnColor === 'danger') {
+                    btnClass = swalBaseConfig.customClass.denyButton;
+                }
+
+                Swal.fire({
+                    ...swalBaseConfig,
+                    title: title,
+                    text: text, // Gunakan text biasa agar font roboto dari parent inheritance jalan
+                    icon: 'warning',
+                    iconColor: confirmBtnColor === 'danger' ? '#EF4444' : '#3B82F6', // Ikon merah jika danger, biru jika normal
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    confirmButtonText: confirmBtnText,
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        ...swalBaseConfig.customClass,
+                        confirmButton: btnClass
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        showLoadingState(formId);
+                    }
+                });
             }
-
-            Swal.fire({
-                ...swalBaseConfig,
-                title: title,
-                text: text, // Gunakan text biasa agar font roboto dari parent inheritance jalan
-                icon: 'warning',
-                iconColor: confirmBtnColor === 'danger' ? '#EF4444' : '#3B82F6', // Ikon merah jika danger, biru jika normal
-                showCancelButton: true,
-                reverseButtons: true,
-                confirmButtonText: confirmBtnText,
-                cancelButtonText: 'Batal',
-                customClass: {
-                    ...swalBaseConfig.customClass,
-                    confirmButton: btnClass
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    showLoadingState(formId);
-                }
-            });
-        }
 
         // --- 3. CONFIRM LOGOUT (Dengan FontAwesome) ---
         function confirmLogout(event) {
@@ -215,7 +217,7 @@
                 customClass: {
                     ...swalBaseConfig.customClass,
                     // Override tombol confirm jadi merah
-                    confirmButton: swalBaseConfig.customClass.denyButton 
+                    confirmButton: swalBaseConfig.customClass.denyButton
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -241,7 +243,7 @@
                     title: 'text-gray-700 font-bold text-lg mt-4'
                 }
             });
-            
+
             // Submit form
             setTimeout(() => {
                 document.getElementById(formId).submit();

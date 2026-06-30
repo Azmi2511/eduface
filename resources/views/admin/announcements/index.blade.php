@@ -147,9 +147,26 @@ $active_menu = 'announcements';
 
                                 <td class="px-6 py-5">
                                     @php
-                                        $rawType = $announcement->getRawOriginal('recipient');
-                                        $isSpecific = ($rawType === 'specific' || !empty($announcement->recipient_id));
-                                        $displayName = $isSpecific ? ($announcement->recipient->full_name ?? 'User') : (['all'=>'Semua', 'student'=>'Siswa', 'teacher'=>'Guru', 'parent'=>'Wali'][$rawType] ?? 'Semua');
+                                        $isSpecific = !empty($announcement->recipient_id);
+        
+                                        if ($isSpecific) {
+                                            $displayName = $announcement->recipient->full_name ?? 'User';
+                                        } else {
+                                            $recipientRoles = $announcement->notifications->pluck('user.role')->unique()->filter()->toArray();
+                                            
+                                            $roleCount = count($recipientRoles);
+
+                                            if ($roleCount > 1 || $roleCount === 0) {
+                                                $displayName = 'Semua';
+                                            } else {
+                                                $detectedRole = reset($recipientRoles);
+                                                $displayName = [
+                                                    'student' => 'Siswa',
+                                                    'teacher' => 'Guru',
+                                                    'parent'  => 'Wali'
+                                                ][$detectedRole] ?? 'Semua';
+                                            }
+                                        }
                                     @endphp
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase {{ $isSpecific ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-100 text-slate-600' }}">
                                         <i class="{{ $isSpecific ? 'fas fa-user' : 'fas fa-users' }} mr-1.5"></i>

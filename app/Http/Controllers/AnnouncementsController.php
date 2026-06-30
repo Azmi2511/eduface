@@ -17,7 +17,7 @@ class AnnouncementsController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Announcement::with('recipient')->orderBy('sent_at', 'desc');
+        $query = Announcement::with(['recipient', 'notifications.user'])->orderBy('sent_at', 'desc');
 
         if ($request->filled('search')) {
             $query->where('message', 'like', '%' . $request->search . '%');
@@ -43,27 +43,27 @@ class AnnouncementsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'recipient'       => 'required|in:all,student,parent,teacher,specific',
-            'user_id'         => 'required_if:recipient,specific|exists:users,id',
-            'message'         => 'required|string',
-            'datetime_send'   => 'required|date',
+            'recipient' => 'required|in:all,student,parent,teacher,specific',
+            'user_id' => 'required_if:recipient,specific|exists:users,id',
+            'message' => 'required|string',
+            'datetime_send' => 'required|date',
             'attachment_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
             'attachment_link' => 'nullable|url'
         ], [
             'attachment_file.mimes' => 'Format file harus PDF, DOC, Excel, atau Gambar.',
-            'attachment_file.max'   => 'Ukuran file maksimal adalah 5MB.',
-            'attachment_link.url'   => 'Format tautan link tidak valid.'
+            'attachment_file.max' => 'Ukuran file maksimal adalah 5MB.',
+            'attachment_link.url' => 'Format tautan link tidak valid.'
         ]);
 
         DB::beginTransaction();
 
         try {
             $data = [
-                'message'         => $request->message,
-                'sent_at'         => $request->datetime_send,
+                'message' => $request->message,
+                'sent_at' => $request->datetime_send,
                 'attachment_link' => $request->attachment_link,
-                'recipient'       => $request->recipient,
-                'recipient_id'    => $request->recipient === 'specific' ? $request->user_id : null
+                'recipient' => $request->recipient,
+                'recipient_id' => $request->recipient === 'specific' ? $request->user_id : null
             ];
 
             if ($request->hasFile('attachment_file')) {
@@ -87,18 +87,18 @@ class AnnouncementsController extends Controller
             } elseif ($request->recipient !== 'all') {
                 $targetUsersQuery->where('role', $request->recipient);
             }
-            
+
             $targetUsers = $targetUsersQuery->select('id', 'fcm_token')->get();
             $notificationsData = [];
             $now = now();
 
             foreach ($targetUsers as $user) {
                 $notificationsData[] = [
-                    'user_id'    => $user->id,
-                    'ann_id'     => $announcement->id,
-                    'message'    => Str::limit($request->message, 50),
-                    'link'       => 'announcements/' . $announcement->id,
-                    'is_read'    => 0,
+                    'user_id' => $user->id,
+                    'ann_id' => $announcement->id,
+                    'message' => Str::limit($request->message, 50),
+                    'link' => 'announcements/' . $announcement->id,
+                    'is_read' => 0,
                     'created_at' => $now,
                     'updated_at' => $now
                 ];
@@ -133,12 +133,13 @@ class AnnouncementsController extends Controller
     public function destroy($id)
     {
         $announcement = Announcement::findOrFail($id);
-        
+
         DB::beginTransaction();
         try {
             if ($announcement->attachment_file) {
                 $path = public_path('uploads/' . $announcement->attachment_file);
-                if (File::exists($path)) File::delete($path);
+                if (File::exists($path))
+                    File::delete($path);
             }
 
             Notification::where('ann_id', $announcement->id)->delete();
@@ -156,19 +157,19 @@ class AnnouncementsController extends Controller
     {
         $announcement = Announcement::findOrFail($id);
         $date = Carbon::parse($announcement->sent_at)->locale('id');
-        
+
         $formattedDate = [
-            'day'        => $date->format('d'),
+            'day' => $date->format('d'),
             'month_year' => $date->isoFormat('MMM Y'),
-            'full'       => $date->isoFormat('D MMMM Y'),
-            'time'       => $date->format('H:i'),
+            'full' => $date->isoFormat('D MMMM Y'),
+            'time' => $date->format('H:i'),
         ];
 
         $cleanFileName = null;
         if ($announcement->attachment_file) {
-             $cleanFileName = Str::after($announcement->attachment_file, '_'); 
+            $cleanFileName = Str::after($announcement->attachment_file, '_');
         }
-        
+
         return view('admin.announcements.show', compact('announcement', 'formattedDate', 'cleanFileName'));
     }
 }

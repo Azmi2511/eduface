@@ -28,4 +28,14 @@ class Notification extends Model
         'updated_at' => 'datetime',
         'is_read'    => 'integer',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function announcement()
+    {
+        return $this->belongsTo(Announcement::class, 'ann_id');
+    }
 }

@@ -124,7 +124,7 @@ class AttendanceController extends Controller
             'student_nisn' => 'required|exists:students,nisn',
             'date'         => 'required|date',
             'time_log'     => 'required',
-            'status'       => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpa',
+            'status'       => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpa,Alpha',
             'schedule_id'  => 'nullable|exists:schedules,id',
         ]);
 
@@ -146,6 +146,11 @@ class AttendanceController extends Controller
             }
         }
 
+        $status = $request->status;
+        if ($status === 'Alpa') {
+            $status = 'Alpha';
+        }
+
         $log = AttendanceLog::updateOrCreate(
             [
                 'student_nisn' => $request->student_nisn,
@@ -154,7 +159,7 @@ class AttendanceController extends Controller
             ],
             [
                 'time_log'  => $request->time_log,
-                'status'    => $request->status,
+                'status'    => $status,
                 'device_id' => null,
             ]
         );
@@ -168,12 +173,16 @@ class AttendanceController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status'   => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpa',
+            'status'   => 'required|in:Hadir,Terlambat,Izin,Sakit,Alpa,Alpha',
             'time_log' => 'nullable'
         ]);
 
         $log = AttendanceLog::findOrFail($id);
-        $log->update($request->all());
+        $data = $request->all();
+        if (isset($data['status']) && $data['status'] === 'Alpa') {
+            $data['status'] = 'Alpha';
+        }
+        $log->update($data);
 
         return (new AttendanceResource($log->load(['student.user', 'student.schoolClass', 'schedule.subject'])))
             ->additional(['message' => 'Status absensi berhasil diperbarui']);

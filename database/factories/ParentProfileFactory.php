@@ -13,8 +13,7 @@ class ParentProfileFactory extends Factory
     {
         return [
             'user_id' => User::factory(['role' => 'parent']),
-            'relationship' => $this->faker->randomElement(['Ayah','Ibu','Wali']),
-            'fcm_token' => null,
+            // 'fcm_token' => null,
         ];
     }
 }

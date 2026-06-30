@@ -17,8 +17,8 @@ class SettingsController extends AdminBaseController
      */
     public function index()
     {
-        $settings = SystemSetting::firstOrNew(['id' => 1]); 
-        
+        $settings = SystemSetting::firstOrNew(['id' => 1]);
+
         return view('admin::settings.index', compact('settings'));
     }
 
@@ -29,14 +29,24 @@ class SettingsController extends AdminBaseController
     {
         $request->validate([
             'school_name' => 'required|string',
-            'npsn'        => 'nullable|string',
-            'address'     => 'nullable|string',
-            'email'       => 'nullable|email',
-            'phone'       => 'nullable|string',
+            'npsn' => 'nullable|string',
+            'address' => 'nullable|string',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string',
+            'school_latitude' => 'nullable|numeric',
+            'school_longitude' => 'nullable|numeric',
+            'allowed_radius_meters' => 'required|integer|min:1',
         ]);
 
         SystemSetting::updateOrCreate(['id' => 1], $request->only([
-            'school_name', 'npsn', 'address', 'email', 'phone'
+            'school_name',
+            'npsn',
+            'address',
+            'email',
+            'phone',
+            'school_latitude',
+            'school_longitude',
+            'allowed_radius_meters'
         ]));
 
         return redirect()->route('settings.index')->with('success', 'Pengaturan Umum berhasil disimpan!');
@@ -48,25 +58,25 @@ class SettingsController extends AdminBaseController
     public function updateAttendance(Request $request)
     {
         $request->validate([
-            'entry_time'        => 'required', 
-            'late_limit'        => 'required',
-            'exit_time'         => 'required',
+            'entry_time' => 'required',
+            'late_limit' => 'required',
+            'exit_time' => 'required',
             'tolerance_minutes' => 'required|integer|min:0',
         ]);
 
         DB::transaction(function () use ($request) {
             // Menggunakan ternary untuk memastikan nilai 1 atau 0 yang eksplisit
             SystemSetting::updateOrCreate(['id' => 1], [
-                'entry_time'          => $request->entry_time,
-                'late_limit'          => $request->late_limit,
-                'exit_time'           => $request->exit_time,
-                'tolerance_minutes'   => $request->tolerance_minutes,
-                'face_rec_enabled'    => $request->has('face_rec_enabled') ? 1 : 0,
+                'entry_time' => $request->entry_time,
+                'late_limit' => $request->late_limit,
+                'exit_time' => $request->exit_time,
+                'tolerance_minutes' => $request->tolerance_minutes,
+                'face_rec_enabled' => $request->has('face_rec_enabled') ? 1 : 0,
                 'upload_file_enabled' => $request->has('upload_file_enabled') ? 1 : 0,
             ]);
 
             $today = now()->toDateString();
-            
+
             // Reset status berdasarkan jam baru untuk log hari ini
             // Kita gunakan update tunggal dengan case jika ingin lebih efisien, 
             // tapi cara Anda sudah cukup baik.
@@ -90,7 +100,7 @@ class SettingsController extends AdminBaseController
     public function updateNotification(Request $request)
     {
         SystemSetting::updateOrCreate(['id' => 1], [
-            'notif_late'   => $request->has('notif_late') ? 1 : 0,
+            'notif_late' => $request->has('notif_late') ? 1 : 0,
             'notif_absent' => $request->has('notif_absent') ? 1 : 0,
         ]);
 
@@ -104,7 +114,7 @@ class SettingsController extends AdminBaseController
     {
         $request->validate([
             'current_password' => 'required',
-            'new_password'     => 'required|min:6',
+            'new_password' => 'required|min:6',
             'confirm_password' => 'required|same:new_password',
         ]);
 
@@ -127,7 +137,7 @@ class SettingsController extends AdminBaseController
     public function backupDatabase()
     {
         $filename = "backup_eduface_" . date("Y-m-d_H-i-s") . ".sql";
-        
+
         $users = User::all();
         $content = "-- BACKUP DATABASE EDUFACE \n";
         $content .= "-- Tanggal: " . date("Y-m-d H:i:s") . "\n\n";

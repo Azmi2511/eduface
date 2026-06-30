@@ -1,5 +1,5 @@
 @php
-$active = 'notifications';
+$active_menu = 'notifications';
 @endphp
 
 @extends('layouts.app')

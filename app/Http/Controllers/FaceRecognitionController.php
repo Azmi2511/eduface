@@ -22,7 +22,7 @@ class FaceRecognitionController extends Controller
         $student = Student::where('nisn', $request->nisn)->first();
 
         // Simpan descriptor sebagai JSON
-        $student->face_descriptor = json_encode($request->descriptor);
+        $student->face_descriptor = $request->descriptor;
         $student->save();
 
         return response()->json([

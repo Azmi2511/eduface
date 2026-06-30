@@ -27,5 +27,8 @@ class SystemSetting extends Model
         'min_accuracy',
         'notif_late',
         'notif_absent',
+        'school_latitude',
+        'school_longitude',
+        'allowed_radius_meters',
     ];
 }

@@ -19,7 +19,7 @@ class StudentFactory extends Factory
             'photo_path' => null,
             'face_registered' => false,
             'face_registered_at' => null,
-            
+            'relationship' => $this->faker->randomElement(['Ayah','Ibu','Wali']),
         ];
     }
 }
