@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ Auth::check() ? Auth::user()->getPref('locale', 'id') : 'id' }}" class="{{ ($user_theme ?? 'light') === 'dark' ? 'dark' : '' }}">
+<html lang="{{ Auth::check() ? Auth::user()->getPref('locale', 'id') : 'id' }}" class="{{ (Auth::check() ? Auth::user()->getPref('theme', 'light') : 'light') === 'dark' ? 'dark' : '' }}">
 
 <head>
     <meta charset="utf-8">
@@ -33,30 +33,78 @@
             background-color: #0f172a !important;
             color: #cbd5e1 !important;
         }
-        html.dark .bg-\[\#F3F6FD\], html.dark main, html.dark .bg-gray-100 {
+        
+        /* Layout Backgrounds */
+        html.dark .bg-\[\#F3F6FD\], html.dark .bg-\[\#F8FAFC\], html.dark main, html.dark .bg-gray-100 {
             background-color: #0f172a !important;
         }
+        
+        /* Tables & Gray Backgrounds */
+        html.dark .bg-gray-50, html.dark .bg-slate-50, html.dark .hover\:bg-gray-50:hover,
+        html.dark .bg-gray-50\/50, html.dark .bg-gray-50\/30, html.dark .hover\:bg-gray-100:hover,
+        html.dark .hover\:bg-indigo-50\/30:hover, html.dark .hover\:bg-blue-50\/30:hover,
+        html.dark .hover\:bg-slate-50:hover {
+            background-color: #111827 !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Unread Notification */
+        html.dark .bg-blue-50\/20 {
+            background-color: rgba(59, 130, 246, 0.15) !important;
+        }
+        
+        /* Cards and White Backgrounds */
         html.dark .bg-white {
             background-color: #1e293b !important;
             color: #cbd5e1 !important;
             border-color: #334155 !important;
         }
-        html.dark .text-gray-900, html.dark .text-slate-800, html.dark .text-gray-800 {
-            color: #f1f5f9 !important;
-        }
-        html.dark .text-gray-500, html.dark .text-slate-500, html.dark .text-gray-600 {
-            color: #94a3b8 !important;
-        }
-        html.dark .border-gray-200, html.dark .border-slate-100, html.dark .border-gray-100, html.dark .border-slate-50 {
+        
+        /* Sidebar Redesign for Dark Mode */
+        html.dark #sidebar {
+            background-color: #1e293b !important; /* Make sidebar dark navy instead of bright blue */
             border-color: #334155 !important;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3) !important;
         }
+        
+        /* Active menu item inside Sidebar */
+        html.dark #sidebar .menu-item.bg-white {
+            background-color: #3b82f6 !important; /* Vibrant blue for active item */
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+            border: none !important;
+        }
+        html.dark #sidebar .menu-item.bg-white i, html.dark #sidebar .menu-item.bg-white span {
+            color: #ffffff !important;
+        }
+        html.dark #sidebar .menu-item:not(.bg-white):hover {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        
+        /* Header Fixes & Dropdowns */
         html.dark header, html.dark header.bg-white {
             background-color: #1e293b !important;
             border-color: #334155 !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
         }
-        html.dark .bg-gray-50, html.dark .bg-slate-50 {
-            background-color: #0f172a !important;
+        html.dark .hover\:bg-blue-50:hover, html.dark .hover\:bg-blue-100:hover {
+            background-color: rgba(255, 255, 255, 0.05) !important;
         }
+        
+        /* Text Colors */
+        html.dark .text-gray-900, html.dark .text-slate-800, html.dark .text-gray-800, html.dark .text-gray-700 {
+            color: #f1f5f9 !important;
+        }
+        html.dark .text-gray-500, html.dark .text-slate-500, html.dark .text-gray-600, html.dark .text-gray-400, html.dark .text-slate-600 {
+            color: #94a3b8 !important;
+        }
+        
+        /* Borders */
+        html.dark .border-gray-200, html.dark .border-slate-100, html.dark .border-gray-100, html.dark .border-slate-50 {
+            border-color: #334155 !important;
+        }
+        
+        /* Forms */
         html.dark input, html.dark select, html.dark textarea {
             background-color: #0f172a !important;
             color: #f1f5f9 !important;

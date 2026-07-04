@@ -27,7 +27,7 @@
                         <label class="block text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Mode Tema</label>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <label class="cursor-pointer group">
-                                <input type="radio" name="theme" value="light" class="peer sr-only" {{ Auth::user()->getPref('theme', 'light') == 'light' ? 'checked' : '' }}>
+                                <input type="radio" name="theme" value="light" class="peer sr-only" {{ Auth::user()->getPref('theme', 'light') == 'light' ? 'checked' : '' }} onchange="if(this.checked) document.documentElement.classList.remove('dark')">
                                 <div class="border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50/30 hover:border-blue-200">
                                     <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 text-orange-500 text-xl border border-slate-100">
                                         <i class="fas fa-sun"></i>
@@ -38,7 +38,7 @@
                             </label>
                             
                             <label class="cursor-pointer group">
-                                <input type="radio" name="theme" value="dark" class="peer sr-only" {{ Auth::user()->getPref('theme') == 'dark' ? 'checked' : '' }}>
+                                <input type="radio" name="theme" value="dark" class="peer sr-only" {{ Auth::user()->getPref('theme') == 'dark' ? 'checked' : '' }} onchange="if(this.checked) document.documentElement.classList.add('dark')">
                                 <div class="border-2 border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 hover:border-slate-300">
                                     <div class="w-12 h-12 rounded-full bg-slate-800 shadow-sm flex items-center justify-center mb-3 text-white text-xl">
                                         <i class="fas fa-moon"></i>

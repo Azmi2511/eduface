@@ -33,7 +33,7 @@
         {{-- Ikon Dashboard lebih modern --}}
         <i class="fas fa-home text-lg {{ $active == 'dashboard' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
-    <span class="menu-text">Dasbor</span>
+    <span class="menu-text">Beranda</span>
 </a>
 
 <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest section-title">

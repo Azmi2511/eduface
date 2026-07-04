@@ -9,7 +9,7 @@
             <i class="fas fa-bars-staggered text-lg"></i>
         </button>
         
-        <h2 class="text-2xl font-bold text-gray-800">@yield('header_title', 'Dashboard')</h2>
+        <h2 class="text-2xl font-bold text-gray-800">@yield('header_title', 'Beranda')</h2>
     </div>
 
     <div class="flex items-center space-x-6">

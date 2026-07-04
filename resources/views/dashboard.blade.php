@@ -4,9 +4,9 @@ $active_menu = 'dashboard';
 
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'Beranda')
 
-@section('header_title', 'Dashboard')
+@section('header_title', 'Beranda')
 
 @section('content')
     <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
