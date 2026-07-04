@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
        :class="sidebarMinimized ? 'md:w-20 w-72' : 'w-72'"
        class="fixed inset-y-0 left-0 z-50 bg-[#2F80ED] text-white flex flex-col transition-all duration-300 transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl">
     
-    <div class="h-24 flex items-center px-6 border-b border-white/20 transition-all duration-300" :class="sidebarMinimized ? 'px-4 justify-center' : ''">
+    <div class="h-24 flex items-center border-b border-white/20 transition-all duration-300" :class="sidebarMinimized ? 'px-4 justify-center' : 'justify-between px-6'">
         <div class="flex items-center gap-4 transition-all duration-300" :class="sidebarMinimized ? 'gap-0' : 'gap-4'">
             <div class="w-10 h-10 bg-white backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shadow-inner shrink-0">
                 <img src="{{ asset('assets/logo.png') }}" alt="logo" class="w-7 h-7">
@@ -22,11 +22,22 @@ use Illuminate\Support\Facades\DB;
                 <p class="text-[11px] text-white/80 font-medium mt-1 tracking-wide">{{ $school_name }}</p>
             </div>
         </div>
+        <!-- Close button for Mobile -->
+        <button onclick="closeSidebar()" class="md:hidden text-white/80 hover:text-white hover:bg-white/10 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 focus:outline-none" title="Tutup Menu">
+            <i class="fas fa-times text-lg"></i>
+        </button>
     </div>
 
     <nav class="flex-1 py-6 space-y-2 overflow-y-auto scrollbar-hide transition-all duration-300" :class="sidebarMinimized ? 'px-2' : 'px-4'">
         @include('partials.sidebar_menu_content') 
     </nav>
+
+    <!-- Floating Toggle Button on Edge (Desktop) -->
+    <button @click="sidebarMinimized = !sidebarMinimized" 
+            class="hidden md:flex absolute top-1/2 -right-3 transform -translate-y-1/2 w-6 h-6 bg-[#2F80ED] text-white border-2 border-white rounded-full items-center justify-center shadow-lg hover:bg-blue-600 hover:scale-110 active:scale-95 transition-all duration-200 focus:outline-none z-50 cursor-pointer"
+            title="Sembunyikan/Tampilkan Menu">
+        <i class="fas text-[9px] transition-transform duration-200" :class="sidebarMinimized ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+    </button>
 </aside>
 
 <style>
