@@ -30,13 +30,14 @@ class FaceRecognitionController extends Controller
             $fullPath = storage_path('app/private/' . $tempFile);
 
             $descriptor = $this->extractDescriptor($fullPath);
-            
+
             $student->face_descriptor = json_encode($descriptor);
             $student->save();
 
             @unlink($fullPath);
         } catch (\Exception $e) {
-            if (isset($fullPath)) @unlink($fullPath);
+            if (isset($fullPath))
+                @unlink($fullPath);
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
@@ -83,7 +84,8 @@ class FaceRecognitionController extends Controller
             $input = $this->extractDescriptor($fullPath);
             @unlink($fullPath);
         } catch (\Exception $e) {
-            if (isset($fullPath)) @unlink($fullPath);
+            if (isset($fullPath))
+                @unlink($fullPath);
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
@@ -94,13 +96,14 @@ class FaceRecognitionController extends Controller
             ->select('id', 'user_id', 'nisn', 'class_id', 'face_descriptor')
             ->whereNotNull('face_descriptor')
             ->get();
-            
+
         $matchedStudent = null;
         $threshold = 0.5;
 
         foreach ($students as $student) {
             $stored = json_decode($student->face_descriptor);
-            if (!$stored) continue;
+            if (!$stored)
+                continue;
 
             $distance = $this->euclideanDistance($stored, $input);
 
@@ -206,15 +209,15 @@ class FaceRecognitionController extends Controller
     private function extractDescriptor($imagePath)
     {
         $scriptPath = base_path('face_service.js');
-        
+
         $resultProcess = Process::env([
             'SystemRoot' => 'C:\\Windows',
             'PATH' => env('PATH', 'C:\\Program Files\\nodejs\\;C:\\Windows\\system32')
         ])->run([
-            'node',
-            $scriptPath,
-            $imagePath
-        ]);
+                    'node',
+                    $scriptPath,
+                    $imagePath
+                ]);
 
         if ($resultProcess->failed()) {
             throw new \Exception("Gagal menjalankan service pengenalan wajah: " . $resultProcess->errorOutput());
@@ -222,19 +225,19 @@ class FaceRecognitionController extends Controller
 
         $output = $resultProcess->output();
         $result = json_decode($output, true);
-        
+
         if ($result === null) {
             throw new \Exception("Service wajah gagal/error: " . $output);
         }
-        
+
         if (isset($result['error'])) {
             throw new \Exception("Error dari node: " . $result['error']);
         }
-        
+
         if (isset($result['success']) && isset($result['descriptor'])) {
             return $result['descriptor'];
         }
-        
+
         throw new \Exception("Format output tidak valid dari service pengenalan wajah: " . $output);
     }
 
@@ -281,37 +284,32 @@ class FaceRecognitionController extends Controller
 
     private function notifyParent($student, $status, $time, $schedule = null)
     {
-        try {
-            $student->loadMissing('parent.user', 'user');
+        $student->loadMissing('parent.user', 'user');
+        $userParent = $student->parent?->user;
+        if (!$userParent)
+            return;
 
-            $userParent = $student->parent?->user;
-            if (!$userParent) return;
-
-            $context = "Sekolah";
-            if ($schedule && $schedule->subject) {
-                $context = "Mapel " . $schedule->subject->subject_name;
-            }
-
-            $studentName = $student->user->full_name ?? 'Siswa';
-            $message = "Presensi $studentName tercatat $status untuk $context pukul " . substr($time, 0, 5) . " WIB.";
-
-            if ($userParent->fcm_token) {
-                NotificationHelper::sendPush(
-                    $userParent->fcm_token,
-                    "Update Presensi: $status",
-                    $message
-                );
-            }
-
-            Notification::create([
-                'user_id' => $userParent->id,
-                'message' => $message,
-                'is_read' => 0,
-                'created_at' => now(),
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error("Notif Error: " . $e->getMessage());
+        $context = "Sekolah";
+        if ($schedule && $schedule->subject) {
+            $context = "Mapel " . $schedule->subject->subject_name;
         }
+
+        $studentName = $student->user->full_name ?? 'Siswa';
+        $message = "Presensi $studentName tercatat $status untuk $context pukul " . substr($time, 0, 5) . " WIB.";
+
+        if ($userParent->fcm_token) {
+            try {
+                NotificationHelper::sendPush($userParent->fcm_token, "Update Presensi: $status", $message);
+            } catch (\Exception $e) {
+                Log::error("FCM Error: " . $e->getMessage());
+            }
+        }
+
+        Notification::create([
+            'user_id' => $userParent->id,
+            'message' => $message,
+            'is_read' => 0,
+            'created_at' => now(),
+        ]);
     }
 }
