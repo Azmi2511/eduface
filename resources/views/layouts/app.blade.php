@@ -69,7 +69,7 @@
     @stack('head')
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800" x-data="{ sidebarMinimized: localStorage.getItem('sidebarMinimized') === 'true' }" x-init="$watch('sidebarMinimized', val => localStorage.setItem('sidebarMinimized', val))" :class="sidebarMinimized ? 'sidebar-minimized' : ''">
 
     <div class="flex h-screen overflow-hidden bg-gray-100">
 

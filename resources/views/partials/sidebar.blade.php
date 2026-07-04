@@ -9,21 +9,22 @@ use Illuminate\Support\Facades\DB;
 @endphp
 
 <aside id="sidebar" 
-       class="fixed inset-y-0 left-0 z-50 w-72 bg-[#2F80ED] text-white flex flex-col transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl">
+       :class="sidebarMinimized ? 'md:w-20 w-72' : 'w-72'"
+       class="fixed inset-y-0 left-0 z-50 bg-[#2F80ED] text-white flex flex-col transition-all duration-300 transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl">
     
-    <div class="h-24 flex items-center px-6 border-b border-white/20">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-white backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
+    <div class="h-24 flex items-center px-6 border-b border-white/20 transition-all duration-300" :class="sidebarMinimized ? 'px-4 justify-center' : ''">
+        <div class="flex items-center gap-4 transition-all duration-300" :class="sidebarMinimized ? 'gap-0' : 'gap-4'">
+            <div class="w-10 h-10 bg-white backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shadow-inner shrink-0">
                 <img src="{{ asset('assets/logo.png') }}" alt="logo" class="w-7 h-7">
             </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarMinimized ? 'w-0 opacity-0' : 'w-32 opacity-100'">
                 <h1 class="text-xl font-bold tracking-tight text-white leading-none drop-shadow-md">EduFace</h1>
                 <p class="text-[11px] text-white/80 font-medium mt-1 tracking-wide">{{ $school_name }}</p>
             </div>
         </div>
     </div>
 
-    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">
+    <nav class="flex-1 py-6 space-y-2 overflow-y-auto scrollbar-hide transition-all duration-300" :class="sidebarMinimized ? 'px-2' : 'px-4'">
         @include('partials.sidebar_menu_content') 
     </nav>
 </aside>
@@ -32,6 +33,78 @@ use Illuminate\Support\Facades\DB;
     /* Utility untuk hide scrollbar tapi tetap bisa scroll */
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Transisi untuk teks dan ikon */
+    .menu-text {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: left center;
+        white-space: nowrap;
+        display: inline-block;
+        max-width: 200px; 
+        opacity: 1;
+    }
+    
+    .menu-item {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .menu-icon-wrapper {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .section-title {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+        .sidebar-minimized .menu-text {
+            opacity: 0;
+            max-width: 0;
+            transform: scaleX(0);
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-minimized .menu-icon-wrapper {
+            margin-right: 0 !important;
+            width: 100% !important;
+            display: flex;
+            justify-content: center;
+        }
+        .sidebar-minimized .menu-item {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: 3rem !important;
+            height: 3rem !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        .sidebar-minimized .menu-arrow {
+            opacity: 0;
+            max-width: 0;
+            margin: 0;
+            overflow: hidden;
+            display: none;
+        }
+        .sidebar-minimized .section-title {
+            opacity: 0;
+            height: 0;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        .sidebar-minimized #submenu-master {
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+            border-left: none !important;
+        }
+        .sidebar-minimized #submenu-master .menu-item {
+            width: 2.75rem !important;
+            height: 2.75rem !important;
+            margin-bottom: 0.25rem;
+        }
+    }
 </style>
 
 <script>

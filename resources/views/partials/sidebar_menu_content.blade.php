@@ -20,78 +20,78 @@
     $hasMasterAccess = $canAccessUsers || $canAccessStudents || $canAccessTeachers || $canAccessParents || $canAccessClasses || $canAccessSchedules;
 @endphp
 
-<div class="mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest">
+<div class="mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest section-title">
     Menu Utama
 </div>
 
 <a href="{{ route('dashboard') }}" 
-   class="flex items-center px-4 py-3 mb-2 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+   class="menu-item flex items-center px-4 py-3 mb-2 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
    {{ $active == 'dashboard' 
       ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
       : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
-    <div class="w-6 mr-3 flex justify-center">
+    <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
         {{-- Ikon Dashboard lebih modern --}}
         <i class="fas fa-home text-lg {{ $active == 'dashboard' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
-    Dashboard
+    <span class="menu-text">Dashboard</span>
 </a>
 
-<div class="mt-6 mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest">
+<div class="mt-6 mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest section-title">
     Manajemen
 </div>
 
 <div class="space-y-1">
     @if($hasMasterAccess)
     <button type="button" onclick="toggleMasterMenu()" 
-            class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+            class="menu-item w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
             {{ $is_master_open ? 'bg-white/10 border-white/20 text-white' : 'text-white/90 hover:bg-white/20 hover:border-white/30' }}">
-        <div class="flex items-center">
-             <div class="w-6 mr-3 flex justify-center">
+        <div class="flex items-center w-full">
+             <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
                 {{-- Ikon Master Data: Layer Group --}}
                 <i class="fas fa-layer-group text-lg"></i>
             </div>
-            Data Master
+            <span class="menu-text">Data Master</span>
         </div>
-        <i id="arrow-master" class="fas fa-chevron-down text-xs transition-transform duration-300 {{ $is_master_open ? 'rotate-180' : '' }}"></i>
+        <i id="arrow-master" class="menu-arrow fas fa-chevron-down text-xs transition-transform duration-300 shrink-0 {{ $is_master_open ? 'rotate-180' : '' }}"></i>
     </button>
 
     <div id="submenu-master" class="{{ $is_master_open ? '' : 'hidden opacity-0 -translate-y-2' }} transition-all duration-300 ml-4 pl-4 border-l-2 border-white/30 space-y-1 mt-1">
         
         @if($canAccessUsers)
-        <a href="{{ route('users.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'users' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-             <i class="fas fa-users-cog w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Semua Pengguna
+        <a href="{{ route('users.index') }}" class="menu-item flex items-center px-3 py-2 text-sm rounded-lg transition-all overflow-hidden whitespace-nowrap {{ $active == 'users' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+             <i class="fas fa-users-cog w-6 h-6 mr-2 text-lg flex items-center justify-center menu-icon-wrapper shrink-0"></i> <span class="menu-text">Semua Pengguna</span>
         </a>
         @endif
         
         @if($canAccessStudents)
-        <a href="{{ route('students.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'students' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            <i class="fas fa-user-graduate w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Siswa
+        <a href="{{ route('students.index') }}" class="menu-item flex items-center px-3 py-2 text-sm rounded-lg transition-all overflow-hidden whitespace-nowrap {{ $active == 'students' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+            <i class="fas fa-user-graduate w-6 h-6 mr-2 text-lg flex items-center justify-center menu-icon-wrapper shrink-0"></i> <span class="menu-text">Data Siswa</span>
         </a>
         @endif
         
         @if($canAccessTeachers)
-        <a href="{{ route('teachers.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'teachers' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            <i class="fas fa-chalkboard-teacher w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Guru
+        <a href="{{ route('teachers.index') }}" class="menu-item flex items-center px-3 py-2 text-sm rounded-lg transition-all overflow-hidden whitespace-nowrap {{ $active == 'teachers' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+            <i class="fas fa-chalkboard-teacher w-6 h-6 mr-2 text-lg flex items-center justify-center menu-icon-wrapper shrink-0"></i> <span class="menu-text">Data Guru</span>
         </a>
         @endif
         
         @if($canAccessParents)
-        <a href="{{ route('parents.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'parents' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+        <a href="{{ route('parents.index') }}" class="menu-item flex items-center px-3 py-2 text-sm rounded-lg transition-all overflow-hidden whitespace-nowrap {{ $active == 'parents' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
             {{-- Mengganti ikon person-breastfeeding ke yang lebih umum --}}
-            <i class="fas fa-user-friends w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Orang Tua
+            <i class="fas fa-user-friends w-6 h-6 mr-2 text-lg flex items-center justify-center menu-icon-wrapper shrink-0"></i> <span class="menu-text">Data Orang Tua</span>
         </a>
         @endif
         
         @if($canAccessSchedules)
-        <a href="{{ route('schedules.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'schedules' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+        <a href="{{ route('schedules.index') }}" class="menu-item flex items-center px-3 py-2 text-sm rounded-lg transition-all overflow-hidden whitespace-nowrap {{ $active == 'schedules' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
             {{-- Mengganti ke ikon Kalender Jadwal --}}
-            <i class="fas fa-calendar-alt w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Jadwal
+            <i class="fas fa-calendar-alt w-6 h-6 mr-2 text-lg flex items-center justify-center menu-icon-wrapper shrink-0"></i> <span class="menu-text">Data Jadwal</span>
         </a>
         @endif
         
         @if($canAccessClasses)
-        <a href="{{ route('classes.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg transition-all {{ $active == 'classes' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
-            <i class="fas fa-school w-6 h-6 mr-2 text-lg flex items-center justify-center"></i> Data Kelas
+        <a href="{{ route('classes.index') }}" class="menu-item flex items-center px-3 py-2 text-sm rounded-lg transition-all overflow-hidden whitespace-nowrap {{ $active == 'classes' ? 'bg-white text-blue-700 font-bold shadow-md' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+            <i class="fas fa-school w-6 h-6 mr-2 text-lg flex items-center justify-center menu-icon-wrapper shrink-0"></i> <span class="menu-text">Data Kelas</span>
         </a>
         @endif
     </div>
@@ -99,72 +99,72 @@
 
     @if($canAccessAttendance)
     <a href="{{ route('attendance.index') }}" 
-       class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+       class="menu-item flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
        {{ $active == 'attendance' 
           ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
           : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
-        <div class="w-6 mr-3 flex justify-center">
+        <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
             {{-- Ikon Absensi: User Clock lebih relevan untuk kehadiran --}}
             <i class="fas fa-user-check text-lg {{ $active == 'attendance' ? 'text-blue-600' : 'text-white' }}"></i>
         </div>
-        Absensi
+        <span class="menu-text">Absensi</span>
     </a>
     @endif
 
     @if($canAccessPermissions)
     <a href="{{ route('permissions.index') }}" 
-       class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+       class="menu-item flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
        {{ $active == 'permissions' 
           ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
           : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
-        <div class="w-6 mr-3 flex justify-center">
+        <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
             {{-- Ikon Izin: File Signature --}}
             <i class="fas fa-file-signature text-lg {{ $active == 'permissions' ? 'text-blue-600' : 'text-white' }}"></i>
         </div>
-        Perizinan
+        <span class="menu-text">Perizinan</span>
     </a>
     @endif
     
     @if($canAccessAnnouncements)
     <a href="{{ route('announcements.index') }}" 
-       class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+       class="menu-item flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
        {{ $active == 'announcements' 
           ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
           : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
-        <div class="w-6 mr-3 flex justify-center">
+        <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
             <i class="fas fa-bullhorn text-lg {{ $active == 'announcements' ? 'text-blue-600' : 'text-white' }}"></i>
         </div>
-        Pengumuman
+        <span class="menu-text">Pengumuman</span>
     </a>
     @endif
     
     @if($canAccessNotifications)
     <a href="{{ route('notifications.index') }}" 
-       class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+       class="menu-item flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
        {{ $active == 'notifications' 
           ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
           : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
-        <div class="w-6 mr-3 flex justify-center">
+        <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
             <i class="fas fa-bell text-lg {{ $active == 'notifications' ? 'text-blue-600' : 'text-white' }}"></i>
         </div>
-        Notifikasi
+        <span class="menu-text">Notifikasi</span>
     </a>
     @endif
 </div>
 
 @if($canAccessSettings)
-<div class="mt-6 mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest">
+<div class="mt-6 mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest section-title">
     Sistem
 </div>
 <a href="{{ route('settings.index') }}" 
-   class="flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent
+   class="menu-item flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
    {{ $active == 'settings' 
       ? 'bg-white text-blue-700 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
       : 'text-white/90 hover:bg-white/20 hover:border-white/30 hover:shadow-lg' }}">
-    <div class="w-6 mr-3 flex justify-center">
+    <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
         {{-- Ikon Setting: Cogs (Jamak) --}}
         <i class="fas fa-cogs text-lg {{ $active == 'settings' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
-    Konfigurasi
+    <span class="menu-text">Konfigurasi</span>
 </a>
 @endif

@@ -4,7 +4,12 @@
 @endphp
 <header class="h-20 bg-white shadow-sm px-8 flex items-center justify-between z-40 border-b border-gray-200 sticky top-0">
     <div class="flex items-center">
+        <!-- Toggle Mobile -->
         <button id="sidebar-toggle" class="text-gray-500 focus:outline-none md:hidden mr-4">
+            <i class="fas fa-bars fa-lg"></i>
+        </button>
+        <!-- Toggle Desktop -->
+        <button @click="sidebarMinimized = !sidebarMinimized" class="text-gray-500 hover:text-blue-600 focus:outline-none hidden md:block mr-4 transition-colors">
             <i class="fas fa-bars fa-lg"></i>
         </button>
         
