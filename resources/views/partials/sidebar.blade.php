@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 <aside id="sidebar" 
        :class="sidebarMinimized ? 'md:w-20 w-72' : 'w-72'"
-       class="fixed inset-y-0 left-0 z-50 bg-[#2F80ED] text-white flex flex-col transition-all duration-300 transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl">
+       class="fixed inset-y-0 left-0 z-50 bg-[#2F80ED] text-white flex flex-col transform -translate-x-full md:relative md:translate-x-0 border-r border-white/20 shadow-2xl sidebar-transition">
     
     <div class="h-24 flex items-center border-b border-white/20 transition-all duration-300" :class="sidebarMinimized ? 'px-4 justify-center' : 'justify-between px-6'">
         <div class="flex items-center gap-4 transition-all duration-300" :class="sidebarMinimized ? 'gap-0' : 'gap-4'">
@@ -34,86 +34,128 @@ use Illuminate\Support\Facades\DB;
 
     <!-- Floating Toggle Button on Edge (Desktop) -->
     <button @click="sidebarMinimized = !sidebarMinimized" 
-            class="hidden md:flex absolute top-1/2 -right-3 transform -translate-y-1/2 w-6 h-6 bg-[#2F80ED] text-white border-2 border-white rounded-full items-center justify-center shadow-lg hover:bg-blue-600 hover:scale-110 active:scale-95 transition-all duration-200 focus:outline-none z-50 cursor-pointer"
+            class="hidden md:flex absolute top-1/2 -right-3 transform -translate-y-1/2 w-6 h-6 bg-blue-100 text-blue-600 border-2 border-white rounded-full items-center justify-center shadow-md hover:bg-blue-200 hover:scale-110 active:scale-95 transition-all duration-200 focus:outline-none z-50 cursor-pointer hover-ripple"
             title="Sembunyikan/Tampilkan Menu">
         <i class="fas text-[9px] transition-transform duration-200" :class="sidebarMinimized ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
     </button>
 </aside>
 
 <style>
+    /* Animasi Hover Circular Ripple */
+    @keyframes circular-ripple {
+        0% {
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(2);
+            opacity: 0;
+        }
+    }
+    
+    .hover-ripple::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid rgba(37, 99, 235, 0.4);
+        background-color: rgba(37, 99, 235, 0.08);
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .hover-ripple:hover::after {
+        animation: circular-ripple 1s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+    }
+
     /* Utility untuk hide scrollbar tapi tetap bisa scroll */
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+    /* Transisi Custom Premium untuk Sidebar & Menu */
+    .sidebar-transition {
+        will-change: width, transform;
+        transition: width 0.38s cubic-bezier(0.25, 1, 0.5, 1), transform 0.38s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
     /* Transisi untuk teks dan ikon */
     .menu-text {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity, max-width;
+        transition: opacity 0.15s ease-out, max-width 0.35s cubic-bezier(0.25, 1, 0.5, 1);
         transform-origin: left center;
         white-space: nowrap;
         display: inline-block;
-        max-width: 200px; 
+        max-width: 140px; 
         opacity: 1;
     }
     
     .menu-item {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: padding;
+        transition: background-color 0.2s ease, padding 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        overflow: hidden;
     }
     
     .menu-icon-wrapper {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: margin-right;
+        transition: margin-right 0.35s cubic-bezier(0.25, 1, 0.5, 1);
     }
     
     .section-title {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity, height, margin, padding;
+        transition: opacity 0.12s ease-out, height 0.35s cubic-bezier(0.25, 1, 0.5, 1), margin 0.35s cubic-bezier(0.25, 1, 0.5, 1), padding 0.35s cubic-bezier(0.25, 1, 0.5, 1);
         overflow: hidden;
     }
 
+    .menu-arrow {
+        will-change: opacity;
+        transition: opacity 0.15s ease-out, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
     @media (min-width: 768px) {
+        /* Percepat transisi saat menyusut (collapse) */
+        .sidebar-minimized #sidebar {
+            transition: width 0.28s cubic-bezier(0.25, 1, 0.5, 1), transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+        }
         .sidebar-minimized .menu-text {
             opacity: 0;
             max-width: 0;
-            transform: scaleX(0);
             padding: 0;
             margin: 0;
+            transition: opacity 0.1s ease-out, max-width 0.28s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .sidebar-minimized .menu-icon-wrapper {
-            margin-right: 0 !important;
-            width: 100% !important;
-            display: flex;
-            justify-content: center;
+            margin-right: 0;
+            transition: margin-right 0.28s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .sidebar-minimized .menu-item {
-            justify-content: center !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            width: 3rem !important;
-            height: 3rem !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+            transition: padding 0.28s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .sidebar-minimized .menu-arrow {
             opacity: 0;
             max-width: 0;
             margin: 0;
             overflow: hidden;
-            display: none;
+            pointer-events: none;
+            transition: opacity 0.1s ease-out, max-width 0.28s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .sidebar-minimized .section-title {
             opacity: 0;
             height: 0;
-            margin-bottom: 0 !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            transition: opacity 0.1s ease-out, height 0.28s cubic-bezier(0.25, 1, 0.5, 1), margin 0.28s cubic-bezier(0.25, 1, 0.5, 1), padding 0.28s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .sidebar-minimized #submenu-master {
-            margin-left: 0 !important;
-            padding-left: 0 !important;
-            border-left: none !important;
-        }
-        .sidebar-minimized #submenu-master .menu-item {
-            width: 2.75rem !important;
-            height: 2.75rem !important;
-            margin-bottom: 0.25rem;
+            display: none;
         }
     }
 </style>

@@ -11,55 +11,214 @@ $active_menu = 'dashboard';
 @section('content')
     <div class="flex-1 flex flex-col overflow-hidden bg-[#F3F6FD]">
         <main class="flex-1 overflow-y-auto p-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
-                    <div
-                        class="w-14 h-14 rounded-xl bg-blue-100 text-blue-500 flex items-center justify-center text-2xl mr-4">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_students) }}</h3>
-                        <p class="text-sm text-gray-500 font-medium">Total Siswa</p>
-                        <p class="text-xs text-blue-500 mt-1 font-semibold">Terdaftar di database</p>
-                    </div>
-                </div>
+            @php
+                $role = strtolower(session('role', 'user'));
+            @endphp
 
-                <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
-                    <div
-                        class="w-14 h-14 rounded-xl bg-green-100 text-green-500 flex items-center justify-center text-2xl mr-4">
-                        <i class="fas fa-user-check"></i>
+            @if($role === 'admin')
+                {{-- Admin Cards --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_students) }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Total Siswa</p>
+                            <p class="text-xs text-blue-500 mt-1 font-semibold">Terdaftar di database</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-2xl font-bold text-gray-900">{{ $attendance_percentage }}%</h3>
-                        <p class="text-sm text-gray-500 font-medium">Kehadiran Hari Ini</p>
-                        <p class="text-xs text-green-500 mt-1 font-semibold">{{ $total_present }} Siswa Hadir</p>
-                    </div>
-                </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
-                    <div
-                        class="w-14 h-14 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-2xl mr-4">
-                        <i class="fas fa-user-clock"></i>
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-green-100 text-green-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $attendance_percentage }}%</h3>
+                            <p class="text-sm text-gray-500 font-medium">Kehadiran Hari Ini</p>
+                            <p class="text-xs text-green-500 mt-1 font-semibold">{{ $total_present }} Siswa Hadir</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-2xl font-bold text-gray-900">{{ $total_late }}</h3>
-                        <p class="text-sm text-gray-500 font-medium">Terlambat Hari Ini</p>
-                        <p class="text-xs text-orange-500 mt-1 font-semibold">Lewat jam {{ $late_limit }}</p>
-                    </div>
-                </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
-                    <div
-                        class="w-14 h-14 rounded-xl bg-red-100 text-red-500 flex items-center justify-center text-2xl mr-4">
-                        <i class="fas fa-user-times"></i>
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $total_late }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Terlambat Hari Ini</p>
+                            <p class="text-xs text-orange-500 mt-1 font-semibold">Lewat jam {{ $late_limit }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-2xl font-bold text-gray-900">{{ $total_absent }}</h3>
-                        <p class="text-sm text-gray-500 font-medium">Tidak Hadir</p>
-                        <p class="text-xs text-red-500 mt-1 font-semibold">Belum check-in</p>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-red-100 text-red-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $total_absent }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Tidak Hadir</p>
+                            <p class="text-xs text-red-500 mt-1 font-semibold">Belum check-in</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @elseif($role === 'teacher')
+                {{-- Teacher Cards --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <!-- Card 1: Total Siswa Diajar -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ number_format($total_students) }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Total Siswa</p>
+                            <p class="text-xs text-blue-500 mt-1 font-semibold">Tersimpan di database</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Kehadiran Hari Ini -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-green-100 text-green-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $attendance_percentage }}%</h3>
+                            <p class="text-sm text-gray-500 font-medium">Kehadiran Hari Ini</p>
+                            <p class="text-xs text-green-500 mt-1 font-semibold">{{ $total_present }} Siswa Hadir</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Perizinan Menunggu -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-envelope-open-text"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $pending_permissions_count }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Izin Menunggu</p>
+                            <p class="text-xs text-amber-600 mt-1 font-semibold">Perlu persetujuan</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Jadwal Mengajar Hari Ini -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-purple-100 text-purple-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $teacher_schedules_count }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Jadwal Mengajar</p>
+                            <p class="text-xs text-purple-500 mt-1 font-semibold">Hari ini</p>
+                        </div>
+                    </div>
+                </div>
+            @elseif($role === 'parent')
+                {{-- Parent Cards --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <!-- Card 1: Anak Terdaftar -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-child"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ count($parent_children) }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Anak Terdaftar</p>
+                            <p class="text-xs text-blue-500 mt-1 font-semibold">Siswa sekolah</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Status Absensi Anak -->
+                    @php
+                        $firstChild = count($parent_children) > 0 ? $parent_children[0] : null;
+                    @endphp
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-green-100 text-green-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 truncate max-w-[155px]">{{ $firstChild ? $firstChild->today_status : 'Belum Absen' }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Absensi Terakhir</p>
+                            <p class="text-xs text-green-500 mt-1 font-semibold truncate max-w-[155px]">{{ $firstChild ? $firstChild->user->full_name : 'Belum ada data' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Izin/Sakit Anak -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-file-medical"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $parent_permissions_count }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Riwayat Izin</p>
+                            <p class="text-xs text-amber-600 mt-1 font-semibold">Telah diajukan</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Limit Jam Terlambat -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-red-100 text-red-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $late_limit }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Batas Terlambat</p>
+                            <p class="text-xs text-red-500 mt-1 font-semibold">Toleransi kehadiran</p>
+                        </div>
+                    </div>
+                </div>
+            @elseif($role === 'student')
+                {{-- Student Cards --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <!-- Card 1: Status Absen Hari Ini -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 truncate max-w-[155px]">{{ $student_today_status }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Kehadiran Hari Ini</p>
+                            <p class="text-xs text-blue-500 mt-1 font-semibold">{{ $student_today_time ? 'Jam ' . $student_today_time : 'Belum absen' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Tingkat Kehadiran Mandiri -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-green-100 text-green-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $student_attendance_rate }}%</h3>
+                            <p class="text-sm text-gray-500 font-medium">Tingkat Kehadiran</p>
+                            <p class="text-xs text-green-500 mt-1 font-semibold">Semester ini</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Kelas Anda -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 truncate max-w-[155px]">{{ $student_info ? ($student_info->schoolClass->name ?? '-') : '-' }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Kelas Terdaftar</p>
+                            <p class="text-xs text-purple-600 mt-1 font-semibold">Tahun ajaran aktif</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Jam Batas Keterlambatan -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center transition-transform hover:-translate-y-1">
+                        <div class="w-14 h-14 rounded-xl bg-red-100 text-red-500 flex items-center justify-center text-2xl mr-4">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $late_limit }}</h3>
+                            <p class="text-sm text-gray-500 font-medium">Batas Masuk</p>
+                            <p class="text-xs text-red-500 mt-1 font-semibold">Jangan terlambat!</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">

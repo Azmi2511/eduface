@@ -1,5 +1,5 @@
 @php
-    $full_name = session('full_name', 'Guest User');
+    $full_name = session('full_name', 'Tamu');
     $role_session = session('role', 'user');
 @endphp
 <header class="h-20 bg-white shadow-sm px-8 flex items-center justify-between z-40 border-b border-gray-200 sticky top-0">

@@ -59,9 +59,9 @@ $active_menu = 'users';
                         <select name="role" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-sm appearance-none bg-white">
                             <option value="">Semua Role</option>
                             <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="teacher" {{ request('role') === 'teacher' ? 'selected' : '' }}>Teacher</option>
-                            <option value="student" {{ request('role') === 'student' ? 'selected' : '' }}>Student</option>
-                            <option value="parent" {{ request('role') === 'parent' ? 'selected' : '' }}>Parent</option>
+                            <option value="teacher" {{ request('role') === 'teacher' ? 'selected' : '' }}>Guru</option>
+                            <option value="student" {{ request('role') === 'student' ? 'selected' : '' }}>Siswa</option>
+                            <option value="parent" {{ request('role') === 'parent' ? 'selected' : '' }}>Orang Tua</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -127,13 +127,23 @@ $active_menu = 'users';
                             </td>
 
                             <td class="px-6 py-4">
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full capitalize
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
                                     {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800' : '' }}
                                     {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-800' : '' }}
                                     {{ $user->role === 'student' ? 'bg-green-100 text-green-800' : '' }}
                                     {{ $user->role === 'parent' ? 'bg-yellow-100 text-yellow-800' : '' }}
                                 ">
-                                    {{ $user->role }}
+                                    @if($user->role === 'admin')
+                                        Admin
+                                    @elseif($user->role === 'teacher')
+                                        Guru
+                                    @elseif($user->role === 'student')
+                                        Siswa
+                                    @elseif($user->role === 'parent')
+                                        Orang Tua
+                                    @else
+                                        {{ $user->role }}
+                                    @endif
                                 </span>
                             </td>
 
@@ -244,7 +254,7 @@ $active_menu = 'users';
                             <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
                             <div class="relative">
                                 <select name="role" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-sm appearance-none bg-white">
-                                    <option value="student">Student</option><option value="teacher">Teacher</option><option value="admin">Admin</option><option value="parent">Parent</option>
+                                    <option value="student">Siswa</option><option value="teacher">Guru</option><option value="admin">Admin</option><option value="parent">Orang Tua</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
                             </div>
@@ -318,7 +328,7 @@ $active_menu = 'users';
                             <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
                             <div class="relative">
                                 <select id="edit_role" name="role" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm appearance-none bg-white">
-                                    <option value="student">Student</option><option value="teacher">Teacher</option><option value="admin">Admin</option><option value="parent">Parent</option>
+                                    <option value="student">Siswa</option><option value="teacher">Guru</option><option value="admin">Admin</option><option value="parent">Orang Tua</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
                             </div>
@@ -504,7 +514,12 @@ $active_menu = 'users';
 
         // Role Badge Styling
         const roleEl = document.getElementById('view_role_badge');
-        roleEl.innerText = user.role;
+        let displayRole = user.role;
+        if(user.role === 'admin') displayRole = 'Admin';
+        else if(user.role === 'teacher') displayRole = 'Guru';
+        else if(user.role === 'student') displayRole = 'Siswa';
+        else if(user.role === 'parent') displayRole = 'Orang Tua';
+        roleEl.innerText = displayRole;
         roleEl.className = 'px-2 py-1 rounded font-mono mr-2 uppercase text-[10px] font-bold ';
         if(user.role === 'admin') roleEl.classList.add('bg-purple-100', 'text-purple-700');
         else if(user.role === 'teacher') roleEl.classList.add('bg-blue-100', 'text-blue-700');

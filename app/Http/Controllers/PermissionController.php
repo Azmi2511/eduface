@@ -25,7 +25,7 @@ class PermissionController extends Controller
             $query->where('parent_id', $user->parent->id);
         } elseif ($user->role === 'teacher') {
             $query->whereHas('student', function($q) use ($user) {
-                $q->whereHas('class.schedules', function($s) use ($user) {
+                $q->whereHas('schoolClass.schedules', function($s) use ($user) {
                     $s->where('teacher_id', $user->teacher->id);
                 });
             });

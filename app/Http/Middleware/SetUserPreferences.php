@@ -12,8 +12,9 @@ class SetUserPreferences
 {
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check()) {
-            $user = Auth::user();
+        $userId = session('user_id') ?: (Auth::check() ? Auth::id() : null);
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
 
             // 1. Set Bahasa / Locale
             $locale = $user->getPref('locale', 'id');

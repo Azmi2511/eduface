@@ -8,14 +8,14 @@
         ->orderBy('created_at', 'desc')
         ->get();
 
-    $roleLabel = 'Guest';
+    $roleLabel = 'Tamu';
     $checkRole = strtolower($userRole);
     
     if ($checkRole == 'admin') $roleLabel = 'Administrator';
     elseif ($checkRole == 'teacher') $roleLabel = 'Guru';
     elseif ($checkRole == 'student') $roleLabel = 'Siswa';
 
-    $initials = substr(session('full_name', 'G'), 0, 1);
+    $initials = substr(session('full_name', 'T'), 0, 1);
 @endphp
 
 <div class="flex items-center space-x-4 ml-auto z-20">
@@ -129,7 +129,7 @@
             
             <div class="hidden lg:block ml-3 text-left max-w-[150px]">
                 <h4 class="text-sm font-extrabold text-gray-900 leading-none group-hover:text-blue-600 transition-colors truncate">
-                    {{ session('full_name', 'Guest User') }}
+                    {{ session('full_name', 'Tamu') }}
                 </h4>
                 <p class="text-[11px] text-blue-500 mt-1 font-bold uppercase tracking-wider truncate">
                     {{ $roleLabel }}
@@ -159,7 +159,7 @@
                     @endif
                  </div>
                  <div>
-                    <p class="text-sm font-bold truncate">{{ session('full_name', 'Guest User') }}</p>
+                    <p class="text-sm font-bold truncate">{{ session('full_name', 'Tamu') }}</p>
                     <p class="text-xs font-medium opacity-80">{{ $roleLabel }}</p>
                  </div>
             </div>
@@ -195,15 +195,7 @@
 </div>
 
 <script>
-    // Fungsi JavaScript untuk konfirmasi logout yang lebih baik (opsional)
-    function confirmLogout(event) {
-        event.preventDefault();
-        
-        // Anda bisa menggantinya dengan library SweetAlert2 atau modal kustom Tailwind
-        if (confirm('Apakah Anda yakin ingin keluar dari sesi Anda?')) {
-            document.getElementById('logout-form').submit();
-        }
-    }
+    // Logout dikonfirmasi lewat modal SweetAlert2 di app.blade.php
 
     // Custom scrollbar (Anda harus menambahkan CSS untuk ini)
     /*

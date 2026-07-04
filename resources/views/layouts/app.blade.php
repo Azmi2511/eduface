@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id">
+<html lang="{{ Auth::check() ? Auth::user()->getPref('locale', 'id') : 'id' }}" class="{{ ($user_theme ?? 'light') === 'dark' ? 'dark' : '' }}">
 
 <head>
     <meta charset="utf-8">
@@ -8,6 +8,11 @@
     <title>@yield('title', 'Eduface: Just Face It')</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -20,6 +25,49 @@
 
     <style>
         /* @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'); */
+
+        /* Tema Gelap & Terang Utama */
+
+        /* Dark Mode support overrides */
+        html.dark, html.dark body {
+            background-color: #0f172a !important;
+            color: #cbd5e1 !important;
+        }
+        html.dark .bg-\[\#F3F6FD\], html.dark main, html.dark .bg-gray-100 {
+            background-color: #0f172a !important;
+        }
+        html.dark .bg-white {
+            background-color: #1e293b !important;
+            color: #cbd5e1 !important;
+            border-color: #334155 !important;
+        }
+        html.dark .text-gray-900, html.dark .text-slate-800, html.dark .text-gray-800 {
+            color: #f1f5f9 !important;
+        }
+        html.dark .text-gray-500, html.dark .text-slate-500, html.dark .text-gray-600 {
+            color: #94a3b8 !important;
+        }
+        html.dark .border-gray-200, html.dark .border-slate-100, html.dark .border-gray-100, html.dark .border-slate-50 {
+            border-color: #334155 !important;
+        }
+        html.dark header, html.dark header.bg-white {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        html.dark .bg-gray-50, html.dark .bg-slate-50 {
+            background-color: #0f172a !important;
+        }
+        html.dark input, html.dark select, html.dark textarea {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+        html.dark input::placeholder {
+            color: #475569 !important;
+        }
+        html.dark .text-slate-700 {
+            color: #cbd5e1 !important;
+        }
 
         body {
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -212,7 +260,7 @@
                 iconColor: '#EF4444', // Merah
                 showCancelButton: true,
                 reverseButtons: true,
-                confirmButtonText: 'Logout',
+                confirmButtonText: 'Keluar',
                 cancelButtonText: 'Batal',
                 customClass: {
                     ...swalBaseConfig.customClass,

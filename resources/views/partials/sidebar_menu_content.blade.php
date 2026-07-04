@@ -33,7 +33,7 @@
         {{-- Ikon Dashboard lebih modern --}}
         <i class="fas fa-home text-lg {{ $active == 'dashboard' ? 'text-blue-600' : 'text-white' }}"></i>
     </div>
-    <span class="menu-text">Dashboard</span>
+    <span class="menu-text">Dasbor</span>
 </a>
 
 <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-white/60 uppercase tracking-widest section-title">
@@ -45,7 +45,7 @@
     <button type="button" onclick="toggleMasterMenu()" 
             class="menu-item w-full flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 border border-transparent overflow-hidden whitespace-nowrap
             {{ $is_master_open ? 'bg-white/10 border-white/20 text-white' : 'text-white/90 hover:bg-white/20 hover:border-white/30' }}">
-        <div class="flex items-center w-full">
+        <div class="flex items-center">
              <div class="w-6 mr-3 flex justify-center menu-icon-wrapper shrink-0">
                 {{-- Ikon Master Data: Layer Group --}}
                 <i class="fas fa-layer-group text-lg"></i>

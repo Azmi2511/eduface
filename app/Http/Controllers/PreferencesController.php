@@ -20,30 +20,12 @@ class PreferencesController extends Controller
         // Daftar semua key yang diizinkan untuk disimpan
         $allowedKeys = [
             'theme', 
-            'accent_color', 
-            'layout_density', 
-            'sidebar_mode',
             'locale', 
-            'date_format', 
-            'timezone',
-            // Checkbox keys (boolean)
-            'notify_grades', 
-            'notify_attendance', 
-            'notify_announcements'
         ];
 
         foreach ($allowedKeys as $key) {
-            // Logika khusus untuk Checkbox:
-            // Jika checkbox tidak dicentang, form HTML tidak mengirim key tersebut.
-            // Kita harus cek manual.
-            if (in_array($key, ['notify_grades', 'notify_attendance', 'notify_announcements'])) {
-                $value = $request->has($key) ? '1' : '0';
-            } else {
-                // Untuk input biasa (select/radio/text), ambil valuenya
-                // Jika tidak ada di request, skip saja
-                if (!$request->has($key)) continue;
-                $value = $request->input($key);
-            }
+            if (!$request->has($key)) continue;
+            $value = $request->input($key);
 
             // Simpan atau Update
             UserPreference::updateOrCreate(

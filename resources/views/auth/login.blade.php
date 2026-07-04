@@ -56,9 +56,15 @@
                     <label class="block text-gray-800 text-xs font-bold mb-1" for="password">
                         Password:
                     </label>
-                    <input type="password" id="password" name="password" required 
-                        class="w-full border-b border-gray-300 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] transition-colors bg-transparent placeholder-gray-400"
-                        placeholder="Masukkan password">
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required 
+                            class="w-full border-b border-gray-300 py-1.5 pr-10 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] transition-colors bg-transparent placeholder-gray-400"
+                            placeholder="Masukkan password">
+                        <button type="button" onclick="togglePasswordVisibility()" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer">
+                            <i id="password-toggle-icon" class="far fa-eye text-sm"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="text-right mb-5">
@@ -77,11 +83,26 @@
                 </div>
 
                 <div class="text-center text-xs text-gray-500">
-                    Belum punya akun? <a href="{{ route('register.show') }}" class="text-[#2F80ED] font-bold hover:underline">Aktivasi Sekarang</a>
+                    Belum punya akun? <a href="{{ route('register.show') }}" class="text-[#2F80ED] font-bold hover:underline">Daftar Sekarang</a>
                 </div>
             </form>
         </div>
     </div>
 
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('password-toggle-icon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>
