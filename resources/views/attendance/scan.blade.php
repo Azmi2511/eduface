@@ -11,7 +11,13 @@
             <!-- CAMERA -->
             <div class="lg:col-span-7">
                 <div class="bg-black rounded-3xl overflow-hidden relative">
-                    <video id="video" autoplay muted class="w-full h-[400px] object-cover scale-x-[-1]"></video>
+                    <video id="video" autoplay muted playsinline class="w-full h-[400px] object-cover scale-x-[-1]"></video>
+
+                    <div id="face-guide" class="face-guide pointer-events-none absolute left-1/2 top-[48%] h-[78%] w-[44%] -translate-x-1/2 -translate-y-1/2 border-4 border-white/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.25)] transition-colors duration-200">
+                        <div id="face-instruction" class="absolute -bottom-12 left-1/2 w-max max-w-[90vw] -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-center text-xs font-semibold text-white">
+                            Posisikan wajah di dalam frame
+                        </div>
+                    </div>
 
                     <div class="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded text-white text-xs">
                         <span id="indicator" class="w-2 h-2 bg-gray-400 inline-block rounded-full mr-2"></span>
@@ -40,11 +46,23 @@
 @endsection
 
 @push('scripts')
-    <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="{{ asset('script/face-api.min.js') }}"></script>
+    <script>
+        if (typeof faceapi === 'undefined') {
+            document.write('<script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"><\/script>');
+        }
+    </script>
 
     <script>
         let isRunning = false;
         let modelsLoaded = false;
+        let isProcessing = false;
+        let scanTimer = null;
+        let lastDescriptor = null;
+        let smileDetected = false;
+        let smileBaseline = 0;
+        let smileBaselineSamples = 0;
+        let faceReady = false;
         let lastSpoken = null;
         let voices = [];
 
@@ -62,8 +80,17 @@
         // INIT CAMERA
         // ============================
         async function initCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            document.getElementById('video').srcObject = stream;
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                },
+                audio: false
+            });
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            await video.play();
         }
 
         // ============================
@@ -103,13 +130,94 @@
             const video = document.getElementById('video');
 
             const detection = await faceapi
-                .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({
+                    inputSize: 224,
+                    scoreThreshold: 0.5
+                }))
                 .withFaceLandmarks()
                 .withFaceDescriptor();
 
-            if (!detection) return null;
+            if (!detection) {
+                updateFaceGuide(null);
+                faceReady = false;
+                return null;
+            }
 
-            return Array.from(detection.descriptor);
+            faceReady = updateFaceGuide(detection);
+            if (!faceReady) {
+                return {
+                    descriptor: Array.from(detection.descriptor),
+                    smileDetected: false
+                };
+            }
+
+            const smileScore = getSmileScore(detection.landmarks, detection.detection.box);
+            if (smileBaselineSamples < 12 && smileScore > 0.18) {
+                smileBaseline = smileBaselineSamples === 0
+                    ? smileScore
+                    : (smileBaseline * 0.8) + (smileScore * 0.2);
+                smileBaselineSamples++;
+            }
+
+            const smileThreshold = smileBaselineSamples >= 3
+                ? Math.max(0.27, smileBaseline * 1.12)
+                : 0.31;
+            if (smileScore > smileThreshold) smileDetected = true;
+
+            return {
+                descriptor: Array.from(detection.descriptor),
+                smileDetected,
+                faceReady
+            };
+        }
+
+        function updateFaceGuide(detection) {
+            const guide = document.getElementById('face-guide');
+            const instruction = document.getElementById('face-instruction');
+
+            if (!detection) {
+                guide.className = guide.className.replace(/border-\S+/g, '') + ' border-white/70';
+                instruction.textContent = 'Posisikan wajah di dalam frame';
+                return false;
+            }
+
+            const box = detection.detection.box;
+            const video = document.getElementById('video');
+            if (!video.videoWidth || !video.videoHeight) return false;
+            const centerX = (box.x + box.width / 2) / video.videoWidth;
+            const centerY = (box.y + box.height / 2) / video.videoHeight;
+            const faceWidth = box.width / video.videoWidth;
+            const centered = centerX > 0.38 && centerX < 0.62 && centerY > 0.35 && centerY < 0.68;
+            const correctDistance = faceWidth > 0.28 && faceWidth < 0.62;
+
+            guide.className = guide.className.replace(/border-\S+/g, '') + (centered && correctDistance ? ' border-emerald-400' : ' border-amber-300');
+
+            if (!centered) {
+                instruction.textContent = 'Posisikan wajah di tengah frame';
+                return false;
+            }
+            if (faceWidth <= 0.28) {
+                instruction.textContent = 'Dekatkan wajah sedikit';
+                return false;
+            }
+            if (faceWidth >= 0.62) {
+                instruction.textContent = 'Jauhkan wajah sedikit';
+                return false;
+            }
+
+            instruction.textContent = smileDetected ? 'Wajah siap diproses' : 'Jarak sesuai, senyum untuk mulai';
+            return true;
+        }
+
+        function getSmileScore(landmarks, faceBox) {
+            const mouth = landmarks.getMouth();
+            const mouthWidth = distance(mouth[0], mouth[6]);
+            const mouthOpening = distance(mouth[3], mouth[9]);
+            return (mouthWidth / faceBox.width) + (mouthOpening / faceBox.width) * 0.15;
+        }
+
+        function distance(first, second) {
+            return Math.hypot(first.x - second.x, first.y - second.y);
         }
 
         // ============================
@@ -122,6 +230,11 @@
 
             if (isRunning) {
                 isRunning = false;
+                clearTimeout(scanTimer);
+                lastDescriptor = null;
+                smileDetected = false;
+                smileBaseline = 0;
+                smileBaselineSamples = 0;
                 btn.innerText = "MULAI SCAN";
                 status.innerText = "Standby";
                 indicator.className = "w-2 h-2 bg-gray-400 inline-block rounded-full";
@@ -132,10 +245,14 @@
                 await loadModels();
             }
 
-
+            lastDescriptor = null;
+            smileDetected = false;
+            smileBaseline = 0;
+            smileBaselineSamples = 0;
+            faceReady = false;
             isRunning = true;
             btn.innerText = "STOP";
-            status.innerText = "Scanning...";
+            status.innerText = "Senyum untuk mulai...";
             indicator.className = "w-2 h-2 bg-green-500 inline-block rounded-full animate-pulse";
 
             scanLoop();
@@ -145,15 +262,27 @@
         // LOOP
         // ============================
         async function scanLoop() {
-            if (!isRunning) return;
+            if (!isRunning || isProcessing) return;
 
-            const descriptor = await getDescriptor();
+            isProcessing = true;
+            try {
+                const detection = await getDescriptor();
 
-            if (descriptor) {
-                await sendToServer(descriptor);
+                if (detection && detection.smileDetected && !lastDescriptor) {
+                    lastDescriptor = detection.descriptor;
+                    await sendToServer(detection.descriptor);
+                } else if (detection && !detection.smileDetected) {
+                    document.getElementById('status').innerText = detection.faceReady
+                        ? "Senyum untuk mulai..."
+                        : "Atur posisi wajah sesuai frame...";
+                }
+            } finally {
+                isProcessing = false;
             }
 
-            setTimeout(scanLoop, 1500);
+            if (isRunning) {
+                scanTimer = setTimeout(scanLoop, 350);
+            }
         }
 
         // ============================
@@ -161,37 +290,38 @@
         // ============================
         async function sendToServer(descriptor) {
             try {
-                const res = await fetch('/api/v1/face/predict', {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch("{{ route('face.predict') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({ descriptor })
                 });
 
-                if (!res.ok) {
-                    console.error("❌ HTTP Error:", res.status);
-                    return;
-                }
-
                 const data = await res.json();
 
-                if (data.status === 'success') {
-                    showToast('success', data.data.message, 'border-green-500');
+                if (data.status === 'success' && data.data) {
+                    showToast('success', data.data.message || 'Presensi berhasil dicatat!', 'border-green-500');
                     addLog(data.data);
                     speak(data.data.name);
+                    isRunning = false;
 
-                } else if (data.status === 'duplicate') {
-                    showToast('warning', data.data.message, 'border-yellow-500');
+                } else if (data.status === 'duplicate' && data.data) {
+                    showToast('warning', data.data.message || 'Sudah absen hari ini', 'border-yellow-500');
                     addLog(data.data);
+                    isRunning = false;
 
                 } else {
-                    showToast('error', data.message, 'border-red-500');
+                    showToast('error', data.message || 'Wajah tidak dikenali', 'border-red-500');
+                    lastDescriptor = null;
                 }
 
             } catch (err) {
                 console.error(err);
+                lastDescriptor = null;
 
                 showToast(
                     'error',
@@ -213,7 +343,8 @@
             const nisn = prompt("Masukkan NISN:");
             if (!nisn) return;
 
-            const descriptor = await getDescriptor();
+            const detection = await getDescriptor();
+            const descriptor = detection?.descriptor;
 
             if (!descriptor) {
                 alert("❌ Wajah tidak terdeteksi");
@@ -223,10 +354,11 @@
 
             const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            const res = await fetch('/api/v1/face/register', {
+            const res = await fetch("{{ route('face.register') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrf
                 },
                 body: JSON.stringify({ nisn, descriptor })
@@ -354,4 +486,15 @@
             speechSynthesis.speak(utterance);
         }
     </script>
+    <style>
+        .face-guide {
+            border-radius: 48% 48% 44% 44% / 38% 38% 62% 62%;
+        }
+
+        @media (max-width: 640px) {
+            .face-guide {
+                width: 62%;
+            }
+        }
+    </style>
 @endpush

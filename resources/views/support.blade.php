@@ -1,6 +1,7 @@
 @php
-$db_phone = '085213345165'; 
-$db_email = 'eduface.atlas@gmail.com';
+$settings = \Illuminate\Support\Facades\DB::table('system_settings')->first();
+$db_phone = $settings->school_phone ?? '085213345165'; 
+$db_email = $settings->school_email ?? 'eduface.atlas@gmail.com';
 $wa_number = preg_replace('/[^0-9]/', '', $db_phone);
 if (substr($wa_number, 0, 1) == '0') {
     $wa_number = '62' . substr($wa_number, 1);

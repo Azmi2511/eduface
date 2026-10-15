@@ -14,6 +14,7 @@
     if ($checkRole == 'admin') $roleLabel = 'Administrator';
     elseif ($checkRole == 'teacher') $roleLabel = 'Guru';
     elseif ($checkRole == 'student') $roleLabel = 'Siswa';
+    elseif ($checkRole == 'parent') $roleLabel = 'Orang Tua / Wali';
 
     $initials = substr(session('full_name', 'T'), 0, 1);
 @endphp

@@ -218,6 +218,18 @@ $active_menu = 'dashboard';
                         </div>
                     </div>
                 </div>
+
+                @if($student_info && !($student_info->face_registered || $student_info->is_face_registered))
+                    <div class="mb-8 flex flex-col gap-4 rounded-xl border border-amber-200 bg-amber-50 p-5 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h3 class="font-bold text-amber-900">Registrasi wajah belum selesai</h3>
+                            <p class="mt-1 text-sm text-amber-700">Daftarkan wajah Anda agar dapat menggunakan presensi wajah.</p>
+                        </div>
+                        <a href="{{ route('attendance.register') }}" class="inline-flex items-center justify-center rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600">
+                            <i class="fas fa-camera mr-2"></i> Daftar Wajah
+                        </a>
+                    </div>
+                @endif
             @endif
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -326,6 +338,7 @@ $active_menu = 'dashboard';
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const labelsFromPHP = @json($chart_labels);
         const dataFromPHP = @json($chart_data);

@@ -171,6 +171,14 @@ $active_menu = 'users';
                                         title="Lihat Detail">
                                         <i class="far fa-eye"></i>
                                     </button>
+
+                                    @if($user->role === 'student' && $user->student && !($user->student->face_registered || $user->student->is_face_registered))
+                                        <a href="{{ route('attendance.register', ['nisn' => $user->student->nisn]) }}"
+                                            class="p-2 text-emerald-500 transition rounded-full hover:bg-emerald-50 hover:text-emerald-700"
+                                            title="Registrasi Wajah">
+                                            <i class="fas fa-camera"></i>
+                                        </a>
+                                    @endif
                                     
                                     <button onclick="openEditModal({{ json_encode($user) }})"
                                         class="p-2 text-yellow-500 transition rounded-full hover:bg-yellow-50 hover:text-yellow-700 focus:outline-none" 
@@ -214,8 +222,8 @@ $active_menu = 'users';
     </main>
 
     {{-- 1. ADD MODAL --}}
-    <div id="createUserModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
-        <div class="relative w-full max-w-3xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+    <div id="createUserModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white p-0 shadow-2xl transform transition-all scale-100">
             <div class="px-6 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
@@ -228,7 +236,7 @@ $active_menu = 'users';
                 </button>
             </div>
 
-            <div class="p-6 overflow-y-auto max-h-[85vh]">
+            <div class="min-h-0 overflow-y-auto p-6">
                 <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -247,6 +255,34 @@ $active_menu = 'users';
                                     <option value="">Pilih</option><option value="L">Laki-laki</option><option value="P">Perempuan</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
+                            </div>
+                        </div>
+
+                        <div id="createStudentFields" class="hidden md:col-span-2 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
+                            <h4 class="mb-3 text-sm font-bold text-indigo-900">Data Akademik Siswa</h4>
+                            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">NISN</label>
+                                    <input type="text" name="student_nisn" id="student_nisn" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                                    <select name="student_class_id" id="student_class_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-sm bg-white">
+                                        <option value="">Pilih Kelas</option>
+                                        @foreach($classmodel as $class)
+                                            <option value="{{ $class->id }}">{{ $class->class_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Orang Tua/Wali <span class="font-normal text-gray-400">(opsional)</span></label>
+                                    <select name="student_parent_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-sm bg-white">
+                                        <option value="">Pilih Orang Tua/Wali</option>
+                                        @foreach($parents as $parent)
+                                            <option value="{{ $parent->id }}">{{ $parent->user->full_name ?? 'Tanpa Nama' }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -285,8 +321,8 @@ $active_menu = 'users';
     </div>
 
     {{-- 2. EDIT MODAL --}}
-    <div id="editUserModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
-        <div class="relative w-full max-w-3xl p-0 bg-white rounded-2xl shadow-2xl mx-4 overflow-hidden transform transition-all scale-100">
+    <div id="editUserModal" class="fixed inset-0 z-50 hidden w-full h-full bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white p-0 shadow-2xl transform transition-all scale-100">
             <div class="px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
@@ -299,7 +335,7 @@ $active_menu = 'users';
                 </button>
             </div>
 
-            <div class="p-6 overflow-y-auto max-h-[85vh]">
+            <div class="min-h-0 overflow-y-auto p-6">
                 <form id="editUserForm" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
@@ -321,6 +357,34 @@ $active_menu = 'users';
                                     <option value="">Pilih</option><option value="L">Laki-laki</option><option value="P">Perempuan</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none"><i class="fas fa-chevron-down text-xs"></i></div>
+                            </div>
+                        </div>
+
+                        <div id="editStudentFields" class="hidden md:col-span-2 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+                            <h4 class="mb-3 text-sm font-bold text-amber-900">Data Akademik Siswa</h4>
+                            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">NISN</label>
+                                    <input type="text" name="student_nisn" id="edit_student_nisn" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                                    <select name="student_class_id" id="edit_student_class_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm bg-white">
+                                        <option value="">Pilih Kelas</option>
+                                        @foreach($classmodel as $class)
+                                            <option value="{{ $class->id }}">{{ $class->class_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Orang Tua/Wali <span class="font-normal text-gray-400">(opsional)</span></label>
+                                    <select name="student_parent_id" id="edit_student_parent_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-orange-500 text-sm bg-white">
+                                        <option value="">Pilih Orang Tua/Wali</option>
+                                        @foreach($parents as $parent)
+                                            <option value="{{ $parent->id }}">{{ $parent->user->full_name ?? 'Tanpa Nama' }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -433,6 +497,16 @@ $active_menu = 'users';
 
 @push('scripts')
 <script>
+    function toggleStudentFields(prefix, isStudent) {
+        const fields = document.getElementById(`${prefix}StudentFields`);
+        const nisn = document.getElementById(`${prefix === 'create' ? 'student_nisn' : 'edit_student_nisn'}`);
+        const classSelect = document.getElementById(`${prefix === 'create' ? 'student_class_id' : 'edit_student_class_id'}`);
+
+        if (fields) fields.classList.toggle('hidden', !isStudent);
+        if (nisn) nisn.required = isStudent;
+        if (classSelect) classSelect.required = isStudent;
+    }
+
     function toggleModal(modalID) {
         const modal = document.getElementById(modalID);
         if (modal) {
@@ -459,6 +533,12 @@ $active_menu = 'users';
         setValue('edit_user_id', user.id);
         setValue('edit_password', ''); // Reset password field
 
+        const student = user.student || null;
+        toggleStudentFields('edit', user.role === 'student');
+        setValue('edit_student_nisn', student?.nisn);
+        setValue('edit_student_class_id', student?.class_id);
+        setValue('edit_student_parent_id', student?.parent_id);
+
         // Handle Date Format for Input Date (YYYY-MM-DD)
         if(user.dob) {
             const dateStr = user.dob.split('T')[0].split(' ')[0];
@@ -482,6 +562,24 @@ $active_menu = 'users';
 
         toggleModal('editUserModal');
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const createRole = document.querySelector('#createUserModal select[name="role"]');
+        const editRole = document.getElementById('edit_role');
+
+        if (createRole) {
+            createRole.addEventListener('change', (event) => {
+                toggleStudentFields('create', event.target.value === 'student');
+            });
+            toggleStudentFields('create', createRole.value === 'student');
+        }
+
+        if (editRole) {
+            editRole.addEventListener('change', (event) => {
+                toggleStudentFields('edit', event.target.value === 'student');
+            });
+        }
+    });
 
     function openViewModal(user) {
         // Helper Text

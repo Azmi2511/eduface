@@ -47,8 +47,9 @@ class AttendanceController extends Controller
 
     public function index(Request $request)
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) abort(403);
+        if (!Auth::check()) abort(403);
 
+        $user = Auth::user();
         $dateFilter = $request->input('date', date('Y-m-d'));
         $scheduleId = $request->input('schedule_id');
         $search = $request->input('search');
@@ -57,9 +58,9 @@ class AttendanceController extends Controller
         $availableSchedules = collect([]);
         $selectedSchedule = null;
 
-        if (Auth::user()->role == 'teacher') {
+        if ($user->role == 'teacher') {
             $dayName = $this->translateDay(Carbon::parse($dateFilter)->format('l'));
-            $availableSchedules = Schedule::where('teacher_id', Auth::user()->teacher->id)
+            $availableSchedules = Schedule::where('teacher_id', $user->teacher->id)
                 ->where('day_of_week', $dayName)
                 ->orderBy('start_time')
                 ->get();
@@ -72,9 +73,15 @@ class AttendanceController extends Controller
             if ($scheduleId) $q->where('schedule_id', $scheduleId);
         }]);
 
+        // Scope by role using getAccessibleNisns
+        $accessibleNisns = $this->getAccessibleNisns();
+        if (is_array($accessibleNisns)) {
+            $query->whereIn('nisn', $accessibleNisns);
+        }
+
         if ($selectedSchedule) {
             $query->where('class_id', $selectedSchedule->class_id);
-        } elseif (Auth::user()->role == 'teacher') {
+        } elseif ($user->role == 'teacher') {
             $todayClassIds = $availableSchedules->pluck('class_id')->unique();
             $todayClassIds->isNotEmpty() ? $query->whereIn('class_id', $todayClassIds) : $query->whereRaw('1 = 0');
         }
@@ -112,6 +119,10 @@ class AttendanceController extends Controller
 
     public function store(Request $request)
     {
+        if (Auth::user()?->role === 'student') {
+            abort(403, 'Siswa tidak dapat menginput absensi secara manual.');
+        }
+
         $request->validate([
             'student_nisn' => 'required|exists:students,nisn',
             'date' => 'required|date',
@@ -129,12 +140,20 @@ class AttendanceController extends Controller
             $activeSchedule = $this->findMatchingSchedule($student->class_id, $dayName, $request->time_log);
         }
 
-        AttendanceLog::updateOrCreate(
+        $log = AttendanceLog::updateOrCreate(
             ['student_nisn' => $request->student_nisn, 'date' => $request->date, 'schedule_id' => $activeSchedule?->id],
             ['time_log' => $request->time_log, 'status' => $request->status, 'device_id' => null]
         );
 
-        $this->notifyParentPush($student, $request->status, $request->time_log, $activeSchedule);
+        $this->notifyParentAfterResponse($student, $request->status, $request->time_log, $activeSchedule, $request->expectsJson());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil disimpan',
+                'data' => ['id' => $log->id, 'status' => $log->status, 'time_log' => $log->time_log]
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Data berhasil disimpan');
     }
@@ -147,6 +166,13 @@ class AttendanceController extends Controller
 
         if ($log->status === $request->status) {
             $log->delete();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status berhasil di-reset.',
+                    'data' => ['status' => null, 'time_log' => null]
+                ]);
+            }
             return redirect()->back()->with('success', 'Status berhasil di-reset.');
         }
 
@@ -164,7 +190,15 @@ class AttendanceController extends Controller
             'schedule_id' => $activeSchedule?->id ?? $log->schedule_id
         ]);
 
-        $this->notifyParentPush($log->student, $request->status, $request->time_log, $activeSchedule);
+        $this->notifyParentAfterResponse($log->student, $request->status, $request->time_log, $activeSchedule, $request->expectsJson());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Status berhasil diupdate.',
+                    'data' => ['id' => $log->id, 'status' => $log->status, 'time_log' => $log->time_log]
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Status berhasil diupdate.');
     }
@@ -200,6 +234,13 @@ class AttendanceController extends Controller
 
     public function storeAjax(Request $request)
     {
+        if (Auth::user()?->role === 'student') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siswa tidak dapat menginput absensi secara manual.'
+            ], 403);
+        }
+
         try {
             $request->validate(['nisn' => 'required|string|exists:students,nisn']);
             
@@ -246,13 +287,18 @@ class AttendanceController extends Controller
         return view('attendance.scan');
     }
 
-    public function register()
+    public function register(Request $request)
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher'])) {
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'teacher', 'student'])) {
             abort(403);
         }
-        
-        return view('attendance.register');
+
+        $registeredNisn = $request->query('nisn');
+        if (Auth::user()->role === 'student') {
+            $registeredNisn = Student::where('user_id', Auth::id())->value('nisn');
+        }
+
+        return view('attendance.register', compact('registeredNisn'));
     }
 
     private function translateDay($englishDay)
@@ -301,5 +347,17 @@ class AttendanceController extends Controller
             'is_read' => 0,
             'created_at' => now(),
         ]);
+    }
+
+    private function notifyParentAfterResponse($student, $status, $time, $schedule, $afterResponse)
+    {
+        if (!$afterResponse) {
+            $this->notifyParentPush($student, $status, $time, $schedule);
+            return;
+        }
+
+        app()->terminating(function () use ($student, $status, $time, $schedule) {
+            $this->notifyParentPush($student, $status, $time, $schedule);
+        });
     }
 }

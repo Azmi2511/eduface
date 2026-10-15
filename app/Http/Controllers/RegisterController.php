@@ -41,8 +41,8 @@ class RegisterController extends Controller
             'phone'     => 'nullable|string|max:50',
             'dob'       => 'nullable|date',
             'photo'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'id_number' => 'nullable|string',
-            'class_id'  => 'required_if:role,student',
+            'id_number' => 'required_if:role,student,teacher|string',
+            'class_id'  => 'required_if:role,student|exists:classes,id',
             'parent_id' => 'nullable|exists:parents,id',
         ]);
 
@@ -81,6 +81,33 @@ class RegisterController extends Controller
 
     public function verifyAndCreate(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'email'     => 'required|email',
+            'otp_code'  => 'required|digits:6',
+            'name'      => 'required|string|max:255',
+            'password'  => 'required|string',
+            'role'      => 'required|in:student,teacher,parent',
+            'gender'    => 'required|in:L,P',
+            'phone'     => 'nullable|string|max:50',
+            'dob'       => 'nullable|date',
+            'photo'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'id_number' => 'required_if:role,student,teacher|string',
+            'class_id'  => 'required_if:role,student|exists:classes,id',
+            'parent_id' => 'nullable|exists:parents,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
+        }
+
+        if ($request->role === 'student' && Student::where('nisn', $request->id_number)->exists()) {
+            return response()->json(['status' => 'error', 'message' => 'NISN sudah terdaftar.'], 422);
+        }
+
+        if ($request->role === 'teacher' && Teacher::where('nip', $request->id_number)->exists()) {
+            return response()->json(['status' => 'error', 'message' => 'NIP sudah terdaftar.'], 422);
+        }
+
         $email = $request->email;
 
         // check lock
@@ -154,7 +181,7 @@ class RegisterController extends Controller
                 'status' => 'success',
                 'message' => 'Registrasi Berhasil!',
                 'username' => $generatedUsername,
-                'redirect' => route('login.perform')
+                'redirect' => route('login')
             ]);
 
         } catch (\Exception $e) {

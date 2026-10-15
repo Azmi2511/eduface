@@ -30,7 +30,7 @@
                             <div>
                                 <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Nama Siswa</label>
                                 <p class="text-sm font-bold text-gray-800">{{ $permit->student->user->full_name }}</p>
-                                <p class="text-xs text-gray-500 italic">NISN: {{ $permit->student->nisn }} | Kelas: {{ $permit->student->class->name ?? '-' }}</p>
+                                <p class="text-xs text-gray-500 italic">NISN: {{ $permit->student->nisn }} | Kelas: {{ $permit->student->schoolClass->class_name ?? '-' }}</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Diajukan Oleh</label>

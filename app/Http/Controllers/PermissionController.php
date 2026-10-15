@@ -140,7 +140,7 @@ class PermissionController extends Controller
 
     public function show($id)
     {
-        $permit = Permission::with(['student.user', 'parent.user', 'approvedBy'])->findOrFail($id);
+        $permit = Permission::with(['student.user', 'student.schoolClass', 'parent.user', 'approvedBy'])->findOrFail($id);
         return view('permissions.show', compact('permit'));
     }
 

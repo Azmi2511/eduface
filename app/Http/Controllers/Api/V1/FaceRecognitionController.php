@@ -19,11 +19,18 @@ class FaceRecognitionController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'nisn' => 'required|exists:students,nisn',
             'file' => 'required|image|max:5120'
         ]);
 
-        $student = Student::where('nisn', $request->nisn)->first();
+        $user = $request->user();
+        $student = $user->student;
+
+        if (!$student) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data siswa tidak ditemukan.'
+            ], 404);
+        }
 
         try {
             $tempFile = $request->file('file')->store('temp_register');
@@ -31,7 +38,10 @@ class FaceRecognitionController extends Controller
 
             $descriptor = $this->extractDescriptor($fullPath);
 
-            $student->face_descriptor = json_encode($descriptor);
+            $student->face_descriptor = $descriptor;
+            $student->face_registered = true;
+            $student->face_registered_at = now();
+            $student->is_face_registered = 1;
             $student->save();
 
             @unlink($fullPath);
@@ -101,7 +111,9 @@ class FaceRecognitionController extends Controller
         $threshold = 0.5;
 
         foreach ($students as $student) {
-            $stored = json_decode($student->face_descriptor);
+            $stored = is_array($student->face_descriptor)
+                ? $student->face_descriptor
+                : json_decode($student->face_descriptor, true);
             if (!$stored)
                 continue;
 
@@ -224,7 +236,14 @@ class FaceRecognitionController extends Controller
         }
 
         $output = $resultProcess->output();
-        $result = json_decode($output, true);
+        $result = null;
+        if (preg_match('/JSON_RESULT:(.+)$/m', $output, $matches)) {
+            $result = json_decode(trim($matches[1]), true);
+        } elseif (preg_match('/\{.*"descriptor".*\}/s', $output, $matches)) {
+            $result = json_decode(trim($matches[0]), true);
+        } else {
+            $result = json_decode($output, true);
+        }
 
         if ($result === null) {
             throw new \Exception("Service wajah gagal/error: " . $output);

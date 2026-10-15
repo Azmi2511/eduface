@@ -17,19 +17,21 @@
                 <div class="px-6 pb-8 relative text-center">
                     {{-- Avatar --}}
                     <div class="relative -mt-16 inline-block">
-                        <div class="w-32 h-32 rounded-full border-4 border-white bg-white shadow-md flex items-center justify-center overflow-hidden">
+                        <div id="avatar-preview-container" class="w-32 h-32 rounded-full border-4 border-white bg-white shadow-md flex items-center justify-center overflow-hidden">
                             <div class="w-full h-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-4xl">
                                 @if($user->profile_picture)
-                                    <img src="{{ asset('storage/' . $user->profile_picture) }}" alt="{{ $user->full_name }}">
+                                    <img id="avatar-preview" src="{{ asset('storage/' . $user->profile_picture) }}" alt="{{ $user->full_name }}" class="w-full h-full object-cover">
                                 @else
-                                    <div class="w-full h-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-4xl uppercase">
+                                    <div id="avatar-initials" class="w-full h-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-4xl uppercase">
                                         {{ substr($user->full_name, 0, 2) }}
                                     </div>
+                                    <img id="avatar-preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
                                 @endif
                             </div>
                         </div>
-                        {{-- Tombol Edit Foto (Hiasan dulu) --}}
-                        <button class="absolute bottom-2 right-2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition shadow-sm" title="Ubah Foto">
+                        {{-- Tombol Edit Foto — terhubung ke file input --}}
+                        <input type="file" id="profile_picture_input" name="profile_picture" accept="image/jpeg,image/png,image/webp" class="hidden" form="profile-info-form">
+                        <button type="button" onclick="document.getElementById('profile_picture_input').click()" class="absolute bottom-2 right-2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition shadow-sm" title="Ubah Foto">
                             <i class="fas fa-camera text-xs"></i>
                         </button>
                     </div>
@@ -73,7 +75,7 @@
                     </span>
                 </div>
 
-                <form action="{{ route('profile.update') }}" method="POST">
+                <form id="profile-info-form" action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('patch')
                     
@@ -154,4 +156,35 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.getElementById('profile_picture_input')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file maksimal 2MB.');
+            e.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const previewImg = document.getElementById('avatar-preview');
+            const initialsDiv = document.getElementById('avatar-initials');
+            
+            if (previewImg) {
+                previewImg.src = ev.target.result;
+                previewImg.classList.remove('hidden');
+            }
+            if (initialsDiv) {
+                initialsDiv.classList.add('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
+@endpush
 @endsection

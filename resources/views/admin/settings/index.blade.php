@@ -144,10 +144,113 @@
                         </form>
                     </div>
 
-                    <div id="attendance" class="tab-content hidden"></div>
-                    <div id="notification" class="tab-content hidden"></div>
-                    <div id="security" class="tab-content hidden"></div>
-                    <div id="backup" class="tab-content hidden"></div>
+                    <div id="attendance" class="tab-content hidden">
+                        <form action="{{ route('settings.update.attendance') }}" method="POST">
+                            @csrf
+                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="p-6 lg:p-8">
+                                    <h3 class="text-lg font-bold text-slate-800 mb-6">Aturan Absensi</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-2">
+                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jam Masuk</label>
+                                            <input type="time" name="entry_time" value="{{ old('entry_time', $settings->entry_time ?? '07:00') }}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Batas Terlambat</label>
+                                            <input type="time" name="late_limit" value="{{ old('late_limit', $settings->late_limit ?? '07:15') }}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jam Pulang</label>
+                                            <input type="time" name="exit_time" value="{{ old('exit_time', $settings->exit_time ?? '16:00') }}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Toleransi (menit)</label>
+                                            <input type="number" name="tolerance_minutes" min="0" value="{{ old('tolerance_minutes', $settings->tolerance_minutes ?? 5) }}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                        </div>
+                                    </div>
+                                    <div class="mt-6 space-y-4">
+                                        <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
+                                            <input type="checkbox" name="face_rec_enabled" value="1" @checked(old('face_rec_enabled', $settings->face_rec_enabled)) class="h-4 w-4 rounded border-slate-300 text-blue-600">
+                                            Aktifkan pengenalan wajah
+                                        </label>
+                                        <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
+                                            <input type="checkbox" name="upload_file_enabled" value="1" @checked(old('upload_file_enabled', $settings->upload_file_enabled)) class="h-4 w-4 rounded border-slate-300 text-blue-600">
+                                            Izinkan unggah file wajah
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="px-6 lg:p-8 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-sm text-sm">Simpan Perubahan</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="notification" class="tab-content hidden">
+                        <form action="{{ route('settings.update.notification') }}" method="POST">
+                            @csrf
+                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="p-6 lg:p-8">
+                                    <h3 class="text-lg font-bold text-slate-800 mb-6">Preferensi Notifikasi</h3>
+                                    <div class="space-y-4">
+                                        <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
+                                            <input type="checkbox" name="notif_late" value="1" @checked(old('notif_late', $settings->notif_late)) class="h-4 w-4 rounded border-slate-300 text-blue-600">
+                                            Notifikasi siswa terlambat
+                                        </label>
+                                        <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
+                                            <input type="checkbox" name="notif_absent" value="1" @checked(old('notif_absent', $settings->notif_absent)) class="h-4 w-4 rounded border-slate-300 text-blue-600">
+                                            Notifikasi siswa tidak hadir
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="px-6 lg:p-8 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-sm text-sm">Simpan Perubahan</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="security" class="tab-content hidden">
+                        <form action="{{ route('settings.update.security') }}" method="POST">
+                            @csrf
+                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="p-6 lg:p-8">
+                                    <h3 class="text-lg font-bold text-slate-800 mb-6">Ubah Password Admin</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div class="space-y-2">
+                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Password Lama</label>
+                                            <input type="password" name="current_password" required autocomplete="current-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Password Baru</label>
+                                            <input type="password" name="new_password" required minlength="6" autocomplete="new-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Konfirmasi Password</label>
+                                            <input type="password" name="confirm_password" required minlength="6" autocomplete="new-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-6 lg:p-8 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-sm text-sm">Perbarui Password</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="backup" class="tab-content hidden">
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="p-6 lg:p-8">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Backup Database</h3>
+                                <p class="text-sm text-slate-500">Unduh salinan data pengguna dalam format SQL.</p>
+                            </div>
+                            <div class="px-6 lg:p-8 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                                <a href="{{ route('settings.backup') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-sm text-sm">
+                                    <i class="fas fa-download mr-2"></i>Unduh Backup
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
             </div>

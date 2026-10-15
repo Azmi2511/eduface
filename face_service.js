@@ -29,18 +29,18 @@ async function main() {
             .withFaceDescriptor();
 
         if (!detections) {
-            console.error(JSON.stringify({ error: 'No face detected' }));
+            console.log('JSON_RESULT:' + JSON.stringify({ error: 'No face detected' }));
             process.exit(1);
         }
 
         // Return the descriptor as JSON array
-        console.log(JSON.stringify({
+        console.log('JSON_RESULT:' + JSON.stringify({
             success: true,
             descriptor: Array.from(detections.descriptor)
         }));
 
     } catch (e) {
-        console.error(JSON.stringify({ error: e.message }));
+        console.log('JSON_RESULT:' + JSON.stringify({ error: e.message }));
         process.exit(1);
     }
 }

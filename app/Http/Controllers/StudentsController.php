@@ -87,8 +87,9 @@ class StudentsController extends AdminBaseController
             'user_id' => 'required|unique:students,user_id',
             'nisn' => 'required|unique:students,nisn',
             'full_name' => 'required|string',
+            'gender' => 'required|in:L,P',
             'class_id' => 'required|exists:classes,id',
-            'parent_id' => 'required|exists:parents,id',
+            'parent_id' => 'nullable|exists:parents,id',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -99,7 +100,10 @@ class StudentsController extends AdminBaseController
                 'parent_id' => $request->parent_id,
             ]);
 
-            User::where('id', $request->user_id)->update(['full_name' => $request->full_name]);
+            User::where('id', $request->user_id)->update([
+                'full_name' => $request->full_name,
+                'gender' => $request->gender,
+            ]);
         });
 
         return redirect()->route('students.index')->with('success', 'Siswa berhasil ditambahkan');

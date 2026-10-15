@@ -3,7 +3,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
     $active = $active_menu ?? '';
-    $master_data_pages = ['users','students','teachers','parents','classes'];
+    $master_data_pages = ['users','students','teachers','parents','classes', 'schedules'];
     $is_master_open = in_array($active, $master_data_pages);
     $school_name = DB::table('system_settings')->value('school_name');
 @endphp

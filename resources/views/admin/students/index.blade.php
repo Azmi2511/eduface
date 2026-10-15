@@ -97,6 +97,7 @@ $active_menu = 'students';
                             <th class="px-6 py-4">Kelas</th>
                             <th class="px-6 py-4">Wali Murid</th>
                             <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4 text-center">Wajah</th>
                             <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -159,6 +160,18 @@ $active_menu = 'students';
                             </td>
 
                             <td class="px-6 py-4 text-center">
+                                @if($student->face_registered || $student->is_face_registered)
+                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold leading-5 text-emerald-800 bg-emerald-100 rounded-full">
+                                        <i class="fas fa-check-circle mr-1 text-[10px]"></i> Terdaftar
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold leading-5 text-gray-500 bg-gray-100 rounded-full">
+                                        <i class="fas fa-times-circle mr-1 text-[10px]"></i> Belum
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center space-x-2">
                                     <button onclick="openViewModal({{ json_encode($student) }})" 
                                         class="p-2 text-blue-500 transition rounded-full hover:bg-blue-50 hover:text-blue-700 focus:outline-none" 
@@ -191,7 +204,7 @@ $active_menu = 'students';
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-10 text-center text-gray-500 bg-gray-50">
+                            <td colspan="8" class="px-6 py-10 text-center text-gray-500 bg-gray-50">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="far fa-folder-open text-4xl mb-2 text-gray-300"></i>
                                     <p>Tidak ada data siswa ditemukan.</p>
@@ -232,7 +245,7 @@ $active_menu = 'students';
 
                 <form action="{{ route('students.store') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="full_name" id="add_full_name" value="">
+                    <input type="hidden" name="full_name" id="add_full_name" required value="">
                     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <label class="block mb-1 text-sm font-medium text-gray-700">Pilih Akun Siswa (User)</label>
@@ -250,6 +263,15 @@ $active_menu = 'students';
                         <div>
                             <label class="block mb-1 text-sm font-medium text-gray-700">NISN</label>
                             <input type="text" name="nisn" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="Nomor Induk Siswa">
+                        </div>
+
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Jenis Kelamin</label>
+                            <select name="gender" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500">
+                                <option value="">-- Pilih Jenis Kelamin --</option>
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
                         </div>
 
                         <div>
@@ -429,6 +451,10 @@ $active_menu = 'students';
                             <span class="text-[10px] text-gray-500 block">Wali Murid</span>
                             <span class="text-xs font-bold text-gray-700" id="view_parent"></span>
                         </div>
+                        <div class="bg-gray-50 p-2 rounded border border-gray-100 col-span-2">
+                            <span class="text-[10px] text-gray-500 block">Registrasi Wajah</span>
+                            <span class="text-xs font-bold" id="view_face_status"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -474,6 +500,16 @@ $active_menu = 'students';
             modal.classList.remove('flex');
             document.body.classList.remove('overflow-hidden');
         }
+    }
+
+    const addUserSelect = document.getElementById('add_user_select');
+    const addFullName = document.getElementById('add_full_name');
+
+    if (addUserSelect && addFullName) {
+        addUserSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            addFullName.value = selectedOption?.dataset.full_name || '';
+        });
     }
 
     // Close on outside click
@@ -556,7 +592,7 @@ $active_menu = 'students';
         if (emailEl) emailEl.innerText = student.user?.email || '-';
         if (usernameEl) usernameEl.innerText = student.user?.username || '-';
         if (nisnEl) nisnEl.innerText = student.nisn || '-';
-        if (classEl) classEl.innerText = student.class?.class_name || student.class_room?.class_name || '-';
+        if (classEl) classEl.innerText = student.school_class?.class_name || '-';
         if (parentEl) parentEl.innerText = student.parent?.user?.full_name || '-';
         
         // Date formatting
@@ -591,6 +627,17 @@ $active_menu = 'students';
             const fullName = student.user?.full_name || 'Tanpa Nama';
             const initials = fullName.substring(0, 2).toUpperCase();
             profileInitialsEl.innerText = initials;
+        }
+
+        // Face Registration Status
+        const faceStatusEl = document.getElementById('view_face_status');
+        if (faceStatusEl) {
+            const isFaceRegistered = student.face_registered || student.is_face_registered;
+            if (isFaceRegistered) {
+                faceStatusEl.innerHTML = '<span class="text-emerald-600"><i class="fas fa-check-circle mr-1"></i>Terdaftar</span>';
+            } else {
+                faceStatusEl.innerHTML = '<span class="text-gray-400"><i class="fas fa-times-circle mr-1"></i>Belum Terdaftar</span>';
+            }
         }
 
         toggleModal('viewStudentModal');

@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\ParentProfile;
+use App\Models\SchoolClass;
+use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,7 +15,7 @@ class UsersController extends AdminBaseController
 {
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::with(['student.schoolClass', 'student.parent.user']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -40,7 +44,10 @@ class UsersController extends AdminBaseController
             'admins'   => User::where('role', 'admin')->count(),
         ];
 
-        return view('admin::users.index', compact('users', 'counts'));
+        $classmodel = SchoolClass::orderBy('class_name')->get(['id', 'class_name']);
+        $parents = ParentProfile::with('user')->orderBy('id')->get();
+
+        return view('admin::users.index', compact('users', 'counts', 'classmodel', 'parents'));
     }
 
     public function create()
@@ -61,6 +68,9 @@ class UsersController extends AdminBaseController
             'role'            => 'required|in:admin,teacher,student,parent',
             'is_active'       => 'required|boolean',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'student_nisn'     => 'required_if:role,student|nullable|string|max:50|unique:students,nisn',
+            'student_class_id' => 'required_if:role,student|nullable|exists:classes,id',
+            'student_parent_id' => 'nullable|exists:parents,id',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -70,7 +80,18 @@ class UsersController extends AdminBaseController
             $validated['profile_picture'] = $path;
         }
 
-        User::create($validated);
+        DB::transaction(function () use ($validated, $request) {
+            $user = User::create($validated);
+
+            if ($user->role === 'student') {
+                Student::create([
+                    'user_id' => $user->id,
+                    'nisn' => $request->student_nisn,
+                    'class_id' => $request->student_class_id,
+                    'parent_id' => $request->student_parent_id,
+                ]);
+            }
+        });
 
         return redirect()->route('users.index')
                          ->with('success', 'User created successfully.');
@@ -103,6 +124,9 @@ class UsersController extends AdminBaseController
             'role'            => 'required|in:admin,teacher,student,parent',
             'is_active'       => 'required|boolean',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'student_nisn'     => 'required_if:role,student|nullable|string|max:50|unique:students,nisn,' . optional($user->student)->id,
+            'student_class_id' => 'required_if:role,student|nullable|exists:classes,id',
+            'student_parent_id' => 'nullable|exists:parents,id',
         ]);
 
         if ($request->filled('password')) {
@@ -120,7 +144,20 @@ class UsersController extends AdminBaseController
             $validated['profile_picture'] = $path;
         }
 
-        $user->update($validated);
+        DB::transaction(function () use ($user, $validated, $request) {
+            $user->update($validated);
+
+            if ($user->role === 'student') {
+                Student::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'nisn' => $request->student_nisn,
+                        'class_id' => $request->student_class_id,
+                        'parent_id' => $request->student_parent_id,
+                    ]
+                );
+            }
+        });
 
         return redirect()->route('users.index')
                          ->with('success', 'User updated successfully.');

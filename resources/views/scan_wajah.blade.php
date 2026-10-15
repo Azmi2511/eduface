@@ -61,7 +61,8 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     }
                 })
                 .then(res => res.json())
@@ -77,8 +78,8 @@
                         
                         // Sembunyikan lagi setelah 3 detik
                         setTimeout(() => { overlay.classList.add('hidden'); }, 3000);
-                    } else if (data.status === 'ignored') {
-                         statusText.innerText = "Info: " + data.student + " sudah absen (Cooldown).";
+                    } else if (data.status === 'ignored' || data.status === 'duplicate') {
+                         statusText.innerText = "Info: " + (data.student || (data.data && data.data.name) || 'Siswa') + " sudah absen hari ini.";
                     } else {
                         statusText.innerText = "Wajah tidak dikenal / Belum terdaftar.";
                     }

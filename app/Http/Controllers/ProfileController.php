@@ -51,16 +51,30 @@ class ProfileController extends Controller
         }
 
         $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email,' . $user->id,
-            'phone'  => 'nullable|string|max:20', 
+            'full_name'       => 'required|string|max:255',
+            'email'           => 'required|email|unique:users,email,' . $user->id,
+            'phone'           => 'nullable|string|max:20',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $user->update([
+        $updateData = [
             'full_name' => $validated['full_name'],
             'email'     => $validated['email'],
-            'phone'     => $validated['phone']
-        ]);
+            'phone'     => $validated['phone'],
+        ];
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete old picture if exists
+            if ($user->profile_picture) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $updateData['profile_picture'] = $path;
+            session(['profile_picture' => $path]);
+        }
+
+        $user->update($updateData);
         
         session(['full_name' => $validated['full_name']]);
 

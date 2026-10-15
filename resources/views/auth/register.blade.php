@@ -7,6 +7,8 @@
     <title>Daftar Akun - Eduface</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
@@ -102,7 +104,7 @@
                             </div>
                             <div>
                                 <label id="idLabel" class="block text-gray-800 text-[11px] font-bold mb-0.5">Nomor ID</label>
-                                <input type="number" name="id_number" id="idInput" placeholder="NIP/NISN" autocomplete="off"
+                                <input type="number" name="id_number" id="idInput" required placeholder="NIP/NISN" autocomplete="off"
                                     class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent">
                             </div>
                         </div>
@@ -127,7 +129,7 @@
                         <div id="student-fields" class="hidden grid-cols-2 gap-3 mt-3 animate-fade-in">
                             <div class="relative">
                                 <label class="block text-gray-800 text-[11px] font-bold mb-0.5">Kelas</label>
-                                <select name="class_id" id="classSelect"
+                                <select name="class_id" id="classSelect" required
                                     class="w-full border-b border-gray-300 py-1 text-sm text-gray-700 focus:outline-none focus:border-[#2F80ED] bg-transparent cursor-pointer">
                                     <option value="" disabled selected>Pilih Kelas</option>
                                     @foreach($classroom as $kelas)
@@ -170,7 +172,7 @@
                     </button>
                     
                     <div class="text-center text-xs text-gray-500 mt-3">
-                        Sudah punya akun? <a href="{{ route('login.perform') }}" class="text-[#2F80ED] font-bold hover:underline">Masuk disini</a>
+                        Sudah punya akun? <a href="{{ route('login') }}" class="text-[#2F80ED] font-bold hover:underline">Masuk disini</a>
                     </div>
                 </div>
             </form>
@@ -222,6 +224,24 @@
     </div>
 
     <script>
+        const registerToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+        });
+
+        function showRegisterAlert(icon, title, text = '') {
+            return Swal.fire({
+                icon,
+                title,
+                text,
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#2F80ED'
+            });
+        }
+
         function updateIdLabel() {
             const role = document.getElementById('roleSelect').value;
             const label = document.getElementById('idLabel');
@@ -263,8 +283,17 @@
             const p1 = document.getElementById('password').value;
             const p2 = document.getElementById('password_confirmation').value;
             
-            if (p1.length < 8) { alert("Password min 8 karakter"); return; }
-            if (p1 !== p2) { document.getElementById('pass-error').classList.remove('hidden'); return; }
+            if (p1.length < 8) {
+                showRegisterAlert('warning', 'Password terlalu pendek', 'Password minimal 8 karakter.');
+                return;
+            }
+            if (p1 !== p2) {
+                document.getElementById('pass-error').classList.remove('hidden');
+                showRegisterAlert('warning', 'Konfirmasi password tidak cocok');
+                return;
+            }
+
+            if (!document.getElementById('regForm').reportValidity()) return;
             
             const btn = document.getElementById('btn-submit');
             const originalText = btn.innerHTML;
@@ -296,10 +325,10 @@
                     }, 10);
                     startResendTimer();
                 } else {
-                    alert(data.message || "Gagal memvalidasi data.");
+                    showRegisterAlert('error', 'Data belum valid', data.message || 'Gagal memvalidasi data.');
                 }
             } catch (err) {
-                alert("Kesalahan jaringan.");
+                showRegisterAlert('error', 'Koneksi bermasalah', 'Periksa koneksi internet lalu coba lagi.');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -308,7 +337,10 @@
 
         async function verifyAndSubmit() {
             const otp = document.getElementById('otpCode').value;
-            if(otp.length < 6) { alert("Masukkan 6 digit kode"); return; }
+            if(otp.length < 6) {
+                showRegisterAlert('warning', 'Kode OTP belum lengkap', 'Masukkan 6 digit kode OTP.');
+                return;
+            }
 
             const btn = document.getElementById('btn-verify');
             const originalText = btn.innerHTML;
@@ -330,17 +362,20 @@
 
                 if (res.ok && data.status === 'success') {
                     closeOtp();
-                    document.getElementById('finalUsername').innerText = data.username;
-                    const successModal = document.getElementById('successModal');
-                    successModal.classList.remove('hidden');
-                    successModal.classList.add('flex');
-                    window.redirectUrl = data.redirect;
                     resetResendTimer();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Registrasi berhasil',
+                        text: `Username Anda: ${data.username}`,
+                        confirmButtonText: 'Lanjut ke Login',
+                        confirmButtonColor: '#16a34a'
+                    });
+                    window.location.href = data.redirect;
                 } else {
-                    alert(data.message || "Kode OTP salah.");
+                    showRegisterAlert('error', 'Verifikasi gagal', data.message || 'Kode OTP salah.');
                 }
             } catch (err) {
-                alert("Kesalahan server.");
+                showRegisterAlert('error', 'Server bermasalah', 'Registrasi belum dapat diselesaikan.');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -405,12 +440,12 @@
 
                 if (res.ok && data.status === 'success') {
                     startResendTimer();
-                    alert('Kode OTP berhasil dikirim ulang.');
+                    registerToast.fire({ icon: 'success', title: 'Kode OTP berhasil dikirim ulang.' });
                 } else {
-                    alert(data.message || 'Gagal mengirim ulang OTP.');
+                    showRegisterAlert('error', 'Gagal mengirim ulang OTP', data.message || 'Silakan coba lagi.');
                 }
             } catch (err) {
-                alert('Kesalahan jaringan.');
+                showRegisterAlert('error', 'Koneksi bermasalah', 'Periksa koneksi internet lalu coba lagi.');
             }
         }
 
@@ -421,7 +456,7 @@
         }
 
         function redirectToLogin() {
-            window.location.href = window.redirectUrl || "{{ route('login.perform') }}";
+            window.location.href = window.redirectUrl || "{{ route('login') }}";
         }
     </script>
 </body>

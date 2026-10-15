@@ -20,7 +20,8 @@ use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\PermissionController;
 
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login.show');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/auth/login', [AuthController::class, 'showLogin'])->name('login.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 
 Route::get('/register', [RegisterController::class, 'show'])->name('register.show');
@@ -98,9 +99,12 @@ Route::middleware(['session.auth'])->group(function () {
     Route::middleware(['role:admin,teacher'])->group(function () {
         Route::resource('classes', ClassesController::class);
         Route::resource('students', StudentsController::class);
+        Route::post('/permissions/{id}/status', [PermissionController::class, 'updateStatus'])->name('permissions.updateStatus');
+    });
+
+    Route::middleware(['role:admin,teacher,parent'])->group(function () {
         Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
         Route::get('/permissions/{id}', [PermissionController::class, 'show'])->name('permissions.show');
-        Route::post('/permissions/{id}/status', [PermissionController::class, 'updateStatus'])->name('permissions.updateStatus');
     });
 
     Route::middleware(['role:admin,parent'])->group(function () {

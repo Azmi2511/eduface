@@ -80,9 +80,9 @@ class PermissionController extends Controller
             $data['parent_id'] = $user->parentProfile->id;
             $data['approval_status'] = 'Pending';
 
-            if ($request->hasFile('proof_file')) {
-                $path = $request->file('proof_file')->store('permissions', 'public');
-                $data['proof_url'] = $path;
+            if ($request->hasFile('proof_file_path')) {
+                $path = $request->file('proof_file_path')->store('permissions', 'public');
+                $data['proof_file_path'] = $path;
             }
 
             $permission = Permission::create($data);

@@ -199,39 +199,35 @@ $active_menu = 'parents';
             </div>
             
             <div class="p-6 overflow-y-auto max-h-[85vh]">
-                <p class="text-sm text-gray-600 mb-4">Catatan: Buat akun user terlebih dahulu pada menu <a href="{{ route('users.index') }}" target="_blank" class="text-blue-600 font-semibold underline">Pengguna</a>, lalu pilih akun tersebut di formulir di bawah.</p>
                 <form action="{{ route('parents.store') }}" method="POST">
                     @csrf
                     <div class="space-y-4">
                         <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Pilih Akun Orang Tua</label>
-                            <div class="relative">
-                                <select name="user_id" id="add_parent_user_id" required class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-blue-500 transition">
-                                    <option value="">-- Pilih Akun User --</option>
-                                        @foreach($users_parent as $user)
-                                                <option value="{{ $user->id }}" data-full_name="{{ $user->full_name }}">{{ $user->full_name }} ({{ $user->email ?? $user->username }})</option>
-                                        @endforeach
-                                </select>
-                                <div class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 pointer-events-none">
-                                    <i class="fas fa-chevron-down text-xs"></i>
-                                </div>
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Nama Lengkap</label>
+                            <input type="text" name="full_name" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block mb-1 text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" name="email" required class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
                             </div>
-                            <p class="mt-1 text-xs text-gray-400">Hanya menampilkan user dengan Role 'Parent'.</p>
+                            <div>
+                                <label class="block mb-1 text-sm font-medium text-gray-700">No. Telepon</label>
+                                <input type="text" name="phone_number" class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="08xxxxxxxxxx">
+                            </div>
                         </div>
-
                         <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-700">No. Telepon</label>
-                            <input type="text" name="phone_number" class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="08xxxxxxxxxx">
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" name="password" required minlength="6" autocomplete="new-password" class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
                         </div>
-
                         <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Pekerjaan</label>
-                            <input type="text" name="occupation" class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition" placeholder="Contoh: Pegawai Swasta, Wirausaha">
-                        </div>
-
-                        <div class="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
-                            <i class="fas fa-info-circle mr-1"></i> 
-                            <strong>Catatan:</strong> Nama lengkap, email, dan password dikelola melalui menu <em>User Management</em>. Form ini hanya melengkapi data profil Orang Tua.
+                            <label class="block mb-1 text-sm font-medium text-gray-700">Hubungan</label>
+                            <select name="relationship" class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
+                                <option value="">-- Pilih --</option>
+                                <option value="Ayah">Ayah</option>
+                                <option value="Ibu">Ibu</option>
+                                <option value="Wali">Wali</option>
+                            </select>
                         </div>
                     </div>
 

@@ -34,17 +34,19 @@ $active_menu = 'attendance';
                     </button>
                 </form>
 
-                <a href="{{ route('attendance.scan') }}" target="_blank"
+                @if(in_array(Auth::user()->role, ['admin', 'teacher']))
+                <a href="{{ route('attendance.scan') }}"
                     class="inline-flex items-center px-4 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm">
                     <i class="fas fa-camera mr-1.5 text-xs"></i>
                     Scan
                 </a>
 
-                <a href="{{ route('attendance.register') }}" target="_blank"
+                <a href="{{ route('attendance.register') }}"
                     class="inline-flex items-center px-4 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-600 transition shadow-sm">
                     <i class="fas fa-user-plus mr-1.5 text-xs"></i>
                     Register
                 </a>
+                @endif
             </div>
         </div>
 
@@ -187,19 +189,24 @@ $active_menu = 'attendance';
                             <th class="px-6 py-4">Kelas</th>
                             <th class="px-6 py-4 text-center">Jam Masuk</th>
                             <th class="px-6 py-4 text-center">Status</th>
-                            <th class="px-6 py-4 text-center">Aksi Cepat</th>
+                            @if(Auth::user()->role !== 'student')
+                                <th class="px-6 py-4 text-center">Aksi Cepat</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50 bg-white">
                         @forelse($students as $student)
-                            <tr class="hover:bg-indigo-50/30 transition duration-150">
+                            @php
+                                $studentName = $student->user?->full_name ?? $student->full_name ?? 'Siswa';
+                            @endphp
+                            <tr class="attendance-row hover:bg-indigo-50/30 transition duration-150">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs mr-3 border border-indigo-100">
-                                            {{ strtoupper(substr($student->user->full_name, 0, 2)) }}
+                                            {{ strtoupper(substr($studentName, 0, 2)) }}
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-gray-800">{{ $student->user->full_name }}</div>
+                                            <div class="text-sm font-bold text-gray-800">{{ $studentName }}</div>
                                             <div class="text-[11px] text-gray-400 font-medium">NISN: {{ $student->nisn }}</div>
                                         </div>
                                     </div>
@@ -208,7 +215,7 @@ $active_menu = 'attendance';
                                     <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-lg">{{ $student->schoolClass->class_name ?? '-' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="text-xs font-mono font-bold {{ $student->today_time != '-' ? 'text-gray-800' : 'text-gray-300' }}">
+                                    <span class="attendance-time text-xs font-mono font-bold {{ $student->today_time != '-' ? 'text-gray-800' : 'text-gray-300' }}">
                                         {{ $student->today_time != '-' ? \Carbon\Carbon::parse($student->today_time)->format('H:i') : '--:--' }}
                                     </span>
                                 </td>
@@ -223,17 +230,18 @@ $active_menu = 'attendance';
                                             default => 'bg-gray-50 text-gray-400 border-gray-100'
                                         };
                                     @endphp
-                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border {{ $statusClasses }}">
+                                    <span class="attendance-status inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border {{ $statusClasses }}">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
+                                @if(Auth::user()->role !== 'student')
                                 <td class="px-6 py-4">
                                     @php
                                         $log = $student->attendanceLogs->first();
                                         $routeUrl = $log ? route('attendance.update', $log->id) : route('attendance.store');
                                         $currentStatus = $log ? $log->status : null;
                                     @endphp
-                                    <form action="{{ $routeUrl }}" method="POST" class="flex justify-center gap-1.5">
+                                    <form action="{{ $routeUrl }}" method="POST" data-current-status="{{ $currentStatus ?? '' }}" data-store-action="{{ route('attendance.store') }}" data-update-template="{{ route('attendance.update', ['attendance' => '__ID__']) }}" class="quick-attendance-form flex justify-center gap-1.5">
                                         @csrf
                                         @if($log) @method('PUT') @endif
                                         <input type="hidden" name="student_nisn" value="{{ $student->nisn }}">
@@ -256,10 +264,11 @@ $active_menu = 'attendance';
                                             class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border {{ $currentStatus == 'Alpha' ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-white text-rose-600 border-gray-200 hover:border-rose-300' }}">A</button>
                                     </form>
                                 </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-20 text-center">
+                                <td colspan="{{ Auth::user()->role === 'student' ? 4 : 5 }}" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100 text-gray-200">
                                             <i class="fas fa-users-slash text-2xl"></i>
@@ -283,6 +292,101 @@ $active_menu = 'attendance';
 @endsection
 @push('scripts')
 <script>
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('.quick-attendance-form');
+        if (!form) return;
+
+        event.preventDefault();
+
+        const submitter = event.submitter;
+        if (!submitter) return;
+        const buttons = [...form.querySelectorAll('button[name="status"]')];
+        const formData = new FormData(form);
+        const clickedStatus = submitter.value;
+        const currentStatus = form.dataset.currentStatus;
+        const statusForRequest = clickedStatus === 'Hadir' && currentStatus === 'Terlambat'
+            ? currentStatus
+            : clickedStatus;
+        formData.set('status', statusForRequest);
+        buttons.forEach(button => button.disabled = true);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                body: formData
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Status absensi gagal diubah.');
+            }
+
+            updateQuickAttendanceRow(form, result.data || {});
+        } catch (error) {
+            console.error('Quick attendance update failed:', error);
+        } finally {
+            buttons.forEach(button => button.disabled = false);
+        }
+    });
+
+    function updateQuickAttendanceRow(form, data) {
+        const row = form.closest('.attendance-row');
+        const status = data.status || null;
+        form.dataset.currentStatus = status || '';
+        const statusElement = row.querySelector('.attendance-status');
+        const timeElement = row.querySelector('.attendance-time');
+        const statusClasses = {
+            Hadir: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+            Terlambat: 'bg-amber-50 text-amber-600 border-amber-100',
+            Izin: 'bg-blue-50 text-blue-600 border-blue-100',
+            Sakit: 'bg-blue-50 text-blue-600 border-blue-100',
+            Alpha: 'bg-rose-50 text-rose-600 border-rose-100'
+        };
+
+        statusElement.textContent = status || 'Belum Absen';
+        statusElement.className = `attendance-status inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase border ${statusClasses[status] || 'bg-gray-50 text-gray-400 border-gray-100'}`;
+        timeElement.textContent = data.time_log ? data.time_log.slice(0, 5) : '--:--';
+        timeElement.className = `attendance-time text-xs font-mono font-bold ${data.time_log ? 'text-gray-800' : 'text-gray-300'}`;
+
+        const activeClasses = {
+            Hadir: 'bg-emerald-600 text-white border-emerald-600 shadow-md',
+            Izin: 'bg-blue-600 text-white border-blue-600 shadow-md',
+            Sakit: 'bg-purple-600 text-white border-purple-600 shadow-md',
+            Alpha: 'bg-rose-600 text-white border-rose-600 shadow-md'
+        };
+        const inactiveClasses = {
+            Hadir: 'bg-white text-emerald-600 border-gray-200 hover:border-emerald-300',
+            Izin: 'bg-white text-blue-600 border-gray-200 hover:border-blue-300',
+            Sakit: 'bg-white text-purple-600 border-gray-200 hover:border-purple-300',
+            Alpha: 'bg-white text-rose-600 border-gray-200 hover:border-rose-300'
+        };
+
+        form.querySelectorAll('button[name="status"]').forEach(button => {
+            const buttonStatus = button.value;
+            button.className = `w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border ${status === buttonStatus || (status === 'Terlambat' && buttonStatus === 'Hadir') ? activeClasses[buttonStatus] : inactiveClasses[buttonStatus]}`;
+        });
+
+        const methodInput = form.querySelector('input[name="_method"]');
+        if (data.id) {
+            form.action = form.dataset.updateTemplate.replace('__ID__', data.id);
+            if (!methodInput) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = '_method';
+                input.value = 'PUT';
+                form.prepend(input);
+            }
+        } else {
+            form.action = form.dataset.storeAction;
+            methodInput?.remove();
+        }
+    }
+
     const API_URL = "{{ config('app.python_api_url') }}";
     
     let isRunning = false;

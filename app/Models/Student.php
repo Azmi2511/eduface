@@ -15,7 +15,10 @@ class Student extends Model
         'parent_id',
         'relationship',
         'photo_path',
-        'face_registered'
+        'face_registered',
+        'face_registered_at',
+        'face_descriptor',
+        'is_face_registered'
     ];
 
     protected $casts = [
@@ -23,6 +26,11 @@ class Student extends Model
         'face_registered_at' => 'datetime',
         'face_descriptor' => 'array',
     ];
+
+    public function getFullNameAttribute()
+    {
+        return $this->user?->full_name;
+    }
 
     public function user()
     {
@@ -32,6 +40,14 @@ class Student extends Model
     public function schoolClass()
     {
         return $this->belongsTo(SchoolClass::class, 'class_id', 'id');
+    }
+
+    /**
+     * Alias for schoolClass() — lets blade templates use $student->class->class_name
+     */
+    public function class()
+    {
+        return $this->schoolClass();
     }
 
     public function parent()
