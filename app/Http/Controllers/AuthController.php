@@ -32,17 +32,29 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('username', $request->username)->first();
+
         if ($user && Hash::check($request->password, $user->password)) {
-            session(['user_id' => $user->id, 'full_name' => $user->full_name, 'role' => $user->role, 'profile_picture' => $user->profile_picture]);
+            $request->session()->regenerate();
+
+            session([
+                'user_id' => $user->id,
+                'full_name' => $user->full_name,
+                'role' => $user->role,
+                'profile_picture' => $user->profile_picture
+            ]);
+
             return redirect()->route('dashboard');
         }
 
-        return back()->withErrors(['username' => 'Credentials not valid']);
+
+        return back()->withErrors(['login_error' => 'Username atau password tidak valid.']);
     }
 
     public function logout()
     {
-        session()->flush();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('login.show');
     }
 
@@ -54,7 +66,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('username', $request->username)->first();
-        
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Credentials not valid'], 401);
         }

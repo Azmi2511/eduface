@@ -136,6 +136,8 @@ Jalankan test unit/feature yang tersedia:
 php artisan test
 ```
 
+Rancangan skenario stress test menggunakan Apache JMeter tersedia di [docs/JMETER_STRESS_TESTING.md](docs/JMETER_STRESS_TESTING.md).
+
 ---
 
 ## Deployment (singkat)

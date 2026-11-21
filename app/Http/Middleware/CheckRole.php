@@ -10,7 +10,7 @@ class CheckRole
     /**
      * Handle an incoming request.
      * Usage (Web): Route::middleware(['role:admin,teacher'])
-     * Usage (API): Route::middleware(['jwt', 'role:admin,teacher'])
+     * Usage (API): Route::middleware(['auth:sanctum', 'role:admin,teacher'])
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
@@ -21,8 +21,8 @@ class CheckRole
             // Check role from JWT token
             $userRole = $jwtPayload['role'] ?? null;
         } else {
-            // Check role from session
-            $userRole = session('role');
+            // Prefer the authenticated principal so API tokens cannot inherit a session role.
+            $userRole = $request->user()?->role ?? session('role');
         }
 
         if (!$userRole) {

@@ -2,6 +2,7 @@
 namespace Tests\Feature\Permission;
 
 use App\Models\Permission;
+use App\Models\ParentProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -10,6 +11,20 @@ use Tests\TestCase;
 class PermissionControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** @test */
+    public function parent_can_view_permissions_using_the_parent_profile_relation()
+    {
+        $parent = User::factory()->create(['role' => 'parent']);
+        ParentProfile::create(['user_id' => $parent->id]);
+
+        $response = $this->withSession([
+            'user_id' => $parent->id,
+            'role' => 'parent',
+        ])->get('/permissions');
+
+        $response->assertOk();
+    }
 
     /** @test */
     public function admin_can_update_permission_status()

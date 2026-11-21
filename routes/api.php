@@ -35,7 +35,8 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
     Route::post('/upload-file', [UploadController::class, 'uploadFile']);
     Route::get('/student/{nisn}', [StudentController::class, 'getNameByNisn']);
 
-    Route::apiResource('destinations', DestinationApiController::class);
+    Route::get('destinations', [DestinationApiController::class, 'index']);
+    Route::get('destinations/{destination}', [DestinationApiController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -50,20 +51,7 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
         Route::put('/me/password', [ProfileController::class, 'updatePassword']);
         Route::post('/user/update-fcm', [UserController::class, 'updateFcmToken']);
 
-        Route::apiResource('users', UserController::class);
-
-
         Route::get('available-teachers', [TeacherController::class, 'available']);
-        Route::apiResource('teachers', TeacherController::class);
-
-        Route::get('class-list', [SchoolClassController::class, 'list']);
-        Route::apiResource('classes', SchoolClassController::class)
-            ->parameters(['classes' => 'schoolClass']);
-
-        Route::apiResource('parents', ParentController::class);
-
-        Route::get('stats/students', [StudentController::class, 'stats']);
-        Route::apiResource('students', StudentController::class);
 
         Route::apiResource('subjects', SubjectController::class);
         Route::get('my-schedules/today', [ScheduleController::class, 'today']);
@@ -75,8 +63,6 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
 
         Route::apiResource('devices', DeviceController::class);
 
-        Route::apiResource('announcements', AnnouncementController::class);
-
         Route::prefix('notifications')->group(function () {
             Route::get('/', [NotificationsController::class, 'index']);
             Route::get('/unread-count', [NotificationsController::class, 'unreadCount']);
@@ -84,17 +70,36 @@ Route::prefix('v1')->as('api.v1.')->group(function () {
             Route::post('/mark-all-read', [NotificationsController::class, 'markAllRead']);
         });
 
-        Route::patch('permissions/{permission}/status', [PermissionController::class, 'updateStatus']);
-        Route::apiResource('permissions', PermissionController::class);
-
-        Route::middleware('role:admin')->group(function () {
-            Route::get('settings/backup', [SystemSettingController::class, 'backupDatabase']);
-            Route::apiResource('settings', SystemSettingController::class)->only(['index', 'update']);
+        Route::middleware('role:admin,teacher,parent,student')->group(function () {
+            Route::apiResource('permissions', PermissionController::class)->only(['index', 'store']);
         });
 
-        Route::get('/settings', [SystemSettingController::class, 'index']);
-        Route::put('/settings/general', [SystemSettingController::class, 'updateGeneral']);
-        Route::put('/settings/attendance', [SystemSettingController::class, 'updateAttendance']);
-        Route::put('/settings/notification', [SystemSettingController::class, 'updateNotification']);
+        Route::middleware('role:admin')->group(function () {
+            Route::apiResource('users', UserController::class);
+            Route::apiResource('teachers', TeacherController::class);
+            Route::apiResource('parents', ParentController::class);
+            Route::apiResource('announcements', AnnouncementController::class);
+
+            Route::apiResource('destinations', DestinationApiController::class)
+                ->except(['index', 'show']);
+
+            Route::get('settings/backup', [SystemSettingController::class, 'backupDatabase']);
+            Route::apiResource('settings', SystemSettingController::class)->only(['index', 'update']);
+
+            Route::put('/settings/general', [SystemSettingController::class, 'updateGeneral']);
+            Route::put('/settings/attendance', [SystemSettingController::class, 'updateAttendance']);
+            Route::put('/settings/notification', [SystemSettingController::class, 'updateNotification']);
+        });
+
+        Route::middleware('role:admin,teacher')->group(function () {
+            Route::get('class-list', [SchoolClassController::class, 'list']);
+            Route::apiResource('classes', SchoolClassController::class)
+                ->parameters(['classes' => 'schoolClass']);
+
+            Route::get('stats/students', [StudentController::class, 'stats']);
+            Route::apiResource('students', StudentController::class);
+
+            Route::patch('permissions/{permission}/status', [PermissionController::class, 'updateStatus']);
+        });
     });
 });

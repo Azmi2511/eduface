@@ -1,0 +1,4 @@
+﻿user_id,nisn,full_name,gender,class_id,parent_id
+101,JM03NISN001,Siswa Testing 001,L,1,1
+102,JM03NISN002,Siswa Testing 002,P,1,2
+103,JM03NISN003,Siswa Testing 003,L,1,

@@ -86,7 +86,7 @@ Route::middleware(['session.auth'])->group(function () {
         Route::resource('students', StudentsController::class);
         Route::resource('teachers', TeachersController::class);
         Route::resource('parents', ParentsController::class);
-        Route::resource('classes', ClassesController::class);
+        // Route::resource('classes', ClassesController::class);
         Route::resource('announcements', AnnouncementsController::class);
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
@@ -97,7 +97,7 @@ Route::middleware(['session.auth'])->group(function () {
     });
 
     Route::middleware(['role:admin,teacher'])->group(function () {
-        Route::resource('classes', ClassesController::class);
+        Route::resource('classes', ClassesController::class)->except(['create', 'edit']);
         Route::resource('students', StudentsController::class);
         Route::post('/permissions/{id}/status', [PermissionController::class, 'updateStatus'])->name('permissions.updateStatus');
     });

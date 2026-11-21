@@ -30,6 +30,20 @@ class LoginTest extends TestCase
     }
 
     /** @test */
+    public function invalid_web_credentials_return_an_error_message()
+    {
+        $response = $this->from('/login')->post('/login', [
+            'username' => 'unknown-user',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertRedirect('/login')
+            ->assertSessionHasErrors([
+                'login_error' => 'Username atau password tidak valid.',
+            ]);
+    }
+
+    /** @test */
     public function user_can_login_via_api()
     {
         $user = User::factory()->create(['password' => bcrypt($pwd = 'secret123')]);

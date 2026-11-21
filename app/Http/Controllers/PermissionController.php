@@ -22,11 +22,17 @@ class PermissionController extends Controller
         $query = Permission::with(['student.user', 'parent.user', 'approvedBy']);
 
         if ($user->role === 'parent') {
-            $query->where('parent_id', $user->parent->id);
+            $parent = $user->parentProfile;
+            abort_unless($parent, 403, 'Akun orang tua belum memiliki profil.');
+
+            $query->where('parent_id', $parent->id);
         } elseif ($user->role === 'teacher') {
-            $query->whereHas('student', function($q) use ($user) {
-                $q->whereHas('schoolClass.schedules', function($s) use ($user) {
-                    $s->where('teacher_id', $user->teacher->id);
+            $teacher = $user->teacher;
+            abort_unless($teacher, 403, 'Akun guru belum memiliki profil.');
+
+            $query->whereHas('student', function($q) use ($teacher) {
+                $q->whereHas('schoolClass.schedules', function($s) use ($teacher) {
+                    $s->where('teacher_id', $teacher->id);
                 });
             });
         }

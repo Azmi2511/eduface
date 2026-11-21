@@ -80,7 +80,7 @@ class ScheduleController extends Controller
         }
 
         $classes = SchoolClass::orderBy('class_name')->get();
-        $subjects = Subject::orderBy('name')->get();
+        $subjects = Subject::orderBy('subject_name')->get();
         $teachers = Teacher::with('user')->get();
 
         return view('schedules.create', compact('classes', 'subjects', 'teachers'));
@@ -96,7 +96,7 @@ class ScheduleController extends Controller
         }
 
         $request->validate([
-            'class_id'    => 'required|exists:school_classes,id',
+            'class_id'    => 'required|exists:classes,id',
             'subject_id'  => 'required|exists:subjects,id',
             'teacher_id'  => 'required|exists:teachers,id',
             'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
@@ -124,7 +124,7 @@ class ScheduleController extends Controller
         }
 
         $classes = SchoolClass::orderBy('class_name')->get();
-        $subjects = Subject::orderBy('name')->get();
+        $subjects = Subject::orderBy('subject_name')->get();
         $teachers = Teacher::with('user')->get();
 
         return view('schedules.edit', compact('schedule', 'classes', 'subjects', 'teachers'));
